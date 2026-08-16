@@ -1,0 +1,7 @@
+# Profile dev: bat log SQL de debug
+spring:
+  jpa:
+    show-sql: true
+logging:
+  level:
+    com.elearning.emotion: DEBUG

@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: emotion-elearning-backend
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:elearning_emotion}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # Flyway quan ly schema -> JPA chi validate, khong tu sinh/sua bang
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-in-.env-it-must-be-at-least-32-chars}
+    access-token-minutes: 30
+    refresh-token-days: 7
+  cors:
+    allowed-origins: ${FRONTEND_URL:http://localhost:5173}
+  emotion:
+    # frame | pre_labeled -> quyet dinh endpoint nao dang duoc dung mac dinh o phia frontend (chi de tham khao, khong bat buoc)
+    default-mode: frame
+    batch-size: 6
+    capture-interval-seconds: 10
+    min-confidence-threshold: 0.5   # BR-11
+  ai-service:
+    # Dia chi ai-service (Python). Doi khi ban cua ban deploy that.
+    base-url: ${AI_SERVICE_URL:http://localhost:8000}
+    timeout-ms: 4000
