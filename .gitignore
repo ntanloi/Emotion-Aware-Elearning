@@ -1,0 +1,115 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ========================
+# Documentation (exclude all .md except README.md)
+# ========================
+*.md
+!README.md
+# Allow README.md in subdirectories
+!backend/README.md
+!frontend/README.md
+!ai-service/README.md
+!docs/**/*.md
+
+# ========================
+# Docker (not using for now)
+# ========================
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# ========================
+# Java/Maven (Backend)
+# ========================
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# ========================
+# Node.js (Frontend)
+# ========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# Python (AI Service)
+# ========================
+ai-service/venv/
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/*.pyc
+ai-service/*.pyo
+ai-service/*.pyd
+ai-service/.Python
+ai-service/*.so
+ai-service/.pytest_cache/
+ai-service/.coverage
+ai-service/htmlcov/
+ai-service/*.egg-info/
+
+# ========================
+# IDE
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ========================
+# OS
+# ========================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# Temporary files
+# ========================
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# ========================
+# Database
+# ========================
+*.sql.backup
+*.sqlite
+*.db
