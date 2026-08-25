@@ -17,6 +17,10 @@ public class AnswerOption {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
+    /** A/B/C/D - de hien thi dung thu tu nhu de thi that */
+    @Column(length = 5)
+    private String label;
+
     @Column(nullable = false, length = 500)
     private String content;
 
