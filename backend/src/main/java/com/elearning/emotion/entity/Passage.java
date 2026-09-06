@@ -18,7 +18,11 @@ public class Passage {
     @JoinColumn(name = "content_item_id", nullable = false)
     private ContentItem contentItem;
 
-    /** Van ban doc (Part 6/7) hoac transcript (Part 3/4) */
+    /** Transcript hoi thoai/bai noi (Part 3/4, di kem audio) */
+    @Column(name = "transcript_html", columnDefinition = "LONGTEXT")
+    private String transcriptHtml;
+
+    /** Van ban doc (Part 6/7) */
     @Column(name = "passage_html", columnDefinition = "LONGTEXT")
     private String passageHtml;
 

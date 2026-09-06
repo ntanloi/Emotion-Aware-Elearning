@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+/** BR-07: sinh khi 1 video bai giang (content_item type=VIDEO_LECTURE) du toi thieu 5 session hop le */
 @Entity
 @Table(name = "lesson_feedback")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -14,8 +15,8 @@ public class LessonFeedback {
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
+    @JoinColumn(name = "content_item_id", nullable = false)
+    private ContentItem contentItem;
 
     @Column(name = "weak_time_segment", length = 100)
     private String weakTimeSegment;
