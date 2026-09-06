@@ -18,9 +18,14 @@ public class LearningSession {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /**
+     * CHI duoc tro toi ContentItem co type = VIDEO_LECTURE (video bai giang ly thuyet).
+     * Rang buoc nay khong ep duoc bang FK/DB (MySQL khong ho tro FK co dieu kien) nen
+     * PHAI validate o LearningSessionService truoc khi tao session - xem startSession().
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", nullable = false)
-    private Lesson lesson;
+    @JoinColumn(name = "content_item_id", nullable = false)
+    private ContentItem contentItem;
 
     /** WAITING | LEARNING | PAUSED | FINISHED | ABANDONED (xem 2.2 trong dac ta) */
     @Column(nullable = false, length = 20)
