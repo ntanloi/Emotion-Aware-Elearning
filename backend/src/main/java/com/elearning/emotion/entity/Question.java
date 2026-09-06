@@ -31,6 +31,14 @@ public class Question {
     @Column(name = "prompt_text", columnDefinition = "TEXT")
     private String promptText;
 
+    /**
+     * Nhan/category tuy chon cho cac cau hoi thuoc 1 pool luyen tap co phan loai rieng (vi du:
+     * Practice Zone Part 1 co tag "[Part 1] Tranh ta nguoi" / "Tranh ta vat" / "Tranh ta ca
+     * nguoi va vat"). NULL cho cau hoi thong thuong khong thuoc pool nao.
+     */
+    @Column(name = "tag", length = 255)
+    private String tag;
+
     /** Part 1: anh mo ta */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "image_media_id")
