@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/features/shared/*"],
+      "@student/*": ["./src/features/student/*"],
+      "@teacher/*": ["./src/features/teacher/*"],
+      "@auth/*": ["./src/features/auth/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@config/*": ["./src/config/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
