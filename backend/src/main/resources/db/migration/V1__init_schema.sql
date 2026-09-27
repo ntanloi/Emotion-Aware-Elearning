@@ -9,7 +9,8 @@ CREATE TABLE users (
     email           VARCHAR(150)  NOT NULL UNIQUE,
     password_hash   VARCHAR(255)  NOT NULL,
     role            VARCHAR(20)   NOT NULL, -- STUDENT | TEACHER | ADMIN
-    created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME      NULL ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE courses (
@@ -20,6 +21,8 @@ CREATE TABLE courses (
     level           VARCHAR(30),
     duration_hours  INT,
     status          VARCHAR(20) NOT NULL DEFAULT 'DRAFT', -- DRAFT | PUBLISHED | HIDDEN
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_courses_teacher FOREIGN KEY (teacher_id) REFERENCES users(id)
 );
 
@@ -29,6 +32,8 @@ CREATE TABLE lessons (
     title           VARCHAR(200) NOT NULL,
     video_url       VARCHAR(500),
     order_index     INT NOT NULL DEFAULT 0,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_lessons_course FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
@@ -47,6 +52,8 @@ CREATE TABLE quizzes (
     id          CHAR(36) PRIMARY KEY,
     lesson_id   CHAR(36) NOT NULL,
     title       VARCHAR(200) NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_quiz_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id)
 );
 
@@ -55,6 +62,8 @@ CREATE TABLE questions (
     quiz_id      CHAR(36) NOT NULL,
     content      TEXT NOT NULL,
     order_index  INT NOT NULL DEFAULT 0,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_question_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id)
 );
 
@@ -63,6 +72,8 @@ CREATE TABLE answer_options (
     question_id  CHAR(36) NOT NULL,
     content      VARCHAR(500) NOT NULL,
     is_correct   BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_option_question FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
@@ -98,7 +109,9 @@ CREATE TABLE ai_models (
     accuracy_test        FLOAT,
     is_active            BOOLEAN NOT NULL DEFAULT FALSE,
     deployed_at          DATETIME NULL,
-    notes                TEXT
+    notes                TEXT,
+    created_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE emotion_logs (
@@ -132,6 +145,8 @@ CREATE TABLE daily_reports (
     status           VARCHAR(20) NOT NULL DEFAULT 'CHUA_TAO', -- CHUA_TAO|DA_TAO|DA_XEM
     emotion_summary  TEXT,
     ai_advice_text   TEXT,
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_report_user FOREIGN KEY (user_id) REFERENCES users(id),
     UNIQUE KEY uq_daily_report (user_id, report_date)
 );
@@ -142,6 +157,8 @@ CREATE TABLE lesson_feedback (
     weak_time_segment        VARCHAR(100),
     improvement_suggestion   TEXT,
     avg_focus_score          FLOAT,
+    created_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_feedback_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id)
 );
 
