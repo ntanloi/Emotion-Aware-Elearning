@@ -1,8 +1,8 @@
 package com.elearning.emotion.controller;
 
 import com.elearning.emotion.dto.CameraPermissionRequest;
+import com.elearning.emotion.dto.LearningSessionDto;
 import com.elearning.emotion.dto.StartSessionRequest;
-import com.elearning.emotion.entity.LearningSession;
 import com.elearning.emotion.service.LearningSessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,28 +16,31 @@ public class LearningSessionController {
 
     private final LearningSessionService sessionService;
 
+    // BUGFIX: tra ve LearningSessionDto thay vi entity LearningSession truc tiep -
+    // xem giai thich chi tiet trong LearningSessionDto (Jackson khong serialize duoc
+    // chuoi quan he lazy Hibernate proxy contentItem->unit->course->teacher).
     @PostMapping
-    public LearningSession start(@AuthenticationPrincipal String userId, @Valid @RequestBody StartSessionRequest req) {
-        return sessionService.startSession(userId, req.lessonId());
+    public LearningSessionDto start(@AuthenticationPrincipal String userId, @Valid @RequestBody StartSessionRequest req) {
+        return LearningSessionDto.from(sessionService.startSession(userId, req.contentItemId()));
     }
 
     @PostMapping("/{id}/camera-permission")
-    public LearningSession setCameraPermission(@PathVariable String id, @RequestBody CameraPermissionRequest req) {
-        return sessionService.setCameraPermission(id, req.granted());
+    public LearningSessionDto setCameraPermission(@PathVariable String id, @RequestBody CameraPermissionRequest req) {
+        return LearningSessionDto.from(sessionService.setCameraPermission(id, req.granted()));
     }
 
     @PostMapping("/{id}/pause")
-    public LearningSession pause(@PathVariable String id) {
-        return sessionService.pause(id);
+    public LearningSessionDto pause(@PathVariable String id) {
+        return LearningSessionDto.from(sessionService.pause(id));
     }
 
     @PostMapping("/{id}/resume")
-    public LearningSession resume(@PathVariable String id) {
-        return sessionService.resume(id);
+    public LearningSessionDto resume(@PathVariable String id) {
+        return LearningSessionDto.from(sessionService.resume(id));
     }
 
     @PostMapping("/{id}/finish")
-    public LearningSession finish(@PathVariable String id, @RequestParam(defaultValue = "false") boolean abandoned) {
-        return sessionService.finish(id, abandoned);
+    public LearningSessionDto finish(@PathVariable String id, @RequestParam(defaultValue = "false") boolean abandoned) {
+        return LearningSessionDto.from(sessionService.finish(id, abandoned));
     }
 }
