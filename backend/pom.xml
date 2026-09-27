@@ -15,7 +15,7 @@
   <artifactId>emotion-elearning-backend</artifactId>
   <version>0.1.0</version>
   <name>emotion-elearning-backend</name>
-  <description>Backend cho he thong E-Learning tich hop AI nhan dien cam xuc</description>
+  <description>Backend cho hethong E-Learning tich hop AI nhan dien cam xuc</description>
 
   <properties>
     <java.version>17</java.version>
@@ -50,6 +50,18 @@
       <scope>runtime</scope>
     </dependency>
 
+    <!-- Luu tru media (anh/audio/video) len Cloudinary thay vi dia local -->
+    <dependency>
+      <groupId>com.cloudinary</groupId>
+      <artifactId>cloudinary-http5</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>me.paulschwarz</groupId>
+      <artifactId>spring-dotenv</artifactId>
+      <version>3.0.0</version>
+    </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-core</artifactId>
