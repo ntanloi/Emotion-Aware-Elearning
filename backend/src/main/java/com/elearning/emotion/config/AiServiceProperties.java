@@ -11,4 +11,6 @@ import org.springframework.stereotype.Component;
 public class AiServiceProperties {
     private String baseUrl = "http://localhost:8000";
     private int timeoutMs = 4000;
+    private boolean mock = false;
+    private String secret = "";
 }

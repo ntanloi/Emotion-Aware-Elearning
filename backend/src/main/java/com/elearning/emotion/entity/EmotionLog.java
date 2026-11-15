@@ -2,14 +2,14 @@ package com.elearning.emotion.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Entity
-@Table(name = "emotion_logs", indexes = @Index(name = "idx_emotion_session", columnList = "session_id"))
+@Table(name = "emotion_logs", indexes = {
+        @Index(name = "idx_emotion_session", columnList = "session_id"),
+        @Index(name = "idx_emotion_learning_state", columnList = "session_id, learning_state")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class EmotionLog {
     @Id
@@ -33,11 +33,18 @@ public class EmotionLog {
     @Column(name = "emotion_label", nullable = false, length = 20)
     private String emotionLabel;
 
+    /** ENGAGED | INTERESTED | CONFUSED | BORED | NEUTRAL | NO_FACE */
+    @Column(name = "learning_state", nullable = false, length = 20)
+    @Builder.Default
+    private String learningState = "ENGAGED";
+
     @Column(name = "confidence_score", nullable = false)
     private Float confidenceScore;
 
-    /** Xac suat tren ca 7 nhan, vd {"happy":0.87,"neutral":0.05,...} - phuc vu danh gia mo hinh */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "raw_scores", columnDefinition = "json")
-    private Map<String, Float> rawScores;
+    @Column(name = "video_time_sec")
+    private Float videoTimeSec;
+
+    /** Xac suat tren ca 7 nhan luu dang JSON String (vd {"happy":0.87,"neutral":0.05,...}) */
+    @Column(name = "raw_scores", columnDefinition = "JSON")
+    private String rawScores;
 }

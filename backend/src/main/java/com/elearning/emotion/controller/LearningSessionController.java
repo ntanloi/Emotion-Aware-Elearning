@@ -25,22 +25,41 @@ public class LearningSessionController {
     }
 
     @PostMapping("/{id}/camera-permission")
-    public LearningSessionDto setCameraPermission(@PathVariable String id, @RequestBody CameraPermissionRequest req) {
-        return LearningSessionDto.from(sessionService.setCameraPermission(id, req.granted()));
+    public LearningSessionDto setCameraPermission(@PathVariable String id,
+                                                  @RequestBody CameraPermissionRequest req,
+                                                  @AuthenticationPrincipal String userId) {
+        return LearningSessionDto.from(sessionService.setCameraPermission(id, req.granted(), req.consentVersion(), userId));
     }
 
     @PostMapping("/{id}/pause")
-    public LearningSessionDto pause(@PathVariable String id) {
-        return LearningSessionDto.from(sessionService.pause(id));
+    public LearningSessionDto pause(@PathVariable String id,
+                                   @AuthenticationPrincipal String userId) {
+        return LearningSessionDto.from(sessionService.pause(id, userId));
     }
 
     @PostMapping("/{id}/resume")
-    public LearningSessionDto resume(@PathVariable String id) {
-        return LearningSessionDto.from(sessionService.resume(id));
+    public LearningSessionDto resume(@PathVariable String id,
+                                    @AuthenticationPrincipal String userId) {
+        return LearningSessionDto.from(sessionService.resume(id, userId));
     }
 
     @PostMapping("/{id}/finish")
-    public LearningSessionDto finish(@PathVariable String id, @RequestParam(defaultValue = "false") boolean abandoned) {
-        return LearningSessionDto.from(sessionService.finish(id, abandoned));
+    public LearningSessionDto finish(@PathVariable String id,
+                                     @RequestParam(defaultValue = "false") boolean abandoned,
+                                     @AuthenticationPrincipal String userId) {
+        return LearningSessionDto.from(sessionService.finish(id, abandoned, userId));
+    }
+
+    @GetMapping("/{id}/summary")
+    public com.elearning.emotion.dto.SessionSummaryDto getSummary(@PathVariable String id,
+                                                                 @AuthenticationPrincipal String userId) {
+        return sessionService.getSessionSummary(id, userId);
+    }
+
+    @PostMapping("/{id}/attempt/restart")
+    public com.elearning.emotion.service.VideoViewAttemptService.AttemptSnapshot restartAttempt(
+            @PathVariable String id,
+            @AuthenticationPrincipal String userId) {
+        return sessionService.restartAttempt(id, userId);
     }
 }

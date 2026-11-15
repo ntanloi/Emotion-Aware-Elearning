@@ -50,4 +50,33 @@ public class VocabWord {
 
     @PrePersist
     void onCreate() { if (createdAt == null) createdAt = LocalDateTime.now(); }
+
+    public String getMeaning() {
+        return meaningVi;
+    }
+
+    public void setMeaning(String meaning) {
+        this.meaningVi = meaning;
+    }
+    @Transient
+    private ContentItem contentItem;
+
+    public ContentItem getContentItem() {
+        return this.contentItem;
+    }
+
+    public void setContentItem(ContentItem contentItem) {
+        this.contentItem = contentItem;
+    }
+
+    public static class VocabWordBuilder {
+        public VocabWordBuilder meaning(String meaning) {
+            return meaningVi(meaning);
+        }
+
+        public VocabWordBuilder contentItem(ContentItem contentItem) {
+            this.contentItem = contentItem;
+            return this;
+        }
+    }
 }

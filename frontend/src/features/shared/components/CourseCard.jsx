@@ -1,8 +1,15 @@
 import { Link } from 'react-router-dom'
+import { BookOpen, Star, User } from 'lucide-react'
+import { resolveMediaUrl } from '@config/media.js'
 
 function formatVnd(value) {
   if (value == null) return null
   return Number(value).toLocaleString('vi-VN') + 'đ'
+}
+
+function stripHtml(html) {
+  if (!html) return ''
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 /**
@@ -20,10 +27,18 @@ export default function CourseCard({ course }) {
       <div className="card hoverable course-card">
         <div className="course-cover-wrapper">
           {course.coverUrl ? (
-            <img className="course-cover" src={course.coverUrl} alt={course.title} />
+            <img
+              className="course-cover"
+              src={resolveMediaUrl(course.coverUrl, { width: 600 })}
+              alt={course.title}
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <div className="course-cover course-cover-placeholder">
-              <span className="course-cover-icon">📚</span>
+              <span className="course-cover-icon">
+                <BookOpen size={42} strokeWidth={1.8} />
+              </span>
             </div>
           )}
           {hasDiscount && (
@@ -36,22 +51,31 @@ export default function CourseCard({ course }) {
         <div className="course-card-body">
           <div className="flex-between" style={{ marginBottom: 8 }}>
             {course.level && (
-              <span className="badge" style={{ background: 'var(--info-soft)', color: 'var(--info)', fontSize: '11px', padding: '2px 8px' }}>
+              <span className="badge" style={{ background: 'var(--info-soft)', color: 'var(--info)', fontSize: '12px', padding: '2px 8px' }}>
                 {course.level}
               </span>
             )}
-            {course.averageRating != null ? (
-              <span className="text-dim text-sm">⭐ {course.averageRating.toFixed(1)}</span>
+            {course.averageRating != null && course.averageRating > 0 ? (
+              <span className="text-dim text-sm flex-row" style={{ gap: 4, alignItems: 'center' }}>
+                <Star size={13} fill="var(--warn)" color="var(--warn)" />
+                <strong style={{ color: 'var(--text)' }}>{course.averageRating.toFixed(1)}</strong>
+                {course.reviewCount != null && (
+                  <span style={{ fontSize: 12, opacity: 0.8 }}>({course.reviewCount})</span>
+                )}
+              </span>
             ) : (
-              <span className="text-dim text-sm">Chưa có đánh giá</span>
+              <span className="text-dim text-sm" style={{ fontSize: 12 }}>Chưa có đánh giá</span>
             )}
           </div>
           
           <h3 className="course-title">{course.title}</h3>
-          <p className="course-description">{course.description}</p>
+          <p className="course-description">{stripHtml(course.description) || 'Chưa có mô tả'}</p>
           
           <div className="course-meta">
-            <span className="text-dim text-sm">👤 {course.teacherName}</span>
+            <span className="text-dim text-sm flex-row" style={{ gap: 5, alignItems: 'center' }}>
+              <User size={13} />
+              <span>{course.teacherName}</span>
+            </span>
           </div>
           
           <div className="course-footer">

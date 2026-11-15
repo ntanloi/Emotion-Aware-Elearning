@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 
 /**
  * WordChoiceText — Câu hỏi "Chọn từ trong đoạn văn" (WORD_CHOICE).
@@ -153,7 +153,7 @@ export default function WordChoiceText({
       {/* Nút làm lại: chỉ hiện sau khi đã check hết tất cả ô, không phải chế độ readOnly */}
       {!readOnly && allChecked && (
         <button className="btn secondary mt-16" onClick={handleRetry}>
-          ↻ Làm lại
+          Làm lại
         </button>
       )}
     </div>

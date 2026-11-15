@@ -111,6 +111,25 @@ public class VocabWordService {
         return VocabWordDto.from(word, examples);
     }
 
+    /** Lấy danh sách từ của 1 Bo tu vung tối ưu bằng JOIN FETCH, không bị N+1 queries */
+    @Transactional(readOnly = true)
+    public List<VocabWordDto> getWordsByContentItemId(String contentItemId) {
+        List<com.elearning.emotion.entity.VocabSetItem> items = vocabSetItemRepository.findByContentItemIdWithMedia(contentItemId);
+        if (items.isEmpty()) return List.of();
+
+        List<String> wordIds = items.stream().map(it -> it.getWord().getId()).toList();
+        List<VocabExample> allExamples = vocabExampleRepository.findByWordIdInWithAudio(wordIds);
+        java.util.Map<String, List<VocabExampleDto>> exampleMap = allExamples.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        ex -> ex.getWord().getId(),
+                        java.util.stream.Collectors.mapping(VocabExampleDto::from, java.util.stream.Collectors.toList())
+                ));
+
+        return items.stream()
+                .map(it -> VocabWordDto.from(it.getWord(), exampleMap.getOrDefault(it.getWord().getId(), List.of())))
+                .toList();
+    }
+
     private MediaAsset resolveMedia(String mediaId) {
         if (mediaId == null) return null;
         return mediaAssetRepository.findById(mediaId)

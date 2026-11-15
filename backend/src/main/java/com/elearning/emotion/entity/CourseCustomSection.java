@@ -31,4 +31,8 @@ public class CourseCustomSection {
     @Column(name = "order_index", nullable = false)
     @Builder.Default
     private Integer orderIndex = 0;
+
+    public String getSectionCode() {
+        return "CUSTOM_" + id;
+    }
 }

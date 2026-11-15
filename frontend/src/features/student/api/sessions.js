@@ -8,8 +8,8 @@ import apiClient from '@shared/api/client.js'
 export const startSession = (contentItemId) =>
   apiClient.post('/sessions', { contentItemId }).then((r) => r.data)
 
-export const setCameraPermission = (sessionId, granted) =>
-  apiClient.post(`/sessions/${sessionId}/camera-permission`, { granted }).then((r) => r.data)
+export const setCameraPermission = (sessionId, granted, consentVersion = 'v1.0') =>
+  apiClient.post(`/sessions/${sessionId}/camera-permission`, { granted, consentVersion }).then((r) => r.data)
 
 export const pauseSession = (sessionId) => apiClient.post(`/sessions/${sessionId}/pause`).then((r) => r.data)
 

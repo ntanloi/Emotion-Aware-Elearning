@@ -39,4 +39,42 @@ public class Passage {
     @Column(name = "order_index", nullable = false)
     @Builder.Default
     private Integer orderIndex = 0;
+
+    @Column(name = "status", length = 20)
+    @Builder.Default
+    private String status = "ACTIVE";
+
+    @Transient
+    private String title;
+
+    public String getTranscript() {
+        return transcriptHtml != null ? transcriptHtml : passageHtml;
+    }
+
+    public void setTranscript(String transcript) {
+        this.transcriptHtml = transcript;
+    }
+
+    public String getContent() {
+        return passageHtml != null ? passageHtml : transcriptHtml;
+    }
+
+    public void setContent(String content) {
+        this.passageHtml = content;
+    }
+
+    public static class PassageBuilder {
+        public PassageBuilder transcript(String transcript) {
+            return transcriptHtml(transcript);
+        }
+
+        public PassageBuilder content(String content) {
+            return passageHtml(content);
+        }
+
+        public PassageBuilder title(String title) {
+            this.title = title;
+            return this;
+        }
+    }
 }

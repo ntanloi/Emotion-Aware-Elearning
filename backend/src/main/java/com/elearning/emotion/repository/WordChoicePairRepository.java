@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface WordChoicePairRepository extends JpaRepository<WordChoicePair, String> {
     List<WordChoicePair> findByQuestionIdOrderByOrderIndex(String questionId);
+    List<WordChoicePair> findByQuestionIdInOrderByOrderIndex(List<String> questionIds);
 }

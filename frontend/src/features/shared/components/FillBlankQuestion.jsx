@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check, X } from 'lucide-react'
 import ExplanationDropdown from '@shared/components/ExplanationDropdown.jsx'
 
 /**
@@ -83,14 +84,22 @@ export default function FillBlankQuestion({
       />
       {displayAnswer && effectiveCorrectText && (
         <p className="text-sm mt-8" style={{ color: isCorrect ? 'var(--good)' : 'var(--bad)', fontWeight: 500 }}>
-          {isCorrect ? '✓ Chính xác' : `✗ Đáp án đúng: ${effectiveCorrectText}`}
+          {isCorrect ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Check size={15} /> Chính xác
+            </span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <X size={15} /> {`Đáp án đúng: ${effectiveCorrectText}`}
+            </span>
+          )}
         </p>
       )}
       
       {/* Nút kiểm tra */}
       {allowCheck && !readOnly && !checked && value?.trim() && (
         <button className="btn secondary mt-16" onClick={handleCheck} disabled={checking}>
-          {checking ? 'Đang kiểm tra...' : '✓ Kiểm tra đáp án'}
+          {checking ? 'Đang kiểm tra...' : 'Kiểm tra đáp án'}
         </button>
       )}
 
@@ -98,7 +107,7 @@ export default function FillBlankQuestion({
           đang hiển thị và làm mới ô input để học viên nhập lại. */}
       {allowCheck && !readOnly && checked && isCorrect === false && (
         <button className="btn secondary mt-16" onClick={handleRetry}>
-          ↻ Làm lại
+          Làm lại
         </button>
       )}
 

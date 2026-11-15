@@ -1,0 +1,12 @@
+Nhiệm vụ: AI-05 (Kiểm tra độ chính xác của nghĩa tiếng Việt so với từ vựng tiếng Anh).
+Hãy kiểm tra xem nghĩa tiếng Việt (meaning_vi) có dịch đúng, đầy đủ và chuẩn xác theo từ vựng tiếng Anh (word) và loại từ (part_of_speech) hay không.
+Lược đồ JSON yêu cầu:
+{
+  "meaning_ok": true | false,
+  "confidence": float (0.0 đến 1.0),
+  "better": "Gợi ý nghĩa tiếng Việt chuẩn xác hơn nếu meaning_ok là false"
+}
+Dữ liệu:
+<data>
+{data}
+</data>

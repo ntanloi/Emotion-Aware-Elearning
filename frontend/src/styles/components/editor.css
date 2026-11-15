@@ -1,0 +1,488 @@
+@layer components {
+/* ---------- Rich text viewer ---------- */
+.rich-text-content {
+  line-height: 1.75;
+  font-size: 15px;
+  color: var(--text);
+}
+.rich-text-content h2,
+.rich-text-editor .ProseMirror h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 18px 0 10px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.rich-text-content h3,
+.rich-text-editor .ProseMirror h3 {
+  font-size: 1.12rem;
+  font-weight: 600;
+  margin: 14px 0 8px;
+  color: var(--text);
+}
+.rich-text-content p,
+.rich-text-editor .ProseMirror p {
+  margin: 0 0 10px;
+}
+.rich-text-content ul,
+.rich-text-editor .ProseMirror ul {
+  list-style-type: disc;
+  margin: 8px 0 14px;
+  padding-left: 22px;
+}
+.rich-text-content ol,
+.rich-text-editor .ProseMirror ol {
+  list-style-type: decimal;
+  margin: 8px 0 14px;
+  padding-left: 22px;
+}
+.rich-text-content li,
+.rich-text-editor .ProseMirror li {
+  margin-bottom: 4px;
+}
+.rich-text-content blockquote,
+.rich-text-editor .ProseMirror blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 8px 14px;
+  margin: 14px 0;
+  background: rgba(37, 99, 235, 0.06);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--text);
+}
+.rich-text-content code,
+.rich-text-editor .ProseMirror code {
+  background: var(--surface-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: monospace;
+}
+.rich-text-content img,
+.rich-text-editor .ProseMirror img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  margin: 10px 0;
+}
+.rich-text-content audio,
+.rich-text-editor .ProseMirror audio {
+  width: 100%;
+  margin: 8px 0;
+}
+.rich-text-content table,
+.rich-text-editor .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 12px 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.rich-text-content th,
+.rich-text-content td,
+.rich-text-editor .ProseMirror th,
+.rich-text-editor .ProseMirror td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  vertical-align: top;
+  position: relative;
+}
+.rich-text-content th,
+.rich-text-editor .ProseMirror th {
+  background: var(--surface-3);
+  font-weight: 600;
+  text-align: left;
+}
+.rich-text-editor .ProseMirror .selectedCell {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+/* Rich Text Editor Container & Toolbars */
+.rich-text-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.rich-text-editor:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.rich-text-editor .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.rich-text-editor .toolbar-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #ffffff;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.rich-text-editor .toolbar button,
+.rich-text-editor .toolbar-btn {
+  background: transparent;
+  border: none;
+  color: #475569;
+  border-radius: 4px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+.rich-text-editor .toolbar button:hover:not(:disabled),
+.rich-text-editor .toolbar-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.rich-text-editor .toolbar button.active,
+.rich-text-editor .toolbar-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+.rich-text-editor .toolbar button:disabled,
+.rich-text-editor .toolbar-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.rich-text-editor .toolbar-btn.btn-has-label {
+  gap: 4px;
+  padding: 0 8px;
+  font-weight: 500;
+}
+.rich-text-editor .toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+  align-self: center;
+}
+.rich-text-editor .toolbar-color-picker-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.rich-text-editor .color-trigger-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 2px 5px !important;
+  gap: 2px;
+}
+.rich-text-editor .color-indicator-bar {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.rich-text-editor .toolbar-color-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  z-index: 50;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rich-text-editor .toolbar-color-popover .popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rich-text-editor .color-swatches-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.rich-text-editor .color-swatch-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease;
+}
+.rich-text-editor .color-swatch-circle:hover {
+  transform: scale(1.2);
+  border-color: #ffffff;
+}
+.rich-text-editor .popover-clear-btn {
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+  color: var(--text-dim) !important;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.rich-text-editor .popover-clear-btn:hover {
+  color: var(--text) !important;
+  background: var(--surface-3) !important;
+}
+
+/* Templates Toolbar Bar */
+.rich-text-editor .templates-toolbar {
+  padding: 7px 12px;
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.rich-text-editor .templates-toolbar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.rich-text-editor .toolbar-template-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
+}
+.rich-text-editor .toolbar-template-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.12);
+}
+
+/* =====================================================================
+   Gợi ý bố cục trong RichTextEditor
+   Gợi ý là thuộc tính data-hint do createHintExtension gắn lên DOM,
+   KHÔNG nằm trong HTML được lưu.
+   ===================================================================== */
+
+/* Đoạn / tiêu đề / mục list đang trống: gợi ý mờ, con trỏ vẫn nằm ở đầu dòng */
+.rich-text-editor .ProseMirror .has-hint::before {
+  content: attr(data-hint);
+  float: left;
+  height: 0;
+  max-width: 100%;
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 400;
+  pointer-events: none;
+}
+
+/* Ô trong bảng: hint thường dài hơn ô hẹp -> cho tự xuống dòng bên trong ô,
+   nâng chiều cao tối thiểu để không bị đè lên hàng dưới */
+.rich-text-editor .ProseMirror td p.has-hint,
+.rich-text-editor .ProseMirror th p.has-hint {
+  position: relative;
+  min-height: 3.6em;
+}
+.rich-text-editor .ProseMirror td p.has-hint::before,
+.rich-text-editor .ProseMirror th p.has-hint::before {
+  position: absolute;
+  inset: 0;
+  float: none;
+  height: auto;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: hidden;
+}
+/* Ô tiêu đề cột trống ("Tên cột") chỉ cần 1 dòng */
+.rich-text-editor .ProseMirror th p.has-hint {
+  min-height: 1.6em;
+}
+
+/* Thanh "Bố cục gợi ý" — giữ nguyên style cũ, chỉ cho phép xuống dòng trên màn hình hẹp */
+.rich-text-editor .templates-toolbar {
+  flex-wrap: wrap;
+}
+
+/* (Tuỳ chọn, an toàn cho học viên) Ẩn khung / đoạn rỗng giảng viên quên điền */
+.rich-text-content p:empty,
+.rich-text-content li:empty {
+  display: none;
+}
+.rich-text-content blockquote:not(:has(:not(p:empty))) {
+  display: none;
+}
+.rich-text-editor .toolbar-uploading {
+  font-size: 12px;
+  color: var(--accent);
+  align-self: center;
+  margin-left: auto;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rich-text-editor .table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(37, 99, 235, 0.08);
+  border-bottom: 1px dashed var(--border);
+  font-size: 11.5px;
+  flex-wrap: wrap;
+}
+.rich-text-editor .table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.rich-text-editor .table-action-btn:hover {
+  background: var(--surface-3);
+  color: var(--accent);
+}
+.rich-text-editor .table-action-btn.danger {
+  color: #ef4444;
+}
+.rich-text-editor .table-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.rich-text-editor .ProseMirror {
+  padding: 16px;
+  min-height: 180px;
+  outline: none;
+}
+
+/* Video Lecture Editor: Upload vs Link tabs & Box */
+.video-source-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px 20px;
+}
+
+.video-source-tabs {
+  display: inline-flex;
+  background: var(--surface-2);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  gap: 3px;
+}
+
+.video-source-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.video-source-tab-btn:hover {
+  color: var(--text);
+}
+
+.video-source-tab-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.video-link-input-card {
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-dim, #64748b);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Course Modal Rich Description Field */
+.course-modal-desc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.course-modal-desc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.course-modal-desc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--accent);
+  font-weight: 500;
+}
+.course-modal-desc-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+}

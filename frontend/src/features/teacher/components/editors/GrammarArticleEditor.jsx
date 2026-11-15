@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import RichTextEditor from '@shared/components/ui/RichTextEditor.jsx'
+import { GRAMMAR_TEMPLATES, findEmptySections } from '@shared/components/ui/editorTemplates.js'
 import { useUpdateContentItem } from '@teacher/hooks/useTeacherContentItems.js'
+import { AlertCircle } from 'lucide-react'
 
 /**
  * GrammarArticleEditor — soạn nội dung lý thuyết ngữ pháp bằng RichTextEditor (Tiptap) có sẵn.
@@ -11,6 +13,7 @@ export default function GrammarArticleEditor({ item }) {
   const [html, setHtml] = useState(item.bodyHtml || '')
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState(null)
+  const [emptyWarning, setEmptyWarning] = useState(null)
   const [savedAt, setSavedAt] = useState(null)
 
   const handleChange = (value) => {
@@ -20,6 +23,12 @@ export default function GrammarArticleEditor({ item }) {
 
   const handleSave = async () => {
     setError(null)
+    const emptySecs = findEmptySections(html)
+    if (emptySecs.length > 0) {
+      setEmptyWarning(`Còn ${emptySecs.length} mục chưa điền nội dung: ${emptySecs.join(', ')}`)
+    } else {
+      setEmptyWarning(null)
+    }
     try {
       await updateItem.mutateAsync({ id: item.id, payload: { bodyHtml: html } })
       setDirty(false)
@@ -37,7 +46,30 @@ export default function GrammarArticleEditor({ item }) {
       </p>
       {error && <div className="form-error">{error}</div>}
 
-      <RichTextEditor value={html} onChange={handleChange} placeholder="Soạn nội dung ngữ pháp..." />
+      <RichTextEditor
+        templates={GRAMMAR_TEMPLATES}
+        value={html}
+        onChange={handleChange}
+        placeholder="Soạn nội dung ngữ pháp..."
+      />
+
+      {emptyWarning && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          marginTop: 10,
+          padding: '8px 12px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          border: '1px solid rgba(245, 158, 11, 0.25)',
+          borderRadius: 8,
+          fontSize: 12.5,
+          color: 'var(--warn)'
+        }}>
+          <AlertCircle size={14} style={{ flexShrink: 0 }} />
+          <span>{emptyWarning}</span>
+        </div>
+      )}
 
       <div className="flex-row mt-16" style={{ justifyContent: 'flex-end', gap: 12 }}>
         {!dirty && savedAt && <span className="text-dim text-sm">Đã lưu lúc {savedAt.toLocaleTimeString('vi-VN')}</span>}

@@ -1,5 +1,7 @@
 package com.elearning.emotion.security;
 
+import com.elearning.emotion.dto.UserAuthInfo;
+import com.elearning.emotion.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,16 +17,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Doc JWT trong header Authorization: Bearer <token>, dat vao SecurityContext.
- * Don gian hoa cho do an - production nen them: blacklist token, refresh flow, v.v.
+ * B4: Đọc JWT trong header Authorization: Bearer <token>, đối soát tv và status với AuthInfoCache.
+ * Nếu tài khoản bị LOCKED hoặc tokenVersion không khớp (đã bị thu hồi), từ chối ngay lập tức.
  */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final AuthInfoCache authInfoCache;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -36,6 +41,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = jwtService.parse(header.substring(7));
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
+                int tv = Optional.ofNullable(claims.get("tv", Integer.class)).orElse(0);
+
+                UserAuthInfo info = authInfoCache.get(userId, userRepository::findAuthInfoById);
+                if (info == null || "LOCKED".equalsIgnoreCase(info.status()) || info.tokenVersion() != tv) {
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"UNAUTHORIZED\",\"message\":\"Phiên đăng nhập đã hết hiệu lực hoặc tài khoản đã bị khóa\"}");
+                    return;
+                }
+
                 var auth = new UsernamePasswordAuthenticationToken(
                         userId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                 SecurityContextHolder.getContext().setAuthentication(auth);

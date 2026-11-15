@@ -27,4 +27,39 @@ public class AnswerOption {
     @Column(name = "is_correct", nullable = false)
     @Builder.Default
     private Boolean isCorrect = false;
+
+    @Transient
+    private Integer orderIndex;
+
+    public boolean isCorrect() {
+        return Boolean.TRUE.equals(isCorrect);
+    }
+
+    public void setCorrect(boolean correct) {
+        this.isCorrect = correct;
+    }
+
+    public Integer getOrderIndex() {
+        return this.orderIndex;
+    }
+
+    public void setOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
+    }
+
+    public static class AnswerOptionBuilder {
+        public AnswerOptionBuilder correct(boolean correct) {
+            return isCorrect(Boolean.valueOf(correct));
+        }
+
+        public AnswerOptionBuilder orderIndex(int orderIndex) {
+            this.orderIndex = orderIndex;
+            return this;
+        }
+
+        public AnswerOptionBuilder orderIndex(Integer orderIndex) {
+            this.orderIndex = orderIndex;
+            return this;
+        }
+    }
 }

@@ -1,0 +1,160 @@
+category,match_type,pattern,severity,lang,scope,active,note
+PROFANITY_VI,WORD,địt,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,đụ,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,lồn,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,cặc,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,buồi,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,đĩ,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,đmm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,đcm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,vcl,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,vkl,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,clgt,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,cmm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,dkm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,đkm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,WORD,dcm,ERROR,vi,ALL,1,Từ tục mạnh/viết tắt không nhập nhằng
+PROFANITY_VI,PHRASE,địt mẹ,ERROR,vi,ALL,1,
+PROFANITY_VI,PHRASE,đụ má,ERROR,vi,ALL,1,
+PROFANITY_VI,PHRASE,con đĩ,ERROR,vi,ALL,1,
+PROFANITY_VI,PHRASE,dit me,ERROR,vi,ALL,1,Dạng không dấu thường gặp
+PROFANITY_VI,PHRASE,du ma,WARNING,vi,ALL,1,Không dấu có thể trùng từ khác; chỉ cảnh báo
+PROFANITY_VI,WORD,dm,WARNING,vi,ALL,1,Dễ khớp nhầm (dm = decimet); chỉ cảnh báo
+PROFANITY_VI,WORD,đm,WARNING,vi,ALL,1,Viết tắt tục; chỉ cảnh báo vì ngắn
+PROFANITY_VI,WORD,vl,WARNING,vi,ALL,1,"Viết tắt ngắn, dễ nhầm; chỉ cảnh báo"
+PROFANITY_VI,WORD,đéo,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,WORD,vãi,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,WORD,cmn,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,PHRASE,ngu vãi,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,PHRASE,óc chó,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,PHRASE,mẹ nó,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,PHRASE,đồ ngu,WARNING,vi,ALL,1,Từ tục nhẹ
+PROFANITY_VI,PHRASE,thằng ngu,WARNING,vi,ALL,1,Từ tục nhẹ
+INSULT_VI,WORD,chó,CONTEXT,vi,ALL,1,Vô hại trong từ vựng (dog); chuyển LLM xác nhận
+INSULT_VI,WORD,ngu,CONTEXT,vi,ALL,1,Cần ngữ cảnh
+INSULT_VI,WORD,đần,CONTEXT,vi,ALL,1,Cần ngữ cảnh
+INSULT_VI,PHRASE,khốn nạn,WARNING,vi,ALL,1,
+INSULT_VI,PHRASE,mất dạy,WARNING,vi,ALL,1,
+PROFANITY_EN,WORD,fuck,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,fucking,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,fucked,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,fucker,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,motherfucker,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,shit,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,bullshit,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,bitch,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,asshole,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,bastard,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,cunt,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,slut,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,whore,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,dickhead,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,stfu,ERROR,en,ALL,1,
+PROFANITY_EN,WORD,damn,WARNING,en,ALL,1,Từ tục nhẹ
+PROFANITY_EN,WORD,crap,WARNING,en,ALL,1,Từ tục nhẹ
+PROFANITY_EN,WORD,wtf,WARNING,en,ALL,1,Từ tục nhẹ
+PROFANITY_EN,WORD,douchebag,WARNING,en,ALL,1,Từ tục nhẹ
+PROFANITY_EN,WORD,jerk,WARNING,en,ALL,1,Từ tục nhẹ
+PROFANITY_EN,WORD,dick,CONTEXT,en,ALL,1,Có thể là tên riêng (Dick)
+PROFANITY_EN,WORD,pussy,CONTEXT,en,ALL,1,Có thể là con mèo
+PROFANITY_EN,WORD,ass,CONTEXT,en,ALL,1,Có thể là con lừa; chỉ khớp nguyên từ
+PROFANITY_EN,WORD,sex,CONTEXT,en,ALL,1,Có thể là trường biểu mẫu (Sex: M/F)
+SEXUAL_VIOLENCE,WORD,porn,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,PHRASE,khiêu dâm,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,PHRASE,phim sex,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,PHRASE,phim đen,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,PHRASE,18+,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,WORD,xxx,WARNING,vi,ALL,1,
+SEXUAL_VIOLENCE,PHRASE,giết người,CONTEXT,vi,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,PHRASE,khủng bố,CONTEXT,vi,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,PHRASE,tự tử,CONTEXT,vi,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,WORD,murder,CONTEXT,en,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,WORD,terrorist,CONTEXT,en,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,WORD,suicide,CONTEXT,en,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+SEXUAL_VIOLENCE,WORD,kill,CONTEXT,en,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc; chuyển LLM xác nhận
+HATE,WORD,__THAY_BANG_TU_THAT__,ERROR,vi,ALL,0,"MẪU TẮT. Tự bổ sung từ miệt thị (sắc tộc, vùng miền, giới tính, tôn giáo, khuyết tật) từ nguồn chuẩn và để người có chuyên môn rà soát trước khi bật active=1"
+SCAM_AD,PHRASE,cá độ,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,nhà cái,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,tài xỉu,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,lô đề,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,tín dụng đen,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,đa cấp,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,kiếm tiền online,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,vay tiền nhanh,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,kiếm tiền tại nhà,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,làm giàu nhanh,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,bán hàng đa cấp,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,đánh bạc,CONTEXT,vi,ALL,1,Có thể là từ vựng/bài đọc hợp lệ
+SCAM_AD,WORD,casino,CONTEXT,en,ALL,1,Có thể xuất hiện hợp lệ trong bài đọc
+SCAM_AD,PHRASE,mua ngay,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,giảm giá sốc,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,chốt đơn,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,liên hệ mua,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,liên hệ để nhận,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,nhắn tin để nhận,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,click vào link,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,đăng ký ngay hôm nay,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,số lượng có hạn,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,PHRASE,ưu đãi chỉ trong hôm nay,WARNING,vi,TITLE_DESC,1,Chỉ áp cho tiêu đề và mô tả (quảng cáo)
+SCAM_AD,WORD,hotline,WARNING,vi,TITLE_DESC,1,Hợp lệ trong từ vựng; chỉ cảnh báo ở tiêu đề/mô tả
+SCAM_AD,WORD,inbox,WARNING,vi,TITLE_DESC,1,Hợp lệ trong từ vựng; chỉ cảnh báo ở tiêu đề/mô tả
+SCAM_AD,PHRASE,hoa hồng,WARNING,vi,TITLE_DESC,1,Hợp lệ khi là nghĩa của commission trong từ vựng; chỉ cảnh báo ở tiêu đề/mô tả
+SCAM_AD,PHRASE,add zalo,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,kết bạn zalo,ERROR,vi,ALL,1,
+SCAM_AD,PHRASE,ib mình,ERROR,vi,ALL,1,
+SCORE_GUARANTEE,PHRASE,cam kết đầu ra,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,cam kết đạt,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,đảm bảo đạt,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,100% đậu,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,học là đậu,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,không cần học vẫn đạt,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,hack điểm,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,lộ đề,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,đề thi thật 100%,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,tặng đề ets,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,bí kíp đảm bảo,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,đảm bảo đầu ra,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,PHRASE,hoàn tiền nếu không đạt,ERROR,vi,TITLE_DESC,1,Cam kết điểm số/lộ đề
+SCORE_GUARANTEE,REGEX,cam\s*kết\s+(đạt\s+)?\d{3}\+?,ERROR,vi,TITLE_DESC,1,Ví dụ: cam kết 800+
+SCORE_GUARANTEE,REGEX,đảm\s*bảo\s+(đạt\s+)?\d{3}\+?,ERROR,vi,TITLE_DESC,1,
+SCORE_GUARANTEE,REGEX,(đạt|lên)\s+\d{3}\+?\s*(điểm\s+)?toeic\s+(trong|sau)\s+\d+\s*(ngày|tuần|tháng),WARNING,vi,TITLE_DESC,1,"Lời hứa thời gian + điểm; chỉ cảnh báo, cần bằng chứng"
+CONTACT_SOCIAL,REGEX,"(?<!\d)(?:\+?84|0)(?:[\s.\-]?\d){8,10}(?!\d)",ERROR,vi,ALL,1,Số điện thoại Việt Nam
+CONTACT_SOCIAL,REGEX,[\w.+\-]+@[\w\-]+\.[\w.\-]+,ERROR,vi,ALL,1,Email
+CONTACT_SOCIAL,REGEX,"https?://[^\s<>\""']+|www\.[^\s<>\""']+",WARNING,vi,ALL,1,URL; bỏ qua tên miền trong policy.text.allowedLinkDomains
+CONTACT_SOCIAL,REGEX,"(?<![\w.])@[A-Za-z0-9_.]{3,}",WARNING,vi,TITLE_DESC,1,Tài khoản mạng xã hội (@handle)
+CONTACT_SOCIAL,WORD,zalo,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,facebook,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,messenger,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,telegram,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,tiktok,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,instagram,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,fb.com,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,t.me,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,bit.ly,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,wechat,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+CONTACT_SOCIAL,WORD,viber,WARNING,vi,TITLE_DESC,1,Chỉ cảnh báo ở tiêu đề/mô tả
+COPYRIGHT_MARK,PHRASE,all rights reserved,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,bản quyền thuộc,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,sưu tầm,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,nguồn:,INFO,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,actual test,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,real test,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,ets toeic official,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,hackers toeic,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,economy toeic,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,longman toeic,WARNING,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,PHRASE,educational testing service,INFO,vi,ALL,1,Dấu hiệu bản quyền: yêu cầu giảng viên chứng minh quyền sử dụng
+COPYRIGHT_MARK,REGEX,\bETS\s*20\d{2}\b,WARNING,vi,ALL,1,Ví dụ: ETS 2023
+COPYRIGHT_MARK,REGEX,©|\(c\)\s*\d{4},WARNING,vi,ALL,1,
+PLACEHOLDER,PHRASE,lorem ipsum,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,asdf,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,qwerty,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,đang cập nhật,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,sắp ra mắt,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,coming soon,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,untitled,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,sample text,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,test test,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,abc xyz,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,nội dung đang được cập nhật,WARNING,vi,ALL,1,Nội dung giữ chỗ
+PLACEHOLDER,PHRASE,chưa có nội dung,WARNING,vi,ALL,1,Nội dung giữ chỗ

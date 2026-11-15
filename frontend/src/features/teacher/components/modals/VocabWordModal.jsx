@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import Modal from '@shared/components/ui/Modal.jsx'
 import MediaUploader from '@shared/components/ui/MediaUploader.jsx'
 import { uploadMedia } from '@shared/api/media.js'
@@ -184,7 +185,7 @@ export default function VocabWordModal({ open, word, onClose, onSaved }) {
             <div key={idx} className="card" style={{ marginBottom: 10, padding: 12 }}>
               <div className="flex-between" style={{ marginBottom: 8 }}>
                 <span className="text-dim text-sm">Ví dụ {idx + 1}</span>
-                <button type="button" className="icon-btn" onClick={() => removeExample(idx)} title="Xoá ví dụ này">🗑️</button>
+                <button type="button" className="icon-btn" onClick={() => removeExample(idx)} title="Xoá ví dụ này"><Trash2 size={13} /></button>
               </div>
               <input
                 type="text" value={ex.sentenceEn} onChange={(e) => updateExample(idx, 'sentenceEn', e.target.value)}

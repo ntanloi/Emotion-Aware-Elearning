@@ -1,0 +1,291 @@
+@layer components {
+/* ==========================================================================
+   PROGRESS TRACKING ENGINE STYLES (LEVEL 0 -> LEVEL 3)
+   ========================================================================== */
+
+/* 1. Sidebar Course Progress & Section Badges */
+.sidebar-header-wrap {
+  margin-bottom: 14px;
+}
+
+.sidebar-course-progress-card {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+}
+
+.sidebar-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.sidebar-progress-title {
+  color: var(--text-dim, #94a3b8);
+  font-weight: 500;
+}
+
+.sidebar-progress-pct {
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+.sidebar-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.08));
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sidebar-progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.nav-link-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.nav-link-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.sidebar-sec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, 6px);
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.sidebar-sec-badge.completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.sidebar-sec-badge.in-progress {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.sidebar-sec-badge.zero {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* 2. My Learning Page (Section Overview Banner & Group Progress) */
+.section-overview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 16px 20px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.section-overview-banner h2 {
+  color: var(--text, #0f172a);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+@keyframes scaleUpFade {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.section-pill-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.section-pill-tag.done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.content-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.content-group-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.content-group-sub {
+  font-size: 12px;
+  color: var(--text-dim, #94a3b8);
+  font-weight: 500;
+}
+
+.content-group-progress-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 170px;
+}
+
+.content-group-progress-track {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.08));
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.content-group-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.content-group-progress-fill.is-complete {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.content-group-progress-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+  min-width: 40px;
+  text-align: right;
+}
+
+.content-group-progress-num.is-complete {
+  color: #10b981;
+}
+
+/* 3. Activity Row Items */
+.activity-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 12px 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+.activity-row.is-item-completed {
+  border-left: 3px solid #10b981;
+}
+
+.activity-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-row-right {
+  flex-shrink: 0;
+}
+
+.activity-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.activity-status-badge.completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-weight: 600;
+}
+
+.activity-status-badge.in-progress {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.activity-status-badge.not-started {
+  color: var(--text-dim, #94a3b8);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* 4. Video Complete Status Pill */
+.video-lecture-complete-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.video-lecture-complete-pill.done {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.video-lecture-complete-pill.pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+}

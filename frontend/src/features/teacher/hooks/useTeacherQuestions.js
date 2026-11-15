@@ -51,3 +51,29 @@ export function useDeleteQuestion(contentItemId) {
       }),
   });
 }
+
+export function useToggleQuestionStatus(contentItemId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }) =>
+      questionsApi.toggleQuestionStatus(id, status),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["questions", "teacher-view", contentItemId],
+      }),
+  });
+}
+
+export function useBulkUpdateQuestionStatus(contentItemId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (status) =>
+      questionsApi.bulkUpdateQuestionStatus(contentItemId, status),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ["questions", "teacher-view", contentItemId],
+      }),
+  });
+}
+
+

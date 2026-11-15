@@ -25,10 +25,10 @@ export function useUpdateCourse() {
   })
 }
 
-export function usePublishCourse() {
+export function useSubmitCourse() {
   const invalidate = useInvalidateCourses()
   return useMutation({
-    mutationFn: coursesApi.publishCourse,
+    mutationFn: coursesApi.submitCourse,
     onSuccess: invalidate,
   })
 }
@@ -37,6 +37,22 @@ export function useHideCourse() {
   const invalidate = useInvalidateCourses()
   return useMutation({
     mutationFn: coursesApi.hideCourse,
+    onSuccess: invalidate,
+  })
+}
+
+export function useShowCourse() {
+  const invalidate = useInvalidateCourses()
+  return useMutation({
+    mutationFn: coursesApi.showCourse,
+    onSuccess: invalidate,
+  })
+}
+
+export function useCancelSubmitCourse() {
+  const invalidate = useInvalidateCourses()
+  return useMutation({
+    mutationFn: coursesApi.cancelSubmitCourse,
     onSuccess: invalidate,
   })
 }

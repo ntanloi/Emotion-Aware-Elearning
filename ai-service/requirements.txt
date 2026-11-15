@@ -1,0 +1,14 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+# Lõi nhận diện (emotion_demo). mediapipe tự kéo opencv-contrib-python, KHÔNG cài thêm opencv-python
+mediapipe==0.10.14
+numpy<2
+# Kiểm duyệt từ vựng (giữ nguyên từ ai-service cũ)
+nltk>=3.8.1
+wordfreq>=3.0.0
+# Chỉ cần khi train lại model (tools/train_models.py), không cần lúc chạy:
+# scikit-learn
+# Chỉ cần khi chạy test:
+# pytest httpx

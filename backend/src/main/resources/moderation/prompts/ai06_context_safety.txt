@@ -1,0 +1,15 @@
+Nhiệm vụ: AI-06 (Xác nhận an toàn nội dung trong ngữ cảnh đối với các từ khóa nhạy cảm / CONTEXT).
+Hệ thống phát hiện một từ khóa nhạy cảm thuộc danh mục CONTEXT (như tên riêng, thuật ngữ y tế, động vật, hoặc từ ngữ dễ nhầm lẫn).
+Hãy xem xét toàn bộ ngữ cảnh để xác định đây là nội dung giáo dục vô hại thông thường hay là hành vi xúc phạm, quấy rối hoặc thù ghét tinh vi.
+LƯU Ý: Nếu phát hiện vi phạm, trường "quote" BẮT BUỘC phải trích dẫn nguyên văn câu văn chứa vi phạm. Nếu là nội dung giáo dục bình thường, đặt category là "SAFE" và để quote rỗng.
+Lược đồ JSON yêu cầu:
+{
+  "category": "SAFE" | "PROFANITY" | "INSULT" | "HATE" | "INAPPROPRIATE",
+  "severity": "INFO" | "WARNING" | "ERROR",
+  "quote": "Đoạn trích dẫn nguyên văn nếu vi phạm, rỗng nếu an toàn",
+  "reason": "Giải thích đánh giá ngữ cảnh"
+}
+Dữ liệu:
+<data>
+{data}
+</data>

@@ -26,4 +26,41 @@ public class VocabExample {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "audio_media_id")
     private MediaAsset audio;
+    public VocabWord getVocabWord() {
+        return this.word;
+    }
+
+    public void setVocabWord(VocabWord vocabWord) {
+        this.word = vocabWord;
+    }
+
+    public String getSentence() {
+        return this.sentenceEn;
+    }
+
+    public void setSentence(String sentence) {
+        this.sentenceEn = sentence;
+    }
+
+    public String getMeaning() {
+        return this.sentenceVi;
+    }
+
+    public void setMeaning(String meaning) {
+        this.sentenceVi = meaning;
+    }
+
+    public static class VocabExampleBuilder {
+        public VocabExampleBuilder vocabWord(VocabWord vocabWord) {
+            return word(vocabWord);
+        }
+
+        public VocabExampleBuilder sentence(String sentence) {
+            return sentenceEn(sentence);
+        }
+
+        public VocabExampleBuilder meaning(String meaning) {
+            return sentenceVi(meaning);
+        }
+    }
 }

@@ -59,7 +59,7 @@ public class VocabPracticeGeneratorService {
             return new VocabPracticeQuestionDto(
                     w.getId(),
                     w.getWord() + (w.getIpa() != null ? " /" + w.getIpa() + "/" : ""),
-                    w.getAudioUk() != null ? w.getAudioUk().getUrl() : null,
+                    w.getAudioUk() != null ? w.getAudioUk().getUrl() : (w.getAudioUs() != null ? w.getAudioUs().getUrl() : null),
                     List.of(w.getMeaningVi()), null,
                     w.getWord(), w.getIpa(), w.getPartOfSpeech(), w.getMeaningVi(),
                     w.getImage() != null ? w.getImage().getUrl() : null,
@@ -86,10 +86,19 @@ public class VocabPracticeGeneratorService {
             int correctIndex = seeded.nextInt(choices.size() + 1);
             choices.add(correctIndex, w.getMeaningVi());
 
+            String audio = null;
+            if (listening) {
+                if (w.getAudioUk() != null && w.getAudioUk().getUrl() != null && !w.getAudioUk().getUrl().isBlank()) {
+                    audio = w.getAudioUk().getUrl();
+                } else if (w.getAudioUs() != null && w.getAudioUs().getUrl() != null && !w.getAudioUs().getUrl().isBlank()) {
+                    audio = w.getAudioUs().getUrl();
+                }
+            }
+
             result.add(new VocabPracticeQuestionDto(
                     w.getId(),
                     listening ? null : w.getWord(),
-                    listening ? (w.getAudioUk() != null ? w.getAudioUk().getUrl() : null) : null,
+                    audio,
                     choices,
                     reveal ? correctIndex : null,
                     null, null, null, null, null, null, null, null

@@ -44,4 +44,29 @@ public class MediaAsset {
 
     @PrePersist
     void onCreate() { if (createdAt == null) createdAt = LocalDateTime.now(); }
+    public String getMediaType() {
+        return this.type;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.type = mediaType;
+    }
+
+    public String getFileUrl() {
+        return this.url;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.url = fileUrl;
+    }
+
+    public static class MediaAssetBuilder {
+        public MediaAssetBuilder mediaType(String mediaType) {
+            return type(mediaType);
+        }
+
+        public MediaAssetBuilder fileUrl(String fileUrl) {
+            return url(fileUrl);
+        }
+    }
 }

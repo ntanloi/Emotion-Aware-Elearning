@@ -1,8 +1,12 @@
 package com.elearning.emotion.controller;
 
 import com.elearning.emotion.dto.VocabPracticeQuestionDto;
+import com.elearning.emotion.entity.ContentItem;
+import com.elearning.emotion.repository.ContentItemRepository;
+import com.elearning.emotion.service.CourseAccessService;
 import com.elearning.emotion.service.VocabPracticeGeneratorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,13 +18,19 @@ import java.util.List;
 public class VocabPracticeController {
 
     private final VocabPracticeGeneratorService generator;
+    private final ContentItemRepository contentItemRepository;
+    private final CourseAccessService courseAccessService;
 
     @GetMapping("/{practiceType}")
     public List<VocabPracticeQuestionDto> getQuestions(@PathVariable String contentItemId,
-                                                         @PathVariable String practiceType) {
+                                                         @PathVariable String practiceType,
+                                                         @AuthenticationPrincipal String userId) {
+        ContentItem item = contentItemRepository.findById(contentItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung"));
+        courseAccessService.validateCanLearn(userId, item.getCourse());
+
         var type = VocabPracticeGeneratorService.PracticeType.valueOf(practiceType.toUpperCase());
-        // reveal=false: hoc vien khong duoc thay truoc dap an dung (tru FLASHCARD/MATCHING/FILL_BLANK
-        // von khong co khai niem "reveal" vi khong phai trac nghiem)
-        return generator.generate(contentItemId, type, false);
+        // Tra ve correctChoiceIndex de FE kiem tra dap an ngay khi hoc vien luyen tap trac nghiem / nghe
+        return generator.generate(contentItemId, type, true);
     }
 }

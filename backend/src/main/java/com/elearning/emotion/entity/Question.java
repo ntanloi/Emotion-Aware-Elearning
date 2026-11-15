@@ -1,5 +1,6 @@
 package com.elearning.emotion.entity;
 
+import com.elearning.emotion.enums.ToeicPart;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -69,9 +70,54 @@ public class Question {
     @Column(name = "explanation", columnDefinition = "TEXT")
     private String explanation;
 
+    @Column(name = "status", length = 20)
+    @Builder.Default
+    private String status = "ACTIVE";
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    private ToeicPart toeicPart;
+
     @PrePersist
     void onCreate() { if (createdAt == null) createdAt = LocalDateTime.now(); }
+
+    public String getContent() {
+        return promptText;
+    }
+
+    public void setContent(String content) {
+        this.promptText = content;
+    }
+
+    public String getKind() {
+        return questionKind;
+    }
+
+    public void setKind(String kind) {
+        this.questionKind = kind;
+    }
+
+    public ToeicPart getToeicPart() {
+        if (toeicPart != null) return toeicPart;
+        if (contentItem != null && contentItem.getSectionCode() != null) {
+            return ToeicPart.fromSectionCode(contentItem.getSectionCode());
+        }
+        return null;
+    }
+
+    public void setToeicPart(ToeicPart toeicPart) {
+        this.toeicPart = toeicPart;
+    }
+
+    public static class QuestionBuilder {
+        public QuestionBuilder content(String content) {
+            return promptText(content);
+        }
+
+        public QuestionBuilder kind(String kind) {
+            return questionKind(kind);
+        }
+    }
 }

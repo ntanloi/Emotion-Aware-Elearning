@@ -1,0 +1,153 @@
+@layer components {
+/* ==========================================================================
+   PHASE U5: MOBILE RESPONSIVENESS & CLEANUP ENHANCEMENTS
+   ========================================================================== */
+
+/* Navbar responsive on mobile devices */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 12px;
+    height: 56px;
+  }
+  .navbar-brand {
+    font-size: 15px;
+    gap: 6px;
+  }
+  .navbar-brand-badge {
+    width: 28px;
+    height: 28px;
+  }
+  .navbar-nav {
+    margin: 0 6px;
+    gap: 3px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .navbar-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .navbar-nav a,
+  .navbar-nav .nav-link {
+    padding: 6px 9px;
+    font-size: 12px;
+    white-space: nowrap;
+    gap: 4px;
+  }
+  .navbar-actions {
+    gap: 6px;
+  }
+  .navbar-actions .navbar-user-link span {
+    display: none;
+  }
+  .navbar-actions .btn.sm span {
+    display: none;
+  }
+  .navbar-actions .btn.sm {
+    padding: 6px 8px;
+  }
+}
+
+/* Today's learning strip mobile responsive */
+@media (max-width: 640px) {
+  .today-learning-strip {
+    flex-direction: column;
+    align-items: stretch !important;
+    padding: 14px !important;
+    gap: 12px;
+  }
+}
+
+/* Review Summary Grid mobile responsive */
+.review-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr auto;
+  gap: 24px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .review-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .review-summary-score-col {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    padding-right: 0 !important;
+    padding-bottom: 16px;
+  }
+  .review-summary-action-col {
+    align-items: flex-start !important;
+  }
+}
+
+/* Course filter bar mobile responsive */
+@media (max-width: 640px) {
+  .home-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+  .home-search-input-wrap {
+    min-width: 100%;
+  }
+  .home-level-tabs {
+    overflow-x: auto;
+    width: 100%;
+    scrollbar-width: none;
+  }
+  .home-level-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .home-sort-wrap {
+    justify-content: space-between;
+    padding-left: 0;
+  }
+}
+
+/* Auth & Navigation Shared Helper Classes */
+.auth-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 10px;
+  font-size: var(--fs-xs, 12px);
+  color: var(--text-dim);
+}
+
+.auth-resend-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: opacity 0.15s ease;
+}
+
+.auth-resend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* Mobile Touch Target Standards (WCAG 2.5.5 / >= 44px on mobile) */
+@media (max-width: 640px) {
+  .btn,
+  .btn.primary,
+  .btn.secondary,
+  .auth-btn-primary,
+  .banner-btn-primary,
+  .banner-btn-secondary,
+  .course-preview-action-btn {
+    min-height: 44px;
+  }
+}
+}

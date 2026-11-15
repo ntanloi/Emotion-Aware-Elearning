@@ -22,15 +22,23 @@ public class JwtService {
         return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String userId, String role) {
+    /**
+     * B4: Tạo access token chứa userId, role và tokenVersion (tv) để hỗ trợ thu hồi tức thì
+     */
+    public String generateAccessToken(String userId, String role, int tokenVersion) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(userId)
                 .claim("role", role)
+                .claim("tv", tokenVersion)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(jwtProperties.getAccessTokenMinutes() * 60L)))
                 .signWith(key())
                 .compact();
+    }
+
+    public String generateAccessToken(String userId, String role) {
+        return generateAccessToken(userId, role, 0);
     }
 
     public Claims parse(String token) {

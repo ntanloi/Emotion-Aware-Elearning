@@ -5,3 +5,8 @@ spring:
 logging:
   level:
     com.elearning.emotion: DEBUG
+
+app:
+  emotion:
+    alert:
+      min-students: 2

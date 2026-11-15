@@ -32,3 +32,27 @@ export function useDeletePassage(contentItemId) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['passages', contentItemId] }),
   })
 }
+
+export function useTogglePassageStatus(contentItemId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }) => passagesApi.togglePassageStatus(id, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['passages', contentItemId] })
+      qc.invalidateQueries({ queryKey: ['questions', 'teacher-view', contentItemId] })
+    },
+  })
+}
+
+export function useBulkUpdatePassageStatus(contentItemId) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (status) => passagesApi.bulkUpdatePassageStatus(contentItemId, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['passages', contentItemId] })
+      qc.invalidateQueries({ queryKey: ['questions', 'teacher-view', contentItemId] })
+    },
+  })
+}
+
+

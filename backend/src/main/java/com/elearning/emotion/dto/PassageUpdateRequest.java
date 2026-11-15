@@ -5,5 +5,6 @@ public record PassageUpdateRequest(
         String transcriptHtml,
         String passageHtml,
         String audioMediaId,
-        String imageMediaId
+        String imageMediaId,
+        String status
 ) {}

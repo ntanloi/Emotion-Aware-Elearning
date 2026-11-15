@@ -30,6 +30,47 @@ public class CourseReview {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    /** PUBLISHED | FLAGGED | HIDDEN | DELETED */
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String status = "PUBLISHED";
+
+    /** Tiến độ % tại thời điểm đánh giá */
+    @Column(name = "progress_at_review")
+    private Integer progressAtReview;
+
+    @Column(name = "is_edited", nullable = false)
+    @Builder.Default
+    private Boolean isEdited = false;
+
+    /** Học viên đồng ý cho giảng viên giới thiệu đánh giá lên trang chủ khóa học */
+    @Column(name = "allow_feature", nullable = false)
+    @Builder.Default
+    private Boolean allowFeature = false;
+
+    /** Phản hồi công khai của giảng viên (Phase 2) */
+    @Column(name = "teacher_reply", columnDefinition = "TEXT")
+    private String teacherReply;
+
+    @Column(name = "teacher_replied_at")
+    private LocalDateTime teacherRepliedAt;
+
+    /** Thông tin kiểm duyệt ẩn đánh giá (Phase 3) */
+    @Column(name = "hidden_reason", length = 500)
+    private String hiddenReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hidden_by")
+    private User hiddenBy;
+
+    @Column(name = "hidden_at")
+    private LocalDateTime hiddenAt;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    @Builder.Default
+    private java.util.List<ReviewImage> images = new java.util.ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

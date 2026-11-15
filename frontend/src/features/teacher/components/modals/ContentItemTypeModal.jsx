@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import Modal from '@shared/components/ui/Modal.jsx'
 import { useCreateContentItem } from '@teacher/hooks/useTeacherContentItems.js'
+import { ActivityTypeIcon } from '@shared/components/ui/AppIcons.jsx'
+import { ArrowLeft } from 'lucide-react'
 
 const TYPES = [
-  { value: 'VIDEO_LECTURE', icon: '▶️', label: 'Video bài giảng', desc: 'Tải lên 1 video lý thuyết' },
-  { value: 'GRAMMAR_ARTICLE', icon: '📖', label: 'Bài viết ngữ pháp', desc: 'Soạn nội dung dạng văn bản' },
-  { value: 'VOCAB_SET', icon: '🗂️', label: 'Bộ từ vựng (Flashcard)', desc: 'Thêm từng thẻ từ vựng' },
-  { value: 'PRACTICE_TEST', icon: '✏️', label: 'Bài luyện tập', desc: 'Soạn câu hỏi trắc nghiệm/điền từ...' },
-  { value: 'DICTATION_SET', icon: '🎧', label: 'Bộ chính tả (tự sinh)', desc: 'Tự sinh từ thư viện từ vựng' },
+  { value: 'VIDEO_LECTURE', label: 'Video bài giảng', desc: 'Tải lên 1 video lý thuyết' },
+  { value: 'GRAMMAR_ARTICLE', label: 'Bài viết ngữ pháp', desc: 'Soạn nội dung dạng văn bản' },
+  { value: 'VOCAB_SET', label: 'Bộ từ vựng (Flashcard)', desc: 'Thêm từng thẻ từ vựng' },
+  { value: 'PRACTICE_TEST', label: 'Bài luyện tập', desc: 'Soạn câu hỏi trắc nghiệm/điền từ...' },
+  { value: 'DICTATION_SET', label: 'Bộ chính tả (tự sinh)', desc: 'Tự sinh từ thư viện từ vựng' },
 ]
 
 /**
@@ -92,7 +94,9 @@ export default function ContentItemTypeModal({ open, courseId, groupId, section,
         <div className="type-option-grid">
           {visibleTypes.map((t) => (
             <button key={t.value} type="button" className="type-option-card" onClick={() => setType(t.value)}>
-              <span className="type-option-icon">{t.icon}</span>
+              <span className="type-option-icon">
+                <ActivityTypeIcon type={t.value} size={20} withBadge style={{ width: 38, height: 38, borderRadius: 9 }} />
+              </span>
               <span className="type-option-label">{t.label}</span>
               <span className="type-option-desc">{t.desc}</span>
             </button>
@@ -104,8 +108,14 @@ export default function ContentItemTypeModal({ open, courseId, groupId, section,
         <form onSubmit={handleSubmit}>
           {error && <div className="form-error">{error}</div>}
 
-          <button type="button" className="text-dim text-sm" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16 }} onClick={() => setType(null)}>
-            ← Đổi loại hoạt động ({TYPES.find((t) => t.value === type)?.label})
+          <button
+            type="button"
+            className="text-dim text-sm flex-row"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16, gap: 5, alignItems: 'center' }}
+            onClick={() => setType(null)}
+          >
+            <ArrowLeft size={14} />
+            <span>Đổi loại hoạt động ({TYPES.find((t) => t.value === type)?.label})</span>
           </button>
 
           <div className="field">

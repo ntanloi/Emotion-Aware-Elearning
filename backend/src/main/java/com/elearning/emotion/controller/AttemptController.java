@@ -1,14 +1,13 @@
 package com.elearning.emotion.controller;
 
-import com.elearning.emotion.dto.AttemptResultDto;
-import com.elearning.emotion.dto.AttemptStartRequest;
-import com.elearning.emotion.dto.AttemptStartResponse;
-import com.elearning.emotion.dto.AttemptSubmitRequest;
+import com.elearning.emotion.dto.*;
 import com.elearning.emotion.service.AttemptService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * FR-LES-03/05/06: chay bai luyen tap tu vung / lam bai Part 1-7 / ngu phap / chinh ta.
@@ -21,6 +20,16 @@ import org.springframework.web.bind.annotation.*;
 public class AttemptController {
 
     private final AttemptService attemptService;
+
+    @GetMapping
+    public List<AttemptSummaryDto> getMyAttempts(@AuthenticationPrincipal String userId) {
+        return attemptService.getMyAttempts(userId);
+    }
+
+    @GetMapping("/mine")
+    public List<AttemptSummaryDto> getMyAttemptsMine(@AuthenticationPrincipal String userId) {
+        return attemptService.getMyAttempts(userId);
+    }
 
     @PostMapping
     public AttemptStartResponse start(@AuthenticationPrincipal String userId,

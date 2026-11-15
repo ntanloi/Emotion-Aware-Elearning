@@ -1,10 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
+import { Check, X } from 'lucide-react'
 
 /**
  * SentenceFillQuestion — Câu hỏi "Điền từ vào chỗ trống trong câu/đoạn văn" (SENTENCE_FILL).
  *
  * `promptText` chứa câu/đoạn văn đầy đủ với các ô trống được đánh dấu bằng token {{1}}, {{2}}, ...
- * Học viên gõ từ vào từng ô → nhấn nút "✓ Kiểm tra đáp án" → tất cả ô hiện đúng/sai cùng lúc.
+ * Học viên gõ từ vào từng ô → nhấn nút "Kiểm tra đáp án" → tất cả ô hiện đúng/sai cùng lúc.
  *
  * Props:
  *  - promptText: string — câu văn có token {{1}}, {{2}}...
@@ -169,14 +170,14 @@ export default function SentenceFillQuestion({
           onClick={handleCheck}
           disabled={checking || !hasAnyInput}
         >
-          {checking ? 'Đang kiểm tra...' : '✓ Kiểm tra đáp án'}
+          {checking ? 'Đang kiểm tra...' : 'Kiểm tra đáp án'}
         </button>
       )}
 
       {/* Nút Làm lại — hiện sau khi đã check, không readOnly */}
       {!readOnly && checked && (
         <button className="btn secondary mt-16" onClick={handleRetry}>
-          ↻ Làm lại
+          Làm lại
         </button>
       )}
     </div>

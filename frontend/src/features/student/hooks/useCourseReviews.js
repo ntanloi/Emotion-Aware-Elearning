@@ -3,15 +3,15 @@ import { useAuthStore } from '@auth/store/authStore.js'
 import * as reviewsApi from '@student/api/reviews.js'
 
 /** Danh sach cong khai + diem trung binh - dung cho moi nguoi, ke ca chua dang nhap */
-export function useCourseReviews(courseId) {
+export function useCourseReviews(courseId, params) {
   return useQuery({
-    queryKey: ['courseReviews', courseId],
-    queryFn: () => reviewsApi.listCourseReviews(courseId),
+    queryKey: ['courseReviews', courseId, params],
+    queryFn: () => reviewsApi.listCourseReviews(courseId, params),
     enabled: !!courseId,
   })
 }
 
-/** { enrolled, review } cua nguoi dang dang nhap - quyet dinh FE co hien form danh gia hay khong */
+/** { enrolled, canReview, progress, requiredProgress, review, reason } cua nguoi dang dang nhap */
 export function useMyCourseReview(courseId) {
   const { isAuthenticated } = useAuthStore()
   return useQuery({

@@ -29,6 +29,7 @@ public class ContentGroupService {
             throw new IllegalArgumentException("section_code khong hop le: " + req.sectionCode());
         }
         Course course = courseService.getOwnedOrThrow(teacherId, req.courseId());
+        courseService.validateCanModifyCourseContent(course);
 
         int nextOrder = contentGroupRepository.findByCourseIdAndSectionCodeOrderByOrderIndex(
                 req.courseId(), req.sectionCode()).size();
@@ -39,13 +40,17 @@ public class ContentGroupService {
                 .title(req.title())
                 .orderIndex(nextOrder)
                 .build();
-        return contentGroupRepository.save(group);
+        ContentGroup saved = contentGroupRepository.save(group);
+        courseService.notifyContentChanged(course);
+        return saved;
     }
 
     public ContentGroup rename(String teacherId, String groupId, String newTitle) {
         ContentGroup group = getOwnedOrThrow(teacherId, groupId);
         group.setTitle(newTitle);
-        return contentGroupRepository.save(group);
+        ContentGroup saved = contentGroupRepository.save(group);
+        courseService.notifyContentChanged(saved.getCourse());
+        return saved;
     }
 
     /** Chỉ cho xoá Nhóm khi đã dọn hết hoạt động con (tránh mất dữ liệu do bấm nhầm) */
@@ -56,11 +61,15 @@ public class ContentGroupService {
             throw new IllegalStateException(
                     "Nhóm này vẫn còn " + remaining + " hoạt động bên trong — hãy xoá/di chuyển hết trước khi xoá Nhóm");
         }
+        Course course = group.getCourse();
         contentGroupRepository.delete(group);
+        courseService.notifyContentChanged(course);
     }
 
     public void reorder(String teacherId, String courseId, ContentGroupReorderRequest req) {
-        courseService.getOwnedOrThrow(teacherId, courseId); // xac nhan quyen tren ca khoa hoc
+        Course course = courseService.getOwnedOrThrow(teacherId, courseId); // xac nhan quyen tren ca khoa hoc
+        courseService.validateCanModifyCourseContent(course);
+
         List<ContentGroup> groups = contentGroupRepository.findAllById(req.orderedGroupIds());
         for (int i = 0; i < req.orderedGroupIds().size(); i++) {
             String id = req.orderedGroupIds().get(i);
@@ -69,6 +78,7 @@ public class ContentGroupService {
                     .ifPresent(g -> g.setOrderIndex(idx));
         }
         contentGroupRepository.saveAll(groups);
+        courseService.notifyContentChanged(course);
     }
 
     public ContentGroup getOwnedOrThrow(String teacherId, String groupId) {
@@ -77,6 +87,7 @@ public class ContentGroupService {
         if (!group.getCourse().getTeacher().getId().equals(teacherId)) {
             throw new SecurityException("Ban khong co quyen chinh sua nhom hoat dong nay");
         }
+        courseService.validateCanModifyCourseContent(group.getCourse());
         return group;
     }
 }

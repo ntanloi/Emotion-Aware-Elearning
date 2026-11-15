@@ -15,3 +15,19 @@ export const updatePassage = (id, payload) =>
 
 export const deletePassage = (id) =>
   apiClient.delete(`/passages/${id}`).then((r) => r.data);
+
+export const togglePassageStatus = (id, status) =>
+  apiClient
+    .put(`/passages/${id}/status`, null, {
+      params: status ? { status } : {},
+    })
+    .then((r) => r.data);
+
+export const bulkUpdatePassageStatus = (contentItemId, status) =>
+  apiClient
+    .put('/passages/bulk-status', null, {
+      params: { contentItemId, status },
+    })
+    .then((r) => r.data);
+
+

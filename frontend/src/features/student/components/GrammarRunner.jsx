@@ -4,6 +4,7 @@ import FillBlankQuestion from '@shared/components/FillBlankQuestion.jsx'
 import TestResultCard from '@student/components/TestResultCard.jsx'
 import { useAttempt } from '@student/hooks/useAttempt.js'
 import * as questionsApi from '@shared/api/questions.js'
+import { recordGrammarRead } from '@student/api/progress.js'
 
 /**
  * GrammarRunner — FR-LES-04: đọc lý thuyết ngữ pháp + làm bài điền từ.
@@ -15,7 +16,15 @@ export default function GrammarRunner({ contentItem }) {
   const [answers, setAnswers] = useState({})
 
   useEffect(() => {
-    questionsApi.listQuestions(contentItem.id).then(setQuestions).catch(() => setQuestions([]))
+    questionsApi
+      .listQuestions(contentItem.id)
+      .then((qs) => {
+        setQuestions(qs || [])
+        if (!qs || qs.length === 0) {
+          recordGrammarRead(contentItem.id).catch(() => {})
+        }
+      })
+      .catch(() => setQuestions([]))
     start(contentItem.id).catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentItem.id])
@@ -58,7 +67,7 @@ export default function GrammarRunner({ contentItem }) {
                   />
                 </div>
               ))}
-              <button className="btn mt-16" onClick={handleSubmit}>✅ Nộp bài</button>
+              <button className="btn mt-16" onClick={handleSubmit}>Nộp bài</button>
             </>
           ) : (
             <>

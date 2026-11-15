@@ -1,6 +1,7 @@
 package com.elearning.emotion.config;
 
 import com.elearning.emotion.security.JwtAuthFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,13 +32,24 @@ public class SecurityConfig {
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"Chưa đăng nhập hoặc phiên đăng nhập đã hết hạn\"}");
+                })
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                // Chi GET /api/courses/** la cong khai (duyet khoa hoc). Create/update/publish
+                // Chi GET /api/courses/** la cong khai (duyet khoa hoc). Create/update/submit
                 // (POST/PUT) can dang nhap + role TEACHER, kiem tra o @PreAuthorize tung controller.
                 .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tests/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll() // tai anh/audio/video da upload
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/orders/webhook", "/api/orders/webhook/**").permitAll()
+                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC, jakarta.servlet.DispatcherType.ERROR).permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

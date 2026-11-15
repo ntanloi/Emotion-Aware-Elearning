@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Check, X } from 'lucide-react'
 import AudioPlayer from '@shared/components/AudioPlayer.jsx'
 import ExplanationDropdown from '@shared/components/ExplanationDropdown.jsx'
+import QuestionImage from '@shared/components/QuestionImage.jsx'
 
 /**
  * MultipleChoiceQuestion — Component câu hỏi trắc nghiệm.
@@ -82,10 +84,19 @@ export default function MultipleChoiceQuestion({
   return (
     <div className="question-card">
       {prompt && <p className="question-prompt">{prompt}</p>}
+
       {(imageUrl || audioUrl) && (
-        <div className="question-media">
-          {imageUrl && <img src={imageUrl} alt="Minh hoạ câu hỏi" />}
-          {audioUrl && <AudioPlayer src={audioUrl} />}
+        <div className="question-media-stack">
+          {imageUrl && (
+            <div className="question-media-image-frame">
+              <QuestionImage src={imageUrl} alt={prompt || "Minh hoạ câu hỏi"} />
+            </div>
+          )}
+          {audioUrl && (
+            <div className="question-media-audio-frame">
+              <AudioPlayer src={audioUrl} title="Audio câu hỏi" />
+            </div>
+          )}
         </div>
       )}
 
@@ -106,7 +117,17 @@ export default function MultipleChoiceQuestion({
                   onClick={() => !readOnly && !checked && onSelectIndex?.(idx)}
                 >
                   <span className="label">{letters[idx] || idx + 1}</span>
-                  <span>{choice}</span>
+                  <span className="option-content">{choice}</span>
+                  {displayAnswer && isCorrectOpt && (
+                    <span className="option-status-icon text-good">
+                      <Check size={18} strokeWidth={2.5} />
+                    </span>
+                  )}
+                  {displayAnswer && isWrongSelected && (
+                    <span className="option-status-icon text-bad">
+                      <X size={18} strokeWidth={2.5} />
+                    </span>
+                  )}
                 </div>
               )
             })
@@ -128,7 +149,17 @@ export default function MultipleChoiceQuestion({
                   onClick={() => !readOnly && !checked && onSelect?.(opt.id)}
                 >
                   <span className="label">{opt.label || letters[idx] || idx + 1}</span>
-                  <span>{opt.content}</span>
+                  <span className="option-content">{opt.content}</span>
+                  {displayAnswer && isCorrectOpt && (
+                    <span className="option-status-icon text-good">
+                      <Check size={18} strokeWidth={2.5} />
+                    </span>
+                  )}
+                  {displayAnswer && isWrongSelected && (
+                    <span className="option-status-icon text-bad">
+                      <X size={18} strokeWidth={2.5} />
+                    </span>
+                  )}
                 </div>
               )
             })}
@@ -137,7 +168,7 @@ export default function MultipleChoiceQuestion({
       {/* Nút kiểm tra đáp án */}
       {allowCheck && !readOnly && !checked && (selectedOptionId || selectedIndex != null) && (
         <button className="btn secondary mt-16" onClick={handleCheck} disabled={checking}>
-          {checking ? 'Đang kiểm tra...' : '✓ Kiểm tra đáp án'}
+          {checking ? 'Đang kiểm tra...' : 'Kiểm tra đáp án'}
         </button>
       )}
 

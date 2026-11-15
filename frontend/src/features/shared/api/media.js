@@ -17,3 +17,6 @@ export const uploadMedia = (file, type, onProgress) => {
     })
     .then((r) => r.data)
 }
+
+export const linkMedia = (url, type, fileName) =>
+  apiClient.post('/media/link', { url, type, fileName }).then((r) => r.data)

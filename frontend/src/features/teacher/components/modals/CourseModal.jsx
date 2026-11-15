@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import Modal from '@shared/components/ui/Modal.jsx'
 import MediaUploader from '@shared/components/ui/MediaUploader.jsx'
+import RichTextEditor from '@shared/components/ui/RichTextEditor.jsx'
+import { COURSE_TEMPLATES } from '@shared/components/ui/editorTemplates.js'
 import { useCreateCourse, useUpdateCourse } from '@teacher/hooks/useTeacherCourses.js'
+import { FileText, Sparkles } from 'lucide-react'
 
 const LEVELS = ['Beginner', 'Elementary', 'Intermediate', 'Advanced']
 
@@ -50,7 +53,7 @@ export default function CourseModal({ open, course, onClose, onCreated }) {
 
   const buildPayload = () => ({
     title: form.title.trim(),
-    description: form.description.trim() || null,
+    description: form.description && form.description.trim() ? form.description.trim() : null,
     level: form.level || null,
     durationHours: form.durationHours === '' ? null : Number(form.durationHours),
     price: form.price === '' ? null : Number(form.price),
@@ -80,7 +83,7 @@ export default function CourseModal({ open, course, onClose, onCreated }) {
   }
 
   return (
-    <Modal open={open} title={isEdit ? 'Sửa khoá học' : 'Tạo khoá học mới'} onClose={onClose} width={560}>
+    <Modal open={open} title={isEdit ? 'Sửa khoá học' : 'Tạo khoá học mới'} onClose={onClose} width={840}>
       <form onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
 
@@ -89,9 +92,24 @@ export default function CourseModal({ open, course, onClose, onCreated }) {
           <input type="text" value={form.title} onChange={set('title')} placeholder="VD: TOEIC 500+ Xuất phát" autoFocus />
         </div>
 
-        <div className="field">
-          <label>Mô tả</label>
-          <textarea value={form.description} onChange={set('description')} placeholder="Mô tả ngắn về khoá học..." />
+        <div className="field course-modal-desc-field">
+          <div className="flex-row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <label style={{ margin: 0, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <FileText size={16} className="text-accent" />
+              <span>Mô tả & Lộ trình khóa học</span>
+            </label>
+            <span className="text-dim text-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <Sparkles size={13} style={{ color: 'var(--accent)' }} />
+              <span>Hỗ trợ định dạng, bảng biểu, ảnh và bố cục gợi ý</span>
+            </span>
+          </div>
+          <RichTextEditor
+            templates={COURSE_TEMPLATES}
+            value={form.description}
+            onChange={(html) => setForm((f) => ({ ...f, description: html }))}
+            placeholder="Soạn mô tả, mục tiêu đầu ra, lộ trình học và quyền lợi học viên..."
+            minHeight={220}
+          />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

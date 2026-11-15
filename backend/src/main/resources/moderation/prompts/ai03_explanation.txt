@@ -1,0 +1,12 @@
+Nhiệm vụ: AI-03 (Đánh giá chất lượng và tính chính xác của lời giải thích câu hỏi).
+Hãy đối chiếu lời giải thích (explanation) với đề câu hỏi và đáp án đúng.
+Xác định xem lời giải thích có giải thích đúng bản chất ngữ pháp/từ vựng và chỉ ra đúng đáp án không, hay giải thích sai kiến thức, mâu thuẫn.
+Lược đồ JSON yêu cầu:
+{
+  "explanation_ok": true | false,
+  "issue": "Chỉ ra câu hoặc ý sai cụ thể trong lời giải thích nếu explanation_ok là false"
+}
+Dữ liệu:
+<data>
+{data}
+</data>

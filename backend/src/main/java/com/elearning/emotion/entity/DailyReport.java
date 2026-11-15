@@ -33,6 +33,9 @@ public class DailyReport {
     @Column(name = "ai_advice_text", columnDefinition = "TEXT")
     private String aiAdviceText;
 
+    @Column(name = "metrics", columnDefinition = "JSON")
+    private String metrics;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -7,9 +7,11 @@ import com.elearning.emotion.dto.QuestionDto;
 import com.elearning.emotion.dto.QuestionUpdateRequest;
 import com.elearning.emotion.entity.ContentGroup;
 import com.elearning.emotion.entity.ContentItem;
+import com.elearning.emotion.entity.Question;
 import com.elearning.emotion.repository.ContentGroupRepository;
 import com.elearning.emotion.repository.ContentItemRepository;
 import com.elearning.emotion.repository.QuestionRepository;
+import com.elearning.emotion.service.CourseAccessService;
 import com.elearning.emotion.service.QuestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,20 +35,36 @@ public class QuestionController {
     private final QuestionService questionService;
     private final ContentItemRepository contentItemRepository;
     private final ContentGroupRepository contentGroupRepository;
+    private final CourseAccessService courseAccessService;
 
-    // Hoc vien lam bai -> AN dap an dung
+    // Hoc vien lam bai -> AN dap an dung, CHI lay cau hoi ACTIVE (Phai kiem tra quyen HOC khoa hoc)
     @GetMapping
-    public List<QuestionDto> listForStudent(@RequestParam String contentItemId) {
-        return questionRepository.findByContentItemIdOrderByOrderIndex(contentItemId).stream()
-                .map(questionService::toStudentDto).toList();
+    public List<QuestionDto> listForStudent(
+            @RequestParam String contentItemId,
+            @AuthenticationPrincipal String userId) {
+        ContentItem item = contentItemRepository.findById(contentItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học / hoạt động"));
+        courseAccessService.validateCanLearn(userId, item.getCourse());
+
+        var questions = questionRepository.findByContentItemIdWithMedia(contentItemId).stream()
+                .filter(q -> q.getStatus() == null || "ACTIVE".equalsIgnoreCase(q.getStatus()))
+                .toList();
+        return questionService.toStudentDtos(questions);
     }
 
     // Giang vien xem lai -> co dap an dung, dung o trang Preview (FR-TCH-07)
+    // Chi chu khoa hoc hoac Admin moi duoc xem dap an cua giang vien
     @GetMapping("/teacher-view")
-    @PreAuthorize("hasRole('TEACHER')")
-    public List<QuestionDto> listForTeacher(@RequestParam String contentItemId) {
-        return questionRepository.findByContentItemIdOrderByOrderIndex(contentItemId).stream()
-                .map(questionService::toTeacherDto).toList();
+    public List<QuestionDto> listForTeacher(
+            @RequestParam String contentItemId,
+            @AuthenticationPrincipal String userId) {
+        ContentItem item = contentItemRepository.findById(contentItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bài học / hoạt động"));
+        if (!courseAccessService.canManageOrModerate(userId, item.getCourse())) {
+            throw new SecurityException("Bạn không có quyền xem cấu hình đáp án của giảng viên cho nội dung này");
+        }
+        var questions = questionRepository.findByContentItemIdWithMedia(contentItemId);
+        return questionService.toTeacherDtos(questions);
     }
 
     // Danh sach tag CHO CHON khi tao cau hoi doc lap moi. Lay tu CAC NHOM HOAT DONG (ContentGroup)
@@ -90,6 +108,26 @@ public class QuestionController {
         return questionService.toTeacherDto(questionService.update(teacherId, id, req));
     }
 
+    @RequestMapping(value = "/bulk-status", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    @PreAuthorize("hasRole('TEACHER')")
+    public void bulkUpdateStatus(
+            @AuthenticationPrincipal String teacherId,
+            @RequestParam String contentItemId,
+            @RequestParam(defaultValue = "DISABLED") String status) {
+        questionService.updateAllStatusByContentItem(teacherId, contentItemId, status);
+    }
+
+    @RequestMapping(value = "/{id}/status", method = {RequestMethod.PATCH, RequestMethod.PUT})
+    @PreAuthorize("hasRole('TEACHER')")
+    public QuestionDto updateStatus(
+            @AuthenticationPrincipal String teacherId,
+            @PathVariable String id,
+            @RequestParam(required = false) String status) {
+        Question q = questionService.getOwnedOrThrow(teacherId, id);
+        String nextStatus = status != null ? status : ("ACTIVE".equalsIgnoreCase(q.getStatus()) ? "DISABLED" : "ACTIVE");
+        return questionService.toTeacherDto(questionService.updateStatus(teacherId, id, nextStatus));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER')")
     public void delete(@AuthenticationPrincipal String teacherId, @PathVariable String id) {
@@ -98,8 +136,12 @@ public class QuestionController {
 
     // Hoc vien bam "Kiem tra dap an" cho 1 cau ngay khi lam bai (Part 1-7/Ngu phap/Chinh ta),
     // KHONG can nop ca bai. Tra ve dap an dung de FE to mau xanh/do (FR-LES-05/06).
+    // Kiem tra quyen validateCanLearn hoac attemptId (tu choi neu dang o che do thi thu).
     @PostMapping("/{id}/check")
-    public QuestionCheckResultDto checkAnswer(@PathVariable String id, @RequestBody QuestionCheckRequest req) {
-        return questionService.checkAnswer(id, req);
+    public QuestionCheckResultDto checkAnswer(
+            @PathVariable String id,
+            @AuthenticationPrincipal String userId,
+            @RequestBody QuestionCheckRequest req) {
+        return questionService.checkAnswer(userId, id, req);
     }
 }

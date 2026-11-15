@@ -8,6 +8,7 @@ import com.elearning.emotion.dto.ContentItemUpdateRequest;
 import com.elearning.emotion.dto.SectionContentTreeDto;
 import com.elearning.emotion.dto.VocabSetItemsRequest;
 import com.elearning.emotion.dto.VocabWordDto;
+import com.elearning.emotion.entity.ContentItem;
 import com.elearning.emotion.repository.ContentGroupRepository;
 import com.elearning.emotion.repository.ContentItemRepository;
 import com.elearning.emotion.repository.VocabSetItemRepository;
@@ -30,15 +31,25 @@ public class ContentItemController {
     private final ContentItemService contentItemService;
     private final VocabSetItemRepository vocabSetItemRepository;
     private final VocabWordService vocabWordService;
+    private final com.elearning.emotion.repository.CourseRepository courseRepository;
+    private final com.elearning.emotion.service.CourseAccessService courseAccessService;
 
     // FR-LES-01: hoc vien/giang vien xem danh sach hoat dong trong 1 muc sidebar (kieu PHANG -
     // giu nguyen cho tuong thich nguoc voi frontend/tich hop cu). Trang UnitContentPage hien da
     // chuyen sang dung /content-tree ben duoi de hien thi theo Nhom hoat dong.
     @GetMapping("/api/courses/{courseId}/content-items")
     public List<ContentItemDto> listBySection(@PathVariable String courseId,
-                                               @RequestParam String sectionCode) {
-        return contentItemRepository.findByCourseIdAndSectionCodeOrderByOrderIndex(courseId, sectionCode).stream()
-                .map(ContentItemDto::from).toList();
+                                               @RequestParam(required = false) String sectionCode,
+                                               @AuthenticationPrincipal String userId) {
+        var course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay khoa hoc"));
+        courseAccessService.validateCanView(userId, course);
+        boolean canLearn = courseAccessService.canLearn(userId, course);
+        List<ContentItem> items = (sectionCode != null && !sectionCode.isBlank())
+                ? contentItemRepository.findByCourseIdAndSectionCodeOrderByOrderIndex(courseId, sectionCode)
+                : contentItemRepository.findByCourseId(courseId);
+        return items.stream()
+                .map(canLearn ? ContentItemDto::from : ContentItemDto::outline).toList();
     }
 
     // FR-LES-01 (V4): cay noi dung co Nhom hoat dong (vd "Danh tu" gom nhieu video +
@@ -46,22 +57,42 @@ public class ContentItemController {
     // dang dung kieu phang, chua tao Nhom) tra ve trong ungroupedItems.
     @GetMapping("/api/courses/{courseId}/content-tree")
     public SectionContentTreeDto contentTree(@PathVariable String courseId,
-                                              @RequestParam String sectionCode) {
+                                               @RequestParam String sectionCode,
+                                               @AuthenticationPrincipal String userId) {
+        var course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay khoa hoc"));
+        courseAccessService.validateCanView(userId, course);
+        boolean canLearn = courseAccessService.canLearn(userId, course);
+
         List<ContentGroupDto> groups = contentGroupRepository.findByCourseIdAndSectionCodeOrderByOrderIndex(courseId, sectionCode).stream()
                 .map(g -> ContentGroupDto.from(g,
                         contentItemRepository.findByGroupIdOrderByOrderIndex(g.getId()).stream()
-                                .map(ContentItemDto::from).toList()))
+                                .map(canLearn ? ContentItemDto::from : ContentItemDto::outline).toList()))
                 .toList();
         List<ContentItemDto> ungrouped = contentItemRepository
                 .findByCourseIdAndSectionCodeAndGroupIsNullOrderByOrderIndex(courseId, sectionCode)
-                .stream().map(ContentItemDto::from).toList();
+                .stream().map(canLearn ? ContentItemDto::from : ContentItemDto::outline).toList();
         return new SectionContentTreeDto(groups, ungrouped);
     }
 
+    @GetMapping("/api/courses/{courseId}/preview-lessons")
+    public List<ContentItemDto> getPreviewLessons(@PathVariable String courseId) {
+        var course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay khoa hoc"));
+        return contentItemRepository.findPreviewItemsByCourseId(courseId).stream()
+                .filter(ContentItem::isVideoLecture)
+                .map(ContentItemDto::from)
+                .toList();
+    }
+
     @GetMapping("/api/content-items/{id}")
-    public ContentItemDto get(@PathVariable String id) {
-        return ContentItemDto.from(contentItemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung")));
+    public ContentItemDto get(@PathVariable String id, @AuthenticationPrincipal String userId) {
+        ContentItem item = contentItemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung"));
+        if (!Boolean.TRUE.equals(item.getIsPreview())) {
+            courseAccessService.validateCanLearn(userId, item.getCourse());
+        }
+        return ContentItemDto.from(item);
     }
 
     // FR-TCH-03/04/05/06: tao hoat dong moi trong 1 muc sidebar, tuy type
@@ -103,9 +134,10 @@ public class ContentItemController {
 
     // FR-LES-03: hoc vien xem danh sach tu cua 1 Bo tu vung (dung lam nguon cho 5 dang luyen tap tu sinh)
     @GetMapping("/api/content-items/{id}/vocab-words")
-    public List<VocabWordDto> getVocabWords(@PathVariable String id) {
-        return vocabSetItemRepository.findByContentItemIdOrderByOrderIndex(id).stream()
-                .map(item -> vocabWordService.toDto(item.getWord()))
-                .toList();
+    public List<VocabWordDto> getVocabWords(@PathVariable String id, @AuthenticationPrincipal String userId) {
+        ContentItem item = contentItemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung"));
+        courseAccessService.validateCanLearn(userId, item.getCourse());
+        return vocabWordService.getWordsByContentItemId(id);
     }
 }

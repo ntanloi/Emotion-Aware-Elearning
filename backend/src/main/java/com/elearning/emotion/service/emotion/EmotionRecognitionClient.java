@@ -17,4 +17,12 @@ public interface EmotionRecognitionClient {
      * @return du doan tuong ung theo dung thu tu voi base64Images
      */
     List<EmotionPrediction> predictBatch(List<String> base64Images);
+
+    /**
+     * Ban co sessionId: ai-service moi (emotion_demo) can biet phien hoc de giu baseline / cua so thoi gian
+     * RIENG cho tung hoc vien. Mac dinh bo qua sessionId nen cac client cu (Mock) khong phai sua.
+     */
+    default List<EmotionPrediction> predictBatch(String sessionId, List<String> base64Images) {
+        return predictBatch(base64Images);
+    }
 }
