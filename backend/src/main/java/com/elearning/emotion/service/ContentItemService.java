@@ -34,6 +34,7 @@ public class ContentItemService {
     private final VocabWordRepository vocabWordRepository;
     private final CourseService courseService;
     private final ContentGroupRepository contentGroupRepository;
+    private final HtmlSanitizerService htmlSanitizerService;
 
     public ContentItem create(String teacherId, ContentItemCreateRequest req) {
         if (!VALID_TYPES.contains(req.type())) {
@@ -43,10 +44,7 @@ public class ContentItemService {
             throw new IllegalArgumentException("section_code khong hop le: " + req.sectionCode());
         }
         Course course = courseService.getOwnedOrThrow(teacherId, req.courseId());
-
-        // Khong bat buoc videoMediaId ngay luc tao: giao vien tao hoat dong VIDEO_LECTURE truoc
-        // (chi voi tieu de), roi upload video SAU trong trang soan (VideoLectureEditor goi
-        // update() rieng) - giu dung luong "Tao & bat dau soan" cua ContentItemTypeModal.
+        courseService.validateCanModifyCourseContent(course);
 
         ContentGroup group = null;
         int nextOrder;
@@ -71,9 +69,11 @@ public class ContentItemService {
                 .orderIndex(nextOrder)
                 .timeLimitMinutes(req.timeLimitMinutes())
                 .videoMedia(resolveMedia(req.videoMediaId()))
-                .bodyHtml(req.bodyHtml())
+                .bodyHtml(htmlSanitizerService.sanitize(req.bodyHtml()))
                 .build();
-        return contentItemRepository.save(item);
+        ContentItem saved = contentItemRepository.save(item);
+        courseService.notifyContentChanged(course);
+        return saved;
     }
 
     /** Field null trong req = giu nguyen gia tri cu. groupId="" (chuoi rong) = go khoi Nhom hien tai. */
@@ -82,7 +82,11 @@ public class ContentItemService {
         if (req.title() != null) item.setTitle(req.title());
         if (req.timeLimitMinutes() != null) item.setTimeLimitMinutes(req.timeLimitMinutes());
         if (req.videoMediaId() != null) item.setVideoMedia(resolveMedia(req.videoMediaId()));
-        if (req.bodyHtml() != null) item.setBodyHtml(req.bodyHtml());
+        if (req.bodyHtml() != null) item.setBodyHtml(htmlSanitizerService.sanitize(req.bodyHtml()));
+        if (req.isPreview() != null) item.setIsPreview(req.isPreview());
+        if (req.previewDurationSeconds() != null) {
+            item.setPreviewDurationSeconds(req.previewDurationSeconds() > 0 ? req.previewDurationSeconds() : null);
+        }
         if (req.groupId() != null) {
             if (req.groupId().isBlank()) {
                 item.setGroup(null);
@@ -92,7 +96,9 @@ public class ContentItemService {
                 item.setGroup(group);
             }
         }
-        return contentItemRepository.save(item);
+        ContentItem saved = contentItemRepository.save(item);
+        courseService.notifyContentChanged(saved.getCourse());
+        return saved;
     }
 
     /** Sap xep lai thu tu cac hoat dong TRONG CUNG 1 pham vi (cung muc sidebar hoac cung Nhom) */
@@ -100,8 +106,9 @@ public class ContentItemService {
         List<ContentItem> items = contentItemRepository.findAllById(orderedItemIds);
         for (ContentItem it : items) {
             if (!it.getCourse().getTeacher().getId().equals(teacherId)) {
-                throw new SecurityException("Ban khong co quyen sap xep hoat dong nay");
+                throw new SecurityException("Ban khong co quyen chinh sua hoat dong nay");
             }
+            courseService.validateCanModifyCourseContent(it.getCourse());
         }
         for (int i = 0; i < orderedItemIds.size(); i++) {
             String id = orderedItemIds.get(i);
@@ -110,11 +117,16 @@ public class ContentItemService {
                     .ifPresent(it -> it.setOrderIndex(idx));
         }
         contentItemRepository.saveAll(items);
+        if (!items.isEmpty()) {
+            courseService.notifyContentChanged(items.get(0).getCourse());
+        }
     }
 
     public void delete(String teacherId, String contentItemId) {
         ContentItem item = getOwnedOrThrow(teacherId, contentItemId);
+        Course course = item.getCourse();
         contentItemRepository.delete(item);
+        courseService.notifyContentChanged(course);
     }
 
     /** FR-TCH-03: gan/thay toan bo danh sach tu cho 1 content_item VOCAB_SET (ghi de thu tu) */
@@ -135,15 +147,23 @@ public class ContentItemService {
                     vocabSetItemRepository.save(VocabSetItem.builder()
                             .contentItem(item).word(w).orderIndex(idx).build()));
         }
+        courseService.notifyContentChanged(item.getCourse());
     }
 
     public ContentItem getOwnedOrThrow(String teacherId, String contentItemId) {
         ContentItem item = contentItemRepository.findById(contentItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung"));
         if (!item.getCourse().getTeacher().getId().equals(teacherId)) {
-            throw new SecurityException("Ban khong co quyen chinh sua noi dung nay");
+            if (!courseService.isAdmin(teacherId)) {
+                throw new SecurityException("Ban khong co quyen chinh sua noi dung nay");
+            }
         }
+        courseService.validateCanModifyCourseContent(item.getCourse());
         return item;
+    }
+
+    public boolean isAdmin(String userId) {
+        return courseService.isAdmin(userId);
     }
 
     private MediaAsset resolveMedia(String mediaId) {

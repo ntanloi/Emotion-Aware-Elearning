@@ -1,13 +1,19 @@
 import apiClient from './client.js'
 
 export const listContentItems = (courseId, sectionCode) =>
-  apiClient.get(`/courses/${courseId}/content-items`, { params: { sectionCode } }).then((r) => r.data)
+  apiClient
+    .get(`/courses/${courseId}/content-items`, { params: sectionCode ? { sectionCode } : {} })
+    .then((r) => r.data)
 
 /** V4: cây nội dung có Nhóm hoạt động (groups) + hoạt động không thuộc nhóm nào (ungroupedItems) */
 export const getContentTree = (courseId, sectionCode) =>
   apiClient.get(`/courses/${courseId}/content-tree`, { params: { sectionCode } }).then((r) => r.data)
 
 export const getContentItem = (id) => apiClient.get(`/content-items/${id}`).then((r) => r.data)
+
+/** Danh sách các bài giảng video học thử miễn phí công khai của khóa học */
+export const getPreviewLessons = (courseId) =>
+  apiClient.get(`/courses/${courseId}/preview-lessons`).then((r) => r.data)
 
 /** FR-LES-03: danh sách từ của 1 Bộ từ vựng (nguồn cho 5 dạng luyện tập tự sinh) */
 export const getVocabWords = (contentItemId) =>

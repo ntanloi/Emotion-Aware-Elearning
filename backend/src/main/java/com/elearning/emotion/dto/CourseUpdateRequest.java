@@ -7,9 +7,9 @@ public record CourseUpdateRequest(
         String title,
         String description,
         String level,
+        String profile,
         Integer durationHours,
         BigDecimal price,
         BigDecimal originalPrice,
-        String coverMediaId,
-        String status // DRAFT | PUBLISHED | HIDDEN
+        String coverMediaId
 ) {}

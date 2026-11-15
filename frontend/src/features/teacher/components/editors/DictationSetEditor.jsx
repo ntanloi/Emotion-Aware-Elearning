@@ -4,6 +4,7 @@ import ConfirmDeleteModal from '@teacher/components/ConfirmDeleteModal.jsx'
 import DictationVocabPickerModal from '@teacher/components/modals/DictationVocabPickerModal.jsx'
 import { useTeacherQuestions, useDeleteQuestion } from '@teacher/hooks/useTeacherQuestions.js'
 import { useGenerateDictation } from '@teacher/hooks/useTeacherDictation.js'
+import { Plus, Headphones, Trash2 } from 'lucide-react'
 
 /**
  * DictationSetEditor — TỰ SINH câu hỏi chính tả từ thư viện từ vựng (đúng yêu cầu: lấy audio
@@ -58,7 +59,7 @@ export default function DictationSetEditor({ item }) {
         onClick={() => setPickerOpen(true)}
         disabled={generateDictation.isPending}
       >
-        <span className="plus-icon">+</span>
+        <span className="plus-icon"><Plus size={16} /></span>
         {generateDictation.isPending ? 'Đang sinh câu hỏi...' : 'Chọn từ vựng & Sinh câu luyện chính tả'}
       </button>
 
@@ -66,7 +67,9 @@ export default function DictationSetEditor({ item }) {
       {isLoading && <p className="text-dim">Đang tải...</p>}
       {!isLoading && (questions || []).length === 0 && (
         <div className="empty-state">
-          <div className="icon">📭</div>
+          <div className="icon">
+            <Headphones size={24} />
+          </div>
           <p>Chưa có câu luyện chính tả nào — chọn từ vựng ở trên để sinh.</p>
         </div>
       )}
@@ -75,7 +78,9 @@ export default function DictationSetEditor({ item }) {
         {(questions || []).map((q, i) => (
           <div key={q.id} className="card editable-block flex-row" style={{ gap: 16, alignItems: 'center' }}>
             <div className="editable-actions">
-              <button type="button" className="danger" onClick={() => setDeletingQuestion(q)} title="Xoá câu này">🗑️</button>
+              <button type="button" className="danger" onClick={() => setDeletingQuestion(q)} title="Xoá câu này">
+                <Trash2 size={13} />
+              </button>
             </div>
             <span className="text-dim" style={{ width: 24 }}>{i + 1}.</span>
             <AudioPlayer src={q.audioUrl} compact />

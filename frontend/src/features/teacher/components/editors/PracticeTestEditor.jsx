@@ -1,17 +1,24 @@
 import { useState } from "react";
+import { Pencil, Trash2, Tag, Check, Inbox, Eye, EyeOff } from "lucide-react";
 import AudioPlayer from "@shared/components/AudioPlayer.jsx";
 import ConfirmDeleteModal from "@teacher/components/ConfirmDeleteModal.jsx";
+import Modal from "@shared/components/ui/Modal.jsx";
 import PassageModal from "@teacher/components/modals/PassageModal.jsx";
 import QuestionModal from "@teacher/components/modals/QuestionModal.jsx";
 import {
   useTeacherPassages,
   useDeletePassage,
+  useTogglePassageStatus,
+  useBulkUpdatePassageStatus,
 } from "@teacher/hooks/useTeacherPassages.js";
 import {
   useTeacherQuestions,
   useDeleteQuestion,
+  useToggleQuestionStatus,
+  useBulkUpdateQuestionStatus,
 } from "@teacher/hooks/useTeacherQuestions.js";
 import { passageTitle } from "@teacher/utils/passageTitle.js";
+import { resolveMediaUrl } from "@config/media.js";
 
 const KIND_LABEL = {
   MULTIPLE_CHOICE: "Trắc nghiệm",
@@ -50,7 +57,7 @@ function jumpTo(id, setHighlighted) {
  *   thấy/không cần chọn gì thêm.
  * - Nút "+ Thêm câu hỏi" ở mục Câu hỏi luôn tạo câu hỏi ĐỘC LẬP (initialPassageId=null +
  *   lockPassageSelect), ẩn hẳn dropdown chọn đoạn văn.
- * - Khi sửa 1 câu hỏi đã có (✏️) thì vẫn mở modal với dropdown như cũ để giáo viên đổi/gỡ liên
+ * - Khi sửa 1 câu hỏi đã có (nút Sửa) thì vẫn mở modal với dropdown như cũ để giáo viên đổi/gỡ liên
  *   kết đoạn văn nếu cần.
  */
 export default function PracticeTestEditor({ item }) {
@@ -62,6 +69,13 @@ export default function PracticeTestEditor({ item }) {
   );
   const deletePassage = useDeletePassage(item.id);
   const deleteQuestion = useDeleteQuestion(item.id);
+  const togglePassageStatus = useTogglePassageStatus(item.id);
+  const toggleQuestionStatus = useToggleQuestionStatus(item.id);
+  const bulkUpdateQuestionStatus = useBulkUpdateQuestionStatus(item.id);
+  const bulkUpdatePassageStatus = useBulkUpdatePassageStatus(item.id);
+
+  const [bulkStatusModal, setBulkStatusModal] = useState(null); // { targetStatus: 'DISABLED' | 'ACTIVE' }
+  const [bulkPassageModal, setBulkPassageModal] = useState(null); // { targetStatus: 'DISABLED' | 'ACTIVE' }
 
   const [passageModal, setPassageModal] = useState({
     open: false,
@@ -84,18 +98,88 @@ export default function PracticeTestEditor({ item }) {
   const questionCountForPassage = (passageId) =>
     questionsForPassage(passageId).length;
 
+  const totalQuestions = (questions || []).length;
+  const disabledQuestionsCount = (questions || []).filter(
+    (q) => q.status === "DISABLED",
+  ).length;
+
+  const totalPassages = (passages || []).length;
+  const disabledPassagesCount = (passages || []).filter(
+    (p) => p.status === "DISABLED",
+  ).length;
+
   return (
     <div>
       <section>
-        <div className="flex-between">
-          <h4 style={{ margin: 0 }}>Bộ câu hỏi theo đoạn văn</h4>
-          <button
-            type="button"
-            className="btn ghost sm"
-            onClick={() => setPassageModal({ open: true, passage: null })}
-          >
-            + Thêm đoạn văn
-          </button>
+        <div
+          className="flex-between"
+          style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}
+        >
+          <div className="flex-row" style={{ alignItems: "center", gap: 8 }}>
+            <h4 style={{ margin: 0 }}>Bộ câu hỏi theo đoạn văn</h4>
+            {totalPassages > 0 && (
+              <span className="badge neutral" style={{ fontSize: "0.75rem" }}>
+                {totalPassages} đoạn
+                {disabledPassagesCount > 0 && (
+                  <span style={{ color: "var(--bad, #ef4444)", marginLeft: 4 }}>
+                    ({disabledPassagesCount} tạm ngưng)
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+
+          <div className="flex-row" style={{ alignItems: "center", gap: 8 }}>
+            {totalPassages > 0 && (
+              <>
+                {disabledPassagesCount < totalPassages && (
+                  <button
+                    type="button"
+                    className="btn ghost sm"
+                    style={{
+                      color: "var(--bad, #ef4444)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      background: "rgba(239, 68, 68, 0.05)",
+                    }}
+                    onClick={() => setBulkPassageModal({ targetStatus: "DISABLED" })}
+                    title="Ẩn tất cả đoạn văn và các câu hỏi liên quan với học viên"
+                  >
+                    <EyeOff size={14} /> Ẩn tất cả đoạn văn
+                  </button>
+                )}
+
+                {disabledPassagesCount > 0 && (
+                  <button
+                    type="button"
+                    className="btn ghost sm"
+                    style={{
+                      color: "var(--good, #16a34a)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      border: "1px solid rgba(34, 197, 94, 0.3)",
+                      background: "rgba(34, 197, 94, 0.05)",
+                    }}
+                    onClick={() => setBulkPassageModal({ targetStatus: "ACTIVE" })}
+                    title="Kích hoạt lại tất cả đoạn văn và các câu hỏi liên quan"
+                  >
+                    <Eye size={14} /> Hiện tất cả đoạn văn
+                  </button>
+                )}
+              </>
+            )}
+
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={() => setPassageModal({ open: true, passage: null })}
+            >
+              + Thêm đoạn văn
+            </button>
+          </div>
         </div>
         <p className="text-dim text-sm" style={{ marginTop: 4 }}>
           Chỉ cần cho Part 3/4/6/7 (nhiều câu hỏi dùng chung 1 đoạn). Bỏ qua nếu
@@ -107,30 +191,83 @@ export default function PracticeTestEditor({ item }) {
         )}
 
         <div className="stack-list mt-16">
-          {(passages || []).map((p, i) => (
-            <div
-              key={p.id}
-              id={passageAnchorId(p.id)}
-              className={`card editable-block${highlighted === passageAnchorId(p.id) ? " jump-highlight" : ""}`}
-            >
-              <div className="editable-actions">
-                <button
-                  type="button"
-                  onClick={() => setPassageModal({ open: true, passage: p })}
-                  title="Sửa"
-                >
-                  ✏️
-                </button>
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => setDeletingPassage(p)}
-                  title="Xoá"
-                >
-                  🗑️
-                </button>
-              </div>
-              <strong>{passageTitle(p, i)}</strong>
+          {(passages || []).map((p, i) => {
+            const isPassageDisabled = p.status === "DISABLED";
+            return (
+              <div
+                key={p.id}
+                id={passageAnchorId(p.id)}
+                className={`card editable-block${highlighted === passageAnchorId(p.id) ? " jump-highlight" : ""}`}
+                style={{
+                  opacity: isPassageDisabled ? 0.65 : 1,
+                  transition: "opacity 0.2s ease",
+                }}
+              >
+                <div className="editable-actions">
+                  <button
+                    type="button"
+                    style={{
+                      color: isPassageDisabled ? "var(--text-dim)" : "var(--color-primary, #2563eb)",
+                    }}
+                    onClick={() =>
+                      togglePassageStatus.mutate({
+                        id: p.id,
+                        status: isPassageDisabled ? "ACTIVE" : "DISABLED",
+                      })
+                    }
+                    title={
+                      isPassageDisabled
+                        ? "Đang tạm ngưng (bấm để kích hoạt lại kèm các câu hỏi liên quan)"
+                        : "Đang hoạt động (bấm để ngưng hoạt động kèm các câu hỏi liên quan)"
+                    }
+                  >
+                    {isPassageDisabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPassageModal({ open: true, passage: p })}
+                    title="Sửa"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => setDeletingPassage(p)}
+                    title="Xoá"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                <div className="flex-row" style={{ alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <strong>{passageTitle(p, i)}</strong>
+                  {isPassageDisabled ? (
+                    <span
+                      className="badge"
+                      style={{
+                        background: "rgba(239, 68, 68, 0.12)",
+                        color: "#ef4444",
+                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      Đang ngưng (ẩn cả câu hỏi)
+                    </span>
+                  ) : (
+                    <span
+                      className="badge"
+                      style={{
+                        background: "rgba(34, 197, 94, 0.12)",
+                        color: "#16a34a",
+                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      Hoạt động
+                    </span>
+                  )}
+                </div>
+
               {p.audioUrl && (
                 <div className="mt-8">
                   <AudioPlayer src={p.audioUrl} compact />
@@ -195,72 +332,183 @@ export default function PracticeTestEditor({ item }) {
                 </button>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       </section>
 
       <section className="mt-24">
-        <div className="flex-between">
-          <h4 style={{ margin: 0 }}>Câu hỏi độc lập</h4>
-          <button
-            type="button"
-            className="btn"
-            onClick={() =>
-              setQuestionModal({
-                open: true,
-                question: null,
-                forPassageId: null,
-              })
-            }
-          >
-            + Thêm câu hỏi
-          </button>
+        <div
+          className="flex-between"
+          style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}
+        >
+          <div className="flex-row" style={{ alignItems: "center", gap: 8 }}>
+            <h4 style={{ margin: 0 }}>Câu hỏi độc lập</h4>
+            {totalQuestions > 0 && (
+              <span className="badge neutral" style={{ fontSize: "0.75rem" }}>
+                {totalQuestions} câu
+                {disabledQuestionsCount > 0 && (
+                  <span style={{ color: "var(--bad, #ef4444)", marginLeft: 4 }}>
+                    ({disabledQuestionsCount} tạm ngưng)
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+
+          <div className="flex-row" style={{ alignItems: "center", gap: 8 }}>
+            {totalQuestions > 0 && (
+              <>
+                {disabledQuestionsCount < totalQuestions && (
+                  <button
+                    type="button"
+                    className="btn ghost sm"
+                    style={{
+                      color: "var(--bad, #ef4444)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      background: "rgba(239, 68, 68, 0.05)",
+                    }}
+                    onClick={() => setBulkStatusModal({ targetStatus: "DISABLED" })}
+                    title="Ẩn tất cả câu hỏi trong bài tập này với học viên"
+                  >
+                    <EyeOff size={14} /> Ẩn tất cả câu
+                  </button>
+                )}
+
+                {disabledQuestionsCount > 0 && (
+                  <button
+                    type="button"
+                    className="btn ghost sm"
+                    style={{
+                      color: "var(--good, #16a34a)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      border: "1px solid rgba(34, 197, 94, 0.3)",
+                      background: "rgba(34, 197, 94, 0.05)",
+                    }}
+                    onClick={() => setBulkStatusModal({ targetStatus: "ACTIVE" })}
+                    title="Kích hoạt lại tất cả câu hỏi cho học viên"
+                  >
+                    <Eye size={14} /> Hiện tất cả câu
+                  </button>
+                )}
+              </>
+            )}
+
+            <button
+              type="button"
+              className="btn"
+              onClick={() =>
+                setQuestionModal({
+                  open: true,
+                  question: null,
+                  forPassageId: null,
+                })
+              }
+            >
+              + Thêm câu hỏi
+            </button>
+          </div>
         </div>
+
 
         {loadingQuestions && <p className="text-dim">Đang tải...</p>}
         {!loadingQuestions && (questions || []).length === 0 && (
           <div className="empty-state">
-            <div className="icon">📭</div>
+            <div className="icon"><Inbox size={24} /></div>
             <p>Chưa có câu hỏi nào.</p>
           </div>
         )}
 
         <div className="stack-list mt-16">
-          {(questions || []).map((q, i) => (
-            <div
-              key={q.id}
-              id={questionAnchorId(q.id)}
-              className={`card editable-block${highlighted === questionAnchorId(q.id) ? " jump-highlight" : ""}`}
-            >
-              <div className="editable-actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setQuestionModal({
-                      open: true,
-                      question: q,
-                      forPassageId: null,
-                    })
-                  }
-                  title="Sửa"
-                >
-                  ✏️
-                </button>
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => setDeletingQuestion(q)}
-                  title="Xoá"
-                >
-                  🗑️
-                </button>
-              </div>
+          {(questions || []).map((q, i) => {
+            const isQuestionDisabled = q.status === "DISABLED";
+            return (
+              <div
+                key={q.id}
+                id={questionAnchorId(q.id)}
+                className={`card editable-block${highlighted === questionAnchorId(q.id) ? " jump-highlight" : ""}`}
+                style={{
+                  opacity: isQuestionDisabled ? 0.65 : 1,
+                  transition: "opacity 0.2s ease",
+                }}
+              >
+                <div className="editable-actions">
+                  <button
+                    type="button"
+                    style={{
+                      color: isQuestionDisabled ? "var(--text-dim)" : "var(--color-primary, #2563eb)",
+                    }}
+                    onClick={() =>
+                      toggleQuestionStatus.mutate({
+                        id: q.id,
+                        status: isQuestionDisabled ? "ACTIVE" : "DISABLED",
+                      })
+                    }
+                    title={
+                      isQuestionDisabled
+                        ? "Câu hỏi đang tạm ngưng (bấm để kích hoạt lại)"
+                        : "Câu hỏi đang hoạt động (bấm để ngưng hoạt động)"
+                    }
+                  >
+                    {isQuestionDisabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setQuestionModal({
+                        open: true,
+                        question: q,
+                        forPassageId: null,
+                      })
+                    }
+                    title="Sửa"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => setDeletingQuestion(q)}
+                    title="Xoá"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
 
-              <div className="flex-row" style={{ gap: 8, marginBottom: 6 }}>
-                <span className="badge neutral">Câu {i + 1}</span>
-                <span className="badge neutral">
-                  {KIND_LABEL[q.questionKind] || q.questionKind}
-                </span>
+                <div className="flex-row" style={{ gap: 8, marginBottom: 6, flexWrap: "wrap", alignItems: "center" }}>
+                  <span className="badge neutral">Câu {i + 1}</span>
+                  <span className="badge neutral">
+                    {KIND_LABEL[q.questionKind] || q.questionKind}
+                  </span>
+                  {isQuestionDisabled ? (
+                    <span
+                      className="badge"
+                      style={{
+                        background: "rgba(239, 68, 68, 0.12)",
+                        color: "#ef4444",
+                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                      }}
+                    >
+                      Tạm ngưng
+                    </span>
+                  ) : (
+                    <span
+                      className="badge"
+                      style={{
+                        background: "rgba(34, 197, 94, 0.12)",
+                        color: "#16a34a",
+                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                      }}
+                    >
+                      Hoạt động
+                    </span>
+                  )}
+
                 {q.passageId && (
                   <button
                     type="button"
@@ -282,11 +530,14 @@ export default function PracticeTestEditor({ item }) {
                   <span
                     className="badge"
                     style={{
-                      background: "var(--accent-soft, #ede9fe)",
-                      color: "var(--accent, #7c3aed)",
+                      background: "var(--accent-soft, rgba(37, 99, 235, 0.08))",
+                      color: "var(--color-primary, #2563eb)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
                     }}
                   >
-                    🏷️ {q.tag}
+                    <Tag size={11} /> {q.tag}
                   </span>
                 )}
               </div>
@@ -296,8 +547,10 @@ export default function PracticeTestEditor({ item }) {
               )}
               {q.imageUrl && (
                 <img
-                  src={q.imageUrl}
+                  src={resolveMediaUrl(q.imageUrl, { width: 500 })}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   style={{
                     maxWidth: 320,
                     maxHeight: 220,
@@ -316,7 +569,7 @@ export default function PracticeTestEditor({ item }) {
                       key={o.id}
                       style={{ color: o.isCorrect ? "var(--good)" : undefined }}
                     >
-                      {o.label}. {o.content} {o.isCorrect && "✓"}
+                      {o.label}. {o.content} {o.isCorrect && <Check size={12} color="var(--good)" />}
                     </li>
                   ))}
                 </ul>
@@ -347,14 +600,15 @@ export default function PracticeTestEditor({ item }) {
                         color: o.blankOrder ? "var(--good)" : undefined,
                       }}
                     >
-                      {o.blankOrder ? `{{${o.blankOrder}}} ` : "🃏 "}
+                      {o.blankOrder ? `{{${o.blankOrder}}} ` : "· "}
                       {o.text}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-          ))}
+          );
+        })}
         </div>
       </section>
 
@@ -391,6 +645,106 @@ export default function PracticeTestEditor({ item }) {
         onClose={() => setDeletingQuestion(null)}
         onConfirm={() => deleteQuestion.mutateAsync(deletingQuestion.id)}
       />
+
+      <Modal
+        open={!!bulkStatusModal}
+        title={
+          bulkStatusModal?.targetStatus === "DISABLED"
+            ? "Xác nhận ẩn tất cả câu hỏi"
+            : "Xác nhận hiện tất cả câu hỏi"
+        }
+        onClose={() => setBulkStatusModal(null)}
+        width={460}
+      >
+        <p className="text-dim" style={{ lineHeight: 1.6 }}>
+          {bulkStatusModal?.targetStatus === "DISABLED"
+            ? `Bạn có chắc chắn muốn ẩn tất cả ${totalQuestions} câu hỏi trong hoạt động này không? Sau khi ẩn, các câu hỏi sẽ tạm ngưng và không hiển thị trên trang làm bài của học viên.`
+            : `Bạn có chắc chắn muốn kích hoạt lại tất cả ${totalQuestions} câu hỏi trong hoạt động này không? Sau khi kích hoạt, học viên sẽ nhìn thấy và làm bài bình thường.`}
+        </p>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setBulkStatusModal(null)}
+            disabled={bulkUpdateQuestionStatus.isPending}
+          >
+            Huỷ
+          </button>
+          <button
+            type="button"
+            className={
+              bulkStatusModal?.targetStatus === "DISABLED" ? "btn danger" : "btn"
+            }
+            onClick={async () => {
+              try {
+                await bulkUpdateQuestionStatus.mutateAsync(
+                  bulkStatusModal.targetStatus,
+                );
+                setBulkStatusModal(null);
+              } catch (err) {
+                console.error("Lỗi khi cập nhật trạng thái hàng loạt:", err);
+              }
+            }}
+            disabled={bulkUpdateQuestionStatus.isPending}
+          >
+            {bulkUpdateQuestionStatus.isPending
+              ? "Đang xử lý..."
+              : bulkStatusModal?.targetStatus === "DISABLED"
+              ? "Ẩn tất cả"
+              : "Hiện tất cả"}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!bulkPassageModal}
+        title={
+          bulkPassageModal?.targetStatus === "DISABLED"
+            ? "Xác nhận ẩn tất cả đoạn văn"
+            : "Xác nhận hiện tất cả đoạn văn"
+        }
+        onClose={() => setBulkPassageModal(null)}
+        width={460}
+      >
+        <p className="text-dim" style={{ lineHeight: 1.6 }}>
+          {bulkPassageModal?.targetStatus === "DISABLED"
+            ? `Bạn có chắc chắn muốn ẩn tất cả ${totalPassages} đoạn văn trong hoạt động này không? Khi ẩn đoạn văn, tất cả các câu hỏi thuộc các đoạn văn này cũng sẽ tự động bị ẩn đối với học viên.`
+            : `Bạn có chắc chắn muốn kích hoạt lại tất cả ${totalPassages} đoạn văn trong hoạt động này không? Khi mở đoạn văn, tất cả các câu hỏi thuộc các đoạn văn này cũng sẽ tự động được hiển thị cho học viên.`}
+        </p>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setBulkPassageModal(null)}
+            disabled={bulkUpdatePassageStatus.isPending}
+          >
+            Huỷ
+          </button>
+          <button
+            type="button"
+            className={
+              bulkPassageModal?.targetStatus === "DISABLED" ? "btn danger" : "btn"
+            }
+            onClick={async () => {
+              try {
+                await bulkUpdatePassageStatus.mutateAsync(
+                  bulkPassageModal.targetStatus,
+                );
+                setBulkPassageModal(null);
+              } catch (err) {
+                console.error("Lỗi khi cập nhật trạng thái đoạn văn hàng loạt:", err);
+              }
+            }}
+            disabled={bulkUpdatePassageStatus.isPending}
+          >
+            {bulkUpdatePassageStatus.isPending
+              ? "Đang xử lý..."
+              : bulkPassageModal?.targetStatus === "DISABLED"
+              ? "Ẩn tất cả"
+              : "Hiện tất cả"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Flag, CheckCircle, CheckCircle2 } from "lucide-react";
 import { useAttempt } from "@student/hooks/useAttempt.js";
 import * as passagesApi from "@shared/api/passages.js";
 import * as questionsApi from "@shared/api/questions.js";
@@ -13,6 +15,8 @@ import AudioPlayer from "@shared/components/AudioPlayer.jsx";
 import TranscriptDropdown from "@shared/components/TranscriptDropdown.jsx";
 import AttemptTimer from "@student/components/AttemptTimer.jsx";
 import TestResultCard from "@student/components/TestResultCard.jsx";
+import QuestionImage from "@shared/components/QuestionImage.jsx";
+import { savePartialAnswers } from "@student/api/progress.js";
 
 /**
  * PracticeTestRunner — FR-LES-05: làm bài Part 1–7.
@@ -20,7 +24,7 @@ import TestResultCard from "@student/components/TestResultCard.jsx";
  * - Các câu hỏi có CÙNG passageId (Part 3/4: hội thoại/bài nói dùng chung audio; Part 6/7:
  *   đoạn văn dùng chung nhiều câu điền/đọc hiểu) được GOM thành 1 "trang" — 1 card, 2 cột tự
  *   cuộn riêng (đề bên trái, toàn bộ câu hỏi thuộc đoạn văn đó bên phải).
- * - Nút "🔀 Xáo trộn câu hỏi": đảo NGẪU NHIÊN thứ tự các TRANG (không phá vỡ nhóm câu chung
+ * - Nút "Xáo trộn câu hỏi": đảo NGẪU NHIÊN thứ tự các TRANG (không phá vỡ nhóm câu chung
  *   1 đoạn văn — cả nhóm luôn đi cùng nhau), rồi đánh số lại Câu 1..N theo thứ tự mới. Học
  *   viên có thể xáo lại nhiều lần; đáp án đã chọn không bị mất vì được lưu theo questionId,
  *   không phụ thuộc vị trí hiển thị.
@@ -31,6 +35,7 @@ import TestResultCard from "@student/components/TestResultCard.jsx";
  *        bấm nút "Câu sau" trên thanh điều hướng để qua câu tiếp theo.
  */
 export default function PracticeTestRunner({ contentItem }) {
+  const navigate = useNavigate();
   const { attempt, result, start, submit, reset } = useAttempt();
   const [passages, setPassages] = useState([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -39,6 +44,7 @@ export default function PracticeTestRunner({ contentItem }) {
   const [reviewMode, setReviewMode] = useState(false);
   const [pageOrder, setPageOrder] = useState(null); // null = thứ tự gốc (giáo viên sắp xếp); mảng = đã xáo trộn
   const [autoAdvance, setAutoAdvance] = useState(true);
+  const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
   const autoAdvanceTimer = useRef(null);
 
   useEffect(() => {
@@ -49,6 +55,20 @@ export default function PracticeTestRunner({ contentItem }) {
       .catch(() => setPassages([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentItem.id]);
+
+  // Khôi phục câu trả lời đã làm trước đó nếu đang làm dở dang
+  useEffect(() => {
+    if (attempt?.initialAnswers && Object.keys(attempt.initialAnswers).length > 0) {
+      setAnswers((prev) => ({
+        ...attempt.initialAnswers,
+        ...prev,
+      }));
+    }
+  }, [attempt]);
+
+  const previouslyAnsweredSet = useMemo(() => {
+    return new Set(attempt?.previouslyAnsweredQuestionIds || []);
+  }, [attempt?.previouslyAnsweredQuestionIds]);
 
   useEffect(() => () => clearTimeout(autoAdvanceTimer.current), []);
 
@@ -109,6 +129,18 @@ export default function PracticeTestRunner({ contentItem }) {
     return set;
   }, [answers, pages]);
 
+  const previouslyAnsweredIndices = useMemo(() => {
+    const set = new Set();
+    let idx = 0;
+    for (const page of pages) {
+      for (const q of page.questions) {
+        if (previouslyAnsweredSet.has(q.id)) set.add(idx);
+        idx++;
+      }
+    }
+    return set;
+  }, [pages, previouslyAnsweredSet]);
+
   // Chỉ số câu hỏi đầu tiên của trang hiện tại (dùng để tô "current" trên lưới điều hướng)
   const currentQuestionIndex = useMemo(() => {
     let idx = 0;
@@ -137,7 +169,7 @@ export default function PracticeTestRunner({ contentItem }) {
       ),
     });
 
-  // checkOneSentenceFill: gọi API check SENTENCE_FILL khi học viên nhấn ✓ cho 1 ô,
+  // checkOneSentenceFill: gọi API check SENTENCE_FILL khi học viên nhấn nút kiểm tra cho 1 ô,
   // nhận currentValue là { [blankId]: text } tại thời điểm click.
   const checkOneSentenceFill = (questionId) => (currentValue) =>
     questionsApi.checkAnswer(questionId, {
@@ -149,7 +181,7 @@ export default function PracticeTestRunner({ contentItem }) {
       ),
     });
 
-  // checkOneDragDrop: gọi API check DRAG_DROP khi học viên nhấn ✓ (sau khi đã kéo thả hết ô
+  // checkOneDragDrop: gọi API check DRAG_DROP khi học viên nhấn kiểm tra (sau khi đã kéo thả hết ô
   // trống), nhận currentPlacements là { [blankOrder]: cardId } tại thời điểm click.
   const checkOneDragDrop = (questionId) => (currentPlacements) =>
     questionsApi.checkAnswer(questionId, {
@@ -239,6 +271,28 @@ export default function PracticeTestRunner({ contentItem }) {
       return { questionId: q.id };
     });
 
+  const [savingProgress, setSavingProgress] = useState(false);
+  const handleSaveProgress = async () => {
+    try {
+      setSavingProgress(true);
+      await savePartialAnswers(contentItem.id, attempt?.id, buildSubmission());
+      setShowSaveSuccessModal(true);
+    } catch (err) {
+      console.warn("Lỗi lưu tiến độ:", err);
+    } finally {
+      setSavingProgress(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowSaveSuccessModal(false);
+    if (contentItem?.courseId) {
+      navigate(`/courses/${contentItem.courseId}/learn?section=${contentItem.sectionCode || ''}`);
+    } else {
+      navigate(-1);
+    }
+  };
+
   const handleSubmit = async () => {
     clearTimeout(autoAdvanceTimer.current);
     await submit(null, buildSubmission());
@@ -304,17 +358,25 @@ export default function PracticeTestRunner({ contentItem }) {
       </div>
 
       <div className="card mt-16">
-        <p className="text-dim text-sm">
-          {isGrouped
-            ? `Câu ${currentQuestionIndex + 1}–${currentQuestionIndex + currentPage.questions.length}/${questions.length}`
-            : `Câu ${currentQuestionIndex + 1}/${questions.length}`}
-        </p>
+        <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: 12 }}>
+          <p className="text-dim text-sm" style={{ margin: 0 }}>
+            {isGrouped
+              ? `Câu ${currentQuestionIndex + 1}–${currentQuestionIndex + currentPage.questions.length}/${questions.length}`
+              : `Câu ${currentQuestionIndex + 1}/${questions.length}`}
+          </p>
+          {!isGrouped && previouslyAnsweredSet.has(currentPage.questions[0]?.id) && (
+            <span className="previously-done-badge">
+              <CheckCircle size={13} /> Đã làm ở lần trước
+            </span>
+          )}
+        </div>
 
         {/* KHÔNG gộp (Part 1, 2, 5; ngữ pháp; chính tả; từ vựng): 1 câu / trang như cũ */}
         {!isGrouped && (
           <SingleQuestionBlock
             question={currentPage.questions[0]}
             passage={passage}
+            currentQuestionIndex={currentQuestionIndex}
             answers={answers}
             setAnswer={setAnswer}
             checkOne={checkOne}
@@ -333,13 +395,22 @@ export default function PracticeTestRunner({ contentItem }) {
         {isGrouped && (
           <div className="passage-split-card">
             <div className="passage-pane">
-              {passage?.audioUrl && <AudioPlayer src={passage.audioUrl} />}
-              {passage?.imageUrl && (
-                <img
-                  src={passage.imageUrl}
-                  alt="Đoạn văn"
-                  style={{ maxWidth: "100%", marginTop: 8 }}
+              {passage?.audioUrl && (
+                <AudioPlayer
+                  src={passage.audioUrl}
+                  title={`Recording (Câu ${currentQuestionIndex + 1}–${currentQuestionIndex + currentPage.questions.length})`}
                 />
+              )}
+              {passage?.imageUrl && (
+                <div style={{ marginTop: 10 }}>
+                  <QuestionImage
+                    src={passage.imageUrl}
+                    alt="Đoạn văn minh hoạ"
+                    aspectRatio="16 / 10"
+                    maxWidth="100%"
+                    maxHeight="420px"
+                  />
+                </div>
               )}
               {passage?.passageHtml && (
                 <div
@@ -352,14 +423,21 @@ export default function PracticeTestRunner({ contentItem }) {
             <div className="passage-questions-pane">
               {currentPage.questions.map((q, i) => (
                 <div key={q.id} className="passage-question-block">
-                  <p className="question-prompt">
-                    <strong>Q{currentQuestionIndex + i + 1}:</strong>{" "}
-                    {q.promptText}
-                  </p>
+                  <div className="flex-row flex-between" style={{ alignItems: 'center', marginBottom: 8, gap: 10 }}>
+                    <p className="question-prompt" style={{ margin: 0 }}>
+                      <strong>Q{currentQuestionIndex + i + 1}:</strong>{" "}
+                      {q.promptText}
+                    </p>
+                    {previouslyAnsweredSet.has(q.id) && (
+                      <span className="previously-done-badge" style={{ flexShrink: 0 }}>
+                        <CheckCircle size={12} /> Đã làm ở lần trước
+                      </span>
+                    )}
+                  </div>
                   {q.questionKind === "MULTIPLE_CHOICE" && (
                     <MultipleChoiceQuestion
                       imageUrl={q.imageUrl}
-                      audioUrl={q.audioUrl}
+                      audioUrl={passage?.audioUrl ? null : q.audioUrl}
                       options={q.options}
                       selectedOptionId={answers[q.id]}
                       onSelect={(id) => setAnswer(q.id, id)}
@@ -441,10 +519,10 @@ export default function PracticeTestRunner({ contentItem }) {
 
         {!showAnswer && !isGrouped && (
           <div className="mt-16">
-            <button className="btn ghost sm" onClick={toggleReview}>
+            <button className="btn ghost sm" onClick={toggleReview} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               {reviewSet.has(currentQuestionIndex)
                 ? "Bỏ đánh dấu"
-                : "🚩 Đánh dấu review"}
+                : <><Flag size={14} /> Đánh dấu review</>}
             </button>
           </div>
         )}
@@ -457,6 +535,7 @@ export default function PracticeTestRunner({ contentItem }) {
           currentSpan={currentPage.questions.length}
           answeredSet={answeredSet}
           reviewSet={reviewSet}
+          previouslyAnsweredIndices={previouslyAnsweredIndices}
           onJump={(qIdx) => goToPage(pageIndexByQuestionIndex[qIdx] ?? 0)}
           onPrev={() => goToPage(currentPageIndex - 1)}
           onNext={() => goToPage(currentPageIndex + 1)}
@@ -469,13 +548,102 @@ export default function PracticeTestRunner({ contentItem }) {
       </div>
 
       {!showAnswer && (
-        <button
-          className="btn mt-16"
-          style={{ width: "100%" }}
-          onClick={handleSubmit}
+        <div className="flex-row" style={{ gap: 12, marginTop: 16 }}>
+          <button
+            type="button"
+            className="btn secondary"
+            style={{ flex: 1 }}
+            onClick={handleSaveProgress}
+            disabled={savingProgress}
+          >
+            {savingProgress ? "Đang lưu..." : "Lưu tiến độ làm bài"}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            style={{ flex: 2 }}
+            onClick={handleSubmit}
+          >
+            Nộp bài
+          </button>
+        </div>
+      )}
+
+      {/* Modal xác nhận lưu tiến độ thành công */}
+      {showSaveSuccessModal && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+          }}
+          onClick={() => setShowSaveSuccessModal(false)}
         >
-          ✅ Nộp bài
-        </button>
+          <div
+            className="card save-progress-dialog"
+            style={{
+              maxWidth: 440,
+              width: '100%',
+              padding: '28px 24px',
+              textAlign: 'center',
+              background: 'var(--surface, #ffffff)',
+              border: '1px solid var(--border, #e2e8f0)',
+              borderRadius: 18,
+              boxShadow: '0 20px 40px -8px rgba(0, 0, 0, 0.25)',
+              animation: 'scaleUpFade 0.2s ease-out',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px auto',
+              }}
+            >
+              <CheckCircle2 size={32} />
+            </div>
+
+            <h3 style={{ margin: '0 0 8px 0', fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
+              Đã lưu tiến độ làm bài thành công!
+            </h3>
+            <p style={{ margin: '0 0 24px 0', fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+              Tiến độ và các câu đã trả lời đã được ghi nhận. Bạn có thể tiếp tục làm bài ngay hoặc quay lại danh sách bài học bất cứ lúc nào.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                type="button"
+                className="btn secondary"
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, fontSize: 14 }}
+                onClick={handleBackToList}
+              >
+                Danh sách bài học
+              </button>
+              <button
+                type="button"
+                className="btn"
+                style={{ flex: 1.2, padding: '10px 14px', borderRadius: 10, fontSize: 14 }}
+                onClick={() => setShowSaveSuccessModal(false)}
+              >
+                Tiếp tục làm bài
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -485,6 +653,7 @@ export default function PracticeTestRunner({ contentItem }) {
 function SingleQuestionBlock({
   question: current,
   passage,
+  currentQuestionIndex = 0,
   answers,
   setAnswer,
   checkOne,
@@ -503,13 +672,22 @@ function SingleQuestionBlock({
           className="card"
           style={{ background: "var(--surface-2)", marginBottom: 16 }}
         >
-          {passage.audioUrl && <AudioPlayer src={passage.audioUrl} />}
-          {passage.imageUrl && (
-            <img
-              src={passage.imageUrl}
-              alt="Đoạn văn"
-              style={{ maxWidth: "100%", marginTop: 8 }}
+          {passage.audioUrl && (
+            <AudioPlayer
+              src={passage.audioUrl}
+              title={`Recording (Câu ${currentQuestionIndex + 1})`}
             />
+          )}
+          {passage.imageUrl && (
+            <div style={{ marginTop: 10 }}>
+              <QuestionImage
+                src={passage.imageUrl}
+                alt="Đoạn văn minh hoạ"
+                aspectRatio="16 / 10"
+                maxWidth="100%"
+                maxHeight="420px"
+              />
+            </div>
           )}
           {passage.passageHtml && (
             <div
@@ -525,7 +703,7 @@ function SingleQuestionBlock({
         <MultipleChoiceQuestion
           key={current.id}
           imageUrl={current.imageUrl}
-          audioUrl={current.audioUrl}
+          audioUrl={passage?.audioUrl ? null : current.audioUrl}
           prompt={current.promptText}
           options={current.options}
           selectedOptionId={answers[current.id]}

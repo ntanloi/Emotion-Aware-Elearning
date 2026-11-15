@@ -28,6 +28,18 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(length = 60)
+    private String model;
+
+    @Column(name = "prompt_tokens")
+    private Integer promptTokens;
+
+    @Column(name = "completion_tokens")
+    private Integer completionTokens;
+
+    @Column
+    private Integer feedback;
+
     @PrePersist
     void onCreate() { if (createdAt == null) createdAt = LocalDateTime.now(); }
 }

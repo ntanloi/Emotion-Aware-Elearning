@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { X, Check, RotateCcw } from 'lucide-react'
 import AudioPlayer from '@shared/components/AudioPlayer.jsx'
 import { resolveMediaUrl } from '@config/media.js'
 
@@ -27,17 +28,30 @@ export default function FlashcardCard({
   examples = [],
   onKnow,
   onDontKnow,
+  flipped: controlledFlipped,
+  onFlipChange,
 }) {
-  const [flipped, setFlipped] = useState(false)
+  const [internalFlipped, setInternalFlipped] = useState(false)
+  const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped
   const resolvedImage = resolveMediaUrl(imageUrl)
+
+  const setFlipped = (nextVal) => {
+    const nextBool = typeof nextVal === 'function' ? nextVal(isFlipped) : nextVal
+    if (controlledFlipped === undefined) {
+      setInternalFlipped(nextBool)
+    }
+    onFlipChange?.(nextBool)
+  }
 
   // BUGFIX: khi bấm "Thẻ tiếp/trước" ở component cha, nếu FlashcardCard không được remount
   // (thiếu key={wordId} ở nơi gọi) thì state `flipped` cũ vẫn còn -> từ MỚI xuất hiện thẳng
   // ở mặt sau (định nghĩa). Effect này đảm bảo LUÔN quay về mặt trước mỗi khi từ thay đổi,
   // bất kể nơi gọi có truyền key hay không.
   useEffect(() => {
-    setFlipped(false)
-  }, [word])
+    if (controlledFlipped === undefined) {
+      setInternalFlipped(false)
+    }
+  }, [word, controlledFlipped])
 
   // In đậm từ vựng xuất hiện trong câu ví dụ (giống kiểu highlight [word] của từ điển)
   const highlightWord = (sentence) => {
@@ -56,86 +70,142 @@ export default function FlashcardCard({
 
   return (
     <div className="flashcard-stage">
-      <div className="dict-card">
-        {/* Nút lật — luôn hiện cố định góc dưới-phải, hoạt động trên cả 2 mặt */}
-        <button
-          type="button"
-          className="dict-flip-btn"
-          onClick={toggleFlip}
-          aria-label="Lật thẻ"
-          title="Lật thẻ"
-        >
-          ↻
-        </button>
+      <div className={`dict-card ${isFlipped ? 'flipped' : ''}`}>
+        {/* Thanh tiêu đề nhỏ trên cùng của thẻ */}
+        <div className="dict-card-top-bar">
+          <div className="dict-card-pos-wrap">
+            {partOfSpeech ? (
+              <span className={`dict-pos-badge ${partOfSpeech.toLowerCase()}`}>
+                {partOfSpeech}
+              </span>
+            ) : (
+              <span className="dict-pos-badge default">vocab</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="dict-flip-btn-header"
+            onClick={toggleFlip}
+            aria-label="Lật thẻ"
+            title="Lật thẻ"
+          >
+            <RotateCcw size={12} />
+            <span>{isFlipped ? 'Xem từ' : 'Xem nghĩa'}</span>
+          </button>
+        </div>
 
-        {/* Mặt trước — từ + 2 audio CÙNG hàng, phiên âm bên dưới */}
-        {!flipped && (
+        {/* Mặt trước — từ + 2 audio UK/US + phiên âm */}
+        {!isFlipped && (
           <div className="dict-card-front" onClick={toggleFlip}>
-            <div className="dict-front-word-row">
-              <span className="flashcard-word">{word}</span>
-              {(audioUkUrl || audioUsUrl) && (
-                <div className="dict-audio-row" onClick={(e) => e.stopPropagation()}>
-                  {audioUkUrl && (
-                    <div className="dict-audio-item">
-                      <AudioPlayer src={audioUkUrl} compact />
-                      <span className="audio-tag">UK</span>
-                    </div>
-                  )}
-                  {audioUsUrl && (
-                    <div className="dict-audio-item">
-                      <AudioPlayer src={audioUsUrl} compact />
-                      <span className="audio-tag">US</span>
-                    </div>
-                  )}
+            <div className="dict-word-container">
+              <h3 className="dict-main-word">{word}</h3>
+              {ipa && (
+                <div className="dict-main-ipa">
+                  /{ipa}/
                 </div>
               )}
             </div>
-            {ipa && (
-              <div className="flashcard-ipa">
-                {partOfSpeech && <span className="dict-pos">({partOfSpeech})</span>} /{ipa}/
+
+            {(audioUkUrl || audioUsUrl) && (
+              <div className="dict-audio-row" onClick={(e) => e.stopPropagation()}>
+                {audioUkUrl && (
+                  <AudioPlayer src={audioUkUrl} compact label="UK" />
+                )}
+                {audioUsUrl && (
+                  <AudioPlayer src={audioUsUrl} compact label="US" />
+                )}
               </div>
             )}
+
+            <div className="dict-card-hint">
+              <span>Chạm thẻ để lật xem định nghĩa</span>
+            </div>
           </div>
         )}
 
-        {/* Mặt sau — CHỈ định nghĩa + ảnh + ví dụ, không lặp lại từ/audio */}
-        {flipped && (
-          <div className="dict-card-back">
-            <div className="dict-body">
-              <div className="dict-definition-col">
-                <div className="dict-section-label">Định nghĩa:</div>
-                <p className="dict-meaning">{meaningVi}</p>
+        {/* Mặt sau — Định nghĩa + Ảnh minh hoạ + Ví dụ */}
+        {isFlipped && (
+          <div className={`dict-card-back ${resolvedImage ? 'has-image' : ''}`} onClick={toggleFlip}>
+            <div className="dict-back-layout">
+              {/* Cột thông tin từ vựng, định nghĩa & ví dụ */}
+              <div className="dict-back-main">
+                <div className="dict-back-recap">
+                  <span className="dict-recap-word">{word}</span>
+                  {ipa && <span className="dict-recap-ipa">/{ipa}/</span>}
+                  {(audioUkUrl || audioUsUrl) && (
+                    <div className="dict-back-audio-row" onClick={(e) => e.stopPropagation()}>
+                      {audioUkUrl && <AudioPlayer src={audioUkUrl} compact label="UK" />}
+                      {audioUsUrl && <AudioPlayer src={audioUsUrl} compact label="US" />}
+                    </div>
+                  )}
+                </div>
+
+                <div className="dict-definition-block">
+                  <div className="dict-section-label">Định nghĩa:</div>
+                  <p className="dict-meaning">{meaningVi}</p>
+                </div>
+
+                {examples.length > 0 && (
+                  <div className="dict-examples" onClick={(e) => e.stopPropagation()}>
+                    <div className="dict-section-label">Ví dụ minh họa:</div>
+                    <ul className="dict-example-list">
+                      {examples.map((ex, i) => (
+                        <li key={ex.id || i} className="dict-example-item">
+                          <div className="dict-example-en">"{highlightWord(ex.sentenceEn)}"</div>
+                          {ex.sentenceVi && (
+                            <div className="dict-example-vi">{ex.sentenceVi}</div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
+
+              {/* Khung ảnh minh họa lớn, nổi bật & cân đối */}
               {resolvedImage && (
-                <div className="dict-image-col">
-                  <img src={resolvedImage} alt={word} className="dict-image" />
+                <div className="dict-image-container" onClick={(e) => e.stopPropagation()}>
+                  <div className="dict-image-frame">
+                    <img
+                      src={resolvedImage}
+                      alt={word}
+                      className="dict-image-large"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  </div>
+                  <span className="dict-image-caption">Hình ảnh minh họa</span>
                 </div>
               )}
             </div>
-
-            {examples.length > 0 && (
-              <div className="dict-examples">
-                <div className="dict-section-label">Ví dụ:</div>
-                <ul className="dict-example-list">
-                  {examples.map((ex, i) => (
-                    <li key={ex.id || i} className="dict-example-item">
-                      <div>{highlightWord(ex.sentenceEn)}</div>
-                      {ex.sentenceVi && (
-                        <div className="text-dim text-sm">(=Dịch: {ex.sentenceVi})</div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         )}
       </div>
 
       {(onKnow || onDontKnow) && (
         <div className="flashcard-actions">
-          <button className="btn secondary" onClick={onDontKnow}>❌ Chưa biết</button>
-          <button className="btn" onClick={onKnow}>✅ Đã biết</button>
+          {onDontKnow && (
+            <button
+              type="button"
+              className="flashcard-action-btn dont-know"
+              onClick={onDontKnow}
+            >
+              <X size={17} strokeWidth={2.5} />
+              <span>Chưa biết</span>
+            </button>
+          )}
+          {onKnow && (
+            <button
+              type="button"
+              className="flashcard-action-btn know"
+              onClick={onKnow}
+            >
+              <Check size={17} strokeWidth={2.5} />
+              <span>Đã biết</span>
+            </button>
+          )}
         </div>
       )}
     </div>

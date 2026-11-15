@@ -1,3 +1,4 @@
+import { Shuffle } from 'lucide-react'
 /**
  * QuestionNavigator — Giai đoạn 5, component #4.
  * Thanh điều hướng làm bài: nút Câu trước/Câu sau, công tắc "Tự động chuyển câu", nút
@@ -21,6 +22,7 @@ export default function QuestionNavigator({
   currentSpan = 1,
   answeredSet,
   reviewSet,
+  previouslyAnsweredIndices,
   onJump,
   onPrev,
   onNext,
@@ -48,8 +50,8 @@ export default function QuestionNavigator({
             </label>
           )}
           {onShuffle && (
-            <button type="button" className="btn ghost sm" onClick={onShuffle} title="Đảo ngẫu nhiên thứ tự câu hỏi">
-              🔀 Xáo trộn câu hỏi
+            <button type="button" className="btn ghost sm" onClick={onShuffle} title="Đảo ngẫu nhiên thứ tự câu hỏi" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <Shuffle size={14} /> Xáo trộn câu hỏi
             </button>
           )}
         </div>
@@ -65,12 +67,32 @@ export default function QuestionNavigator({
           if (reviewSet?.has(i)) classes.push('review')
           else if (answeredSet?.has(i)) classes.push('answered')
           else classes.push('unanswered')
+
+          const isPreviouslyAnswered = previouslyAnsweredIndices?.has(i)
+          if (isPreviouslyAnswered) classes.push('previously-done')
+
           return (
-            <button key={i} className={classes.join(' ')} onClick={() => onJump(i)} type="button">
+            <button
+              key={i}
+              className={classes.join(' ')}
+              onClick={() => onJump(i)}
+              type="button"
+              title={isPreviouslyAnswered ? `Câu ${i + 1} (Đã làm ở lần trước)` : `Câu ${i + 1}`}
+            >
               {i + 1}
+              {isPreviouslyAnswered && <span className="prev-done-dot" />}
             </button>
           )
         })}
+      </div>
+
+      <div className="question-nav-legend">
+        <span className="legend-item"><span className="dot current" /> Đang xem</span>
+        <span className="legend-item"><span className="dot answered" /> Đã trả lời</span>
+        {previouslyAnsweredIndices && previouslyAnsweredIndices.size > 0 && (
+          <span className="legend-item"><span className="dot prev-done" /> Đã làm trước đó</span>
+        )}
+        <span className="legend-item"><span className="dot review" /> Đánh dấu review</span>
       </div>
     </div>
   )

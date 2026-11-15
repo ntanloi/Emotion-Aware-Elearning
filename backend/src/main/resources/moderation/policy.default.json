@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "_comment": "Chính sách mặc định. Mọi con số chỉ là điểm khởi đầu, hãy chỉnh sau khi chạy thử trên 3-5 khóa học thật. Không viết cứng các số này trong code: đọc qua PolicyService.",
+
+  "course": {
+    "titleMinChars": 5,
+    "titleMaxChars": 120,
+    "descriptionMinChars": 100,
+    "requireCover": true,
+    "priceMin": 10000,
+    "allowFree": true,
+    "titleMaxEmoji": 3
+  },
+
+  "profiles": {
+    "FULL":      { "label": "Khóa đầy đủ",        "requireSections": ["PART1","PART2","PART3","PART4","PART5","PART6","PART7","VOCAB","GRAMMAR"] },
+    "LISTENING": { "label": "Khóa Listening",     "requireSections": ["PART1","PART2","PART3","PART4"] },
+    "READING":   { "label": "Khóa Reading",       "requireSections": ["PART5","PART6","PART7"] },
+    "TOPIC":     { "label": "Khóa chuyên đề",     "requireSections": [] }
+  },
+
+  "sections": {
+    "PART1": { "video": "REQUIRED", "minQuestions": 6,  "recQuestions": 18,  "options": 4, "groupSize": 1, "requireImage": true,  "requireAudio": true },
+    "PART2": { "video": "REQUIRED", "minQuestions": 25, "recQuestions": 50,  "options": 3, "groupSize": 1, "requireImage": false, "requireAudio": true, "promptMaxWords": 25 },
+    "PART3": { "video": "REQUIRED", "minQuestions": 39, "recQuestions": 78,  "options": 4, "groupSize": 3, "requireAudio": true, "requireTranscript": true, "promptMaxWords": 25, "transcriptWords": [40, 200] },
+    "PART4": { "video": "REQUIRED", "minQuestions": 30, "recQuestions": 60,  "options": 4, "groupSize": 3, "requireAudio": true, "requireTranscript": true, "promptMaxWords": 25, "transcriptWords": [60, 250] },
+    "PART5": { "video": "REQUIRED", "minQuestions": 30, "recQuestions": 60,  "options": 4, "groupSize": 1, "blanksPerQuestion": 1, "promptWords": [6, 60] },
+    "PART6": { "video": "REQUIRED", "minQuestions": 16, "recQuestions": 32,  "options": 4, "blanksPerPassage": 4, "minBlanksPerPassage": 3, "passageWords": [60, 200], "requirePassage": true },
+    "PART7": { "video": "REQUIRED", "minQuestions": 54, "recQuestions": 108, "options": 4, "questionsPerPassage": [2, 5], "passagesPerSet": [1, 3], "passageMinWords": 40, "promptMaxWords": 40, "requirePassage": true },
+    "VOCAB": {
+      "video": "NONE",
+      "minWords": 50, "recWords": 150,
+      "minWordsPerSet": 10, "setSize": [10, 40],
+      "requireExample": true, "requireVietnameseExample": true,
+      "exampleWords": [4, 35],
+      "recommendAudio": true
+    },
+    "GRAMMAR": {
+      "video": "OPTIONAL",
+      "minTopics": 8, "recCoveragePct": 70,
+      "minArticleChars": 800, "minExampleSentences": 3,
+      "requireTopicCode": true,
+      "minPracticePerTopic": 1
+    },
+    "DICTATION": {
+      "video": "NONE",
+      "minSets": 1, "minSentences": 10, "recSentences": 30,
+      "sentenceWords": [3, 30],
+      "requireAudio": true
+    }
+  },
+
+  "groups": {
+    "minItems": 1,
+    "LESSON":    { "minVideos": 0, "minPractice": 0, "minItems": 1 },
+    "PRACTICE":  { "minVideos": 0, "minPractice": 0, "minItems": 1 },
+    "REFERENCE": { "minVideos": 0, "minPractice": 0, "minItems": 1 }
+  },
+
+  "video": {
+    "minDurationSec": 120,
+    "checkExternalLinks": false,
+    "externalLinkTimeoutMs": 3000
+  },
+
+  "practiceTest": { "minQuestions": 5 },
+
+  "audio": {
+    "minSec": 2, "maxSec": 600,
+    "part1MaxSec": 30, "part2MaxSec": 40
+  },
+
+  "image": { "allowedFormats": ["jpg", "jpeg", "png", "webp"] },
+
+  "thresholds": {
+    "answerSkewPct": 45,
+    "answerSkewMinQuestions": 20,
+    "answerRunLength": 8,
+    "longestCorrectPct": 60,
+    "explanationMinChars": 15,
+    "explanationCoveragePct": 90,
+    "forbiddenOptionPhrases": ["all of the above", "none of the above", "both a and b", "a and b", "b and c", "tất cả các đáp án", "không có đáp án nào"]
+  },
+
+  "text": {
+    "allowedLinkDomains": ["youtube.com", "youtu.be", "dictionary.cambridge.org", "oxfordlearnersdictionaries.com", "merriam-webster.com"],
+    "upperCaseRatioMax": 0.6,
+    "upperCaseMinLength": 20,
+    "repeatedCharRun": 6,
+    "vietnameseUnaccentedMinLength": 40,
+    "languageToolMinErrorsPerSentence": 2
+  },
+
+  "duplicates": {
+    "questionSimilarity": 0.9,
+    "lessonTextSimilarity": 0.8,
+    "grammarArticleSimilarity": 0.8,
+    "crossCourseScope": "PUBLISHED_ONLY",
+    "maxCandidatesPerItem": 200
+  },
+
+  "risk": {
+    "errorWeight": 10,
+    "warningWeight": 3,
+    "infoWeight": 0,
+    "highScore": 40,
+    "mediumScore": 10,
+    "highIfCategories": ["SAFETY", "SECURITY"]
+  },
+
+  "approval": {
+    "requireAllErrorsDecided": true,
+    "blockOnNeedFix": true,
+    "checklistItems": [
+      "Đã xem nội dung bài giảng chính của khóa học",
+      "Đã đối chiếu các lỗi AI/luật đánh dấu",
+      "Nội dung không vi phạm bản quyền và quy định nền tảng",
+      "Thông tin khóa học (tên, mô tả, giá) trung thực"
+    ],
+    "highRiskNoteMinChars": 10
+  },
+
+  "llm": {
+    "enabled": false,
+    "batchSize": 10,
+    "confidenceMin": 0.8,
+    "swapOptionsCheck": true,
+    "maxCallsPerCourse": 60,
+    "maxCallsPerDay": 500,
+    "timeoutMs": 30000,
+    "temperature": 0
+  }
+}

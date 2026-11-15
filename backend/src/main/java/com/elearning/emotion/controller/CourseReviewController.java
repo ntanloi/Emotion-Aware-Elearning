@@ -27,8 +27,15 @@ public class CourseReviewController {
     private final CourseReviewService reviewService;
 
     @GetMapping
-    public CourseReviewListDto list(@PathVariable String courseId) {
-        return reviewService.list(courseId);
+    public CourseReviewListDto list(
+            @PathVariable String courseId,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) Boolean hasImage,
+            @RequestParam(required = false, defaultValue = "newest") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        return reviewService.list(courseId, rating, hasImage, sort, page, size);
     }
 
     @GetMapping("/mine")

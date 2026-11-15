@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check, X } from 'lucide-react'
 import AudioPlayer from '@shared/components/AudioPlayer.jsx'
 import ExplanationDropdown from '@shared/components/ExplanationDropdown.jsx'
 
@@ -64,7 +65,15 @@ export default function DictationPlayer({
       {displayAnswer && effectiveCorrectText && (
         <div className="mt-8">
           <p className="text-sm" style={{ color: isCorrect ? 'var(--good)' : 'var(--bad)', fontWeight: 500 }}>
-            {isCorrect ? '✓ Chính xác' : '✗ Chưa khớp — đối chiếu đáp án dưới đây:'}
+            {isCorrect ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Check size={15} /> Chính xác
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <X size={15} /> Chưa khớp — đối chiếu đáp án dưới đây:
+              </span>
+            )}
           </p>
           {!isCorrect && <p className="dictation-answer-diff mt-8">{effectiveCorrectText}</p>}
         </div>
@@ -73,7 +82,7 @@ export default function DictationPlayer({
       {/* Nút kiểm tra */}
       {allowCheck && !readOnly && !checked && value?.trim() && (
         <button className="btn secondary mt-16" onClick={handleCheck} disabled={checking}>
-          {checking ? 'Đang kiểm tra...' : '✓ Kiểm tra đáp án'}
+          {checking ? 'Đang kiểm tra...' : 'Kiểm tra đáp án'}
         </button>
       )}
 

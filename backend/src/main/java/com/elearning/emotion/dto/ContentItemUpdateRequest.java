@@ -1,14 +1,16 @@
 package com.elearning.emotion.dto;
 
 /**
- * Sửa 1 hoạt động đã tạo. Field null = KHÔNG ghi đè (giữ nguyên giá trị cũ) — cùng quy ước với
- * CourseUpdateRequest. groupId có thể gửi rỗng-string "" để CHUYỂN hoạt động ra khỏi Nhóm hiện tại
- * (thành ungrouped) — xem ContentItemService.update().
+ * Sua 1 hoat dong da tao. Field null = KHONG ghi de (giu nguyen gia tri cu) - cung quy uoc voi
+ * CourseUpdateRequest. groupId co the gui rong-string "" de CHUYEN hoat dong ra khoi Nhom hien tai
+ * (thanh ungrouped) - xem ContentItemService.update().
  */
 public record ContentItemUpdateRequest(
         String title,
         Integer timeLimitMinutes,
         String videoMediaId,
         String bodyHtml,
-        String groupId
+        String groupId,
+        Boolean isPreview,
+        Integer previewDurationSeconds
 ) {}

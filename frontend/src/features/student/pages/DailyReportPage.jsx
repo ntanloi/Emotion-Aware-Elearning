@@ -1,3 +1,4 @@
+import { BarChart3 } from 'lucide-react'
 import { useDailyReport } from '@student/hooks/useDailyReport.js'
 import DailyReportCard from '@student/components/DailyReportCard.jsx'
 
@@ -15,7 +16,7 @@ export default function DailyReportPage() {
       <div>
         <h2>Báo cáo ngày</h2>
         <div className="empty-state">
-          <div className="icon">📊</div>
+          <div className="icon"><BarChart3 size={24} /></div>
           <p>Chưa có báo cáo nào. Báo cáo ngày được hệ thống tự tổng hợp vào cuối mỗi ngày sau khi bạn học video bài giảng.</p>
         </div>
       </div>

@@ -5,13 +5,20 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record CourseReviewRequest(
-        @NotNull(message = "Vui long chon so sao danh gia")
-        @Min(value = 1, message = "So sao toi thieu la 1")
-        @Max(value = 5, message = "So sao toi da la 5")
+        @NotNull(message = "Vui lòng chọn số sao đánh giá")
+        @Min(value = 1, message = "Số sao tối thiểu là 1")
+        @Max(value = 5, message = "Số sao tối đa là 5")
         Integer rating,
 
-        @Size(max = 2000, message = "Binh luan toi da 2000 ky tu")
-        String comment
+        @Size(max = 2000, message = "Bình luận tối đa 2000 ký tự")
+        String comment,
+
+        @Size(max = 3, message = "Tối đa đính kèm 3 hình ảnh")
+        List<String> imageMediaIds,
+
+        Boolean allowFeature
 ) {
 }

@@ -1,3 +1,6 @@
 package com.elearning.emotion.dto;
 
-public record CameraPermissionRequest(boolean granted) {}
+public record CameraPermissionRequest(
+        boolean granted,
+        String consentVersion
+) {}

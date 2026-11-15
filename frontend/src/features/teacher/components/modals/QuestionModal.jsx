@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Trash2, Check, Search } from "lucide-react";
 import Modal from "@shared/components/ui/Modal.jsx";
 import MediaUploader from "@shared/components/ui/MediaUploader.jsx";
 import {
@@ -43,7 +44,7 @@ const emptyDragDropDistractor = () => ({ text: "" });
  * 2. Từ nút "+ Thêm câu hỏi" độc lập ở dưới → initialPassageId=null, lockPassageSelect=true —
  *    modal ẩn hẳn phần chọn đoạn văn, luôn tạo câu hỏi độc lập (passageId=null) dù có đoạn văn
  *    nào tồn tại hay không.
- * 3. Sửa 1 câu hỏi đã có (bấm ✏️ trong danh sách Câu hỏi) → lockPassageSelect=false (mặc định)
+ * 3. Sửa 1 câu hỏi đã có (bấm nút Sửa trong danh sách Câu hỏi) → lockPassageSelect=false (mặc định)
  *    — vẫn hiện dropdown để giáo viên đổi/gỡ đoạn văn liên kết nếu cần, như hành vi cũ.
  */
 export default function QuestionModal({
@@ -573,9 +574,9 @@ export default function QuestionModal({
                       padding: 0,
                     }}
                   >
-                    {tagScope === "current"
-                      ? "🔍 Xem tag ở Part/nhóm khác"
-                      : "↩ Chỉ xem Part hiện tại"}
+                    {tagScope === "current" ? (
+                      <><Search size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> Xem tag ở Part/nhóm khác</>
+                    ) : "↩ Chỉ xem Part hiện tại"}
                   </button>
                 </>
               ) : (
@@ -675,7 +676,7 @@ export default function QuestionModal({
                     color: o.isCorrect ? "#fff" : "transparent",
                   }}
                 >
-                  ✓
+                  <Check size={12} />
                 </button>
                 <span className="text-dim" style={{ width: 16 }}>
                   {LABELS[idx]}
@@ -695,7 +696,7 @@ export default function QuestionModal({
                     onClick={() => removeOption(idx)}
                     title="Xoá đáp án"
                   >
-                    🗑️
+                    <Trash2 size={13} />
                   </button>
                 )}
               </div>
@@ -768,7 +769,7 @@ export default function QuestionModal({
                     onClick={() => removePair(idx)}
                     title="Xoá cặp"
                   >
-                    🗑️
+                    <Trash2 size={13} />
                   </button>
                 )}
               </div>
@@ -818,7 +819,7 @@ export default function QuestionModal({
                     color: p.correctOption === "A" ? "#fff" : "transparent",
                   }}
                 >
-                  ✓
+                  <Check size={13} />
                 </button>
                 <input
                   type="text"
@@ -849,7 +850,7 @@ export default function QuestionModal({
                     color: p.correctOption === "B" ? "#fff" : "transparent",
                   }}
                 >
-                  ✓
+                  <Check size={13} />
                 </button>
                 <input
                   type="text"
@@ -868,7 +869,7 @@ export default function QuestionModal({
                     onClick={() => removeWordChoicePair(idx)}
                     title="Xoá chỗ trống"
                   >
-                    🗑️
+                    <Trash2 size={13} />
                   </button>
                 )}
               </div>
@@ -927,7 +928,7 @@ export default function QuestionModal({
                     onClick={() => removeSentenceFillBlank(idx)}
                     title="Xoá chỗ trống"
                   >
-                    🗑️
+                    <Trash2 size={13} />
                   </button>
                 )}
               </div>
@@ -981,7 +982,7 @@ export default function QuestionModal({
                       onClick={() => removeDragDropBlank(idx)}
                       title="Xoá ô trống"
                     >
-                      🗑️
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
@@ -1031,7 +1032,7 @@ export default function QuestionModal({
                     onClick={() => removeDragDropDistractor(idx)}
                     title="Xoá thẻ mồi"
                   >
-                    🗑️
+                    <Trash2 size={13} />
                   </button>
                 </div>
               ))}

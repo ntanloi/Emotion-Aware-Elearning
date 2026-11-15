@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Check, X } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -18,7 +19,7 @@ import {
  * (forStudent) blankOrder LUÔN null cho tới khi kiểm tra đáp án, để không lộ đáp án trước.
  *
  * Học viên kéo thẻ từ ngăn kéo thả vào ô trống tương ứng (hoặc bấm vào thẻ đã đặt để trả nó về
- * ngăn kéo) → nhấn "✓ Kiểm tra đáp án" → tất cả ô hiện đúng/sai cùng lúc.
+ * ngăn kéo) → nhấn "Kiểm tra đáp án" → tất cả ô hiện đúng/sai cùng lúc.
  *
  * Props:
  *  - promptText: string — câu văn có token {{1}}, {{2}}...
@@ -217,14 +218,14 @@ export default function DragDropQuestion({
             onClick={handleCheck}
             disabled={checking}
           >
-            {checking ? "Đang kiểm tra..." : "✓ Kiểm tra đáp án"}
+            {checking ? "Đang kiểm tra..." : "Kiểm tra đáp án"}
           </button>
         )}
 
         {/* Nút Làm lại — hiện sau khi đã check, không readOnly */}
         {!readOnly && checked && (
           <button className="btn secondary mt-16" onClick={handleRetry}>
-            ↻ Làm lại
+            Làm lại
           </button>
         )}
       </div>

@@ -32,9 +32,26 @@ public class LearningSession {
     @Builder.Default
     private String status = "WAITING";
 
+    @Column(name = "attempt_id", columnDefinition = "CHAR(36)")
+    private String attemptId;
+
+    @Column(name = "face_lost_since")
+    private LocalDateTime faceLostSince;
+
+    /** ON | OFF */
+    @Column(name = "camera_choice", length = 3)
+    private String cameraChoice;
+
     @Column(name = "has_camera_permission", nullable = false)
     @Builder.Default
     private Boolean hasCameraPermission = false;
+
+    /** H5 Item 5: Ghi nhận sự đồng ý dùng camera */
+    @Column(name = "consent_version", length = 20)
+    private String consentVersion;
+
+    @Column(name = "consent_at")
+    private LocalDateTime consentAt;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
@@ -45,6 +62,15 @@ public class LearningSession {
     /** BR-05: % thoi luong o nhom cam xuc tich cuc/trung tinh */
     @Column(name = "focus_score")
     private Float focusScore;
+
+    @Column(name = "active_seconds", nullable = false)
+    @Builder.Default
+    private Integer activeSeconds = 0;
+
+    @Column(name = "last_active_at")
+    private LocalDateTime lastActiveAt;
+
+    public LocalDateTime getEndedAt() { return endTime; }
 
     @PrePersist
     void onCreate() { if (startTime == null) startTime = LocalDateTime.now(); }

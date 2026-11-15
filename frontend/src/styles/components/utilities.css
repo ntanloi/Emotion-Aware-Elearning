@@ -1,0 +1,49 @@
+@layer utilities {
+  /* ---------- Common Utility Helpers ---------- */
+  .flex-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .text-dim {
+    color: var(--text-dim);
+  }
+
+  .text-sm {
+    font-size: 13px;
+  }
+
+  .mt-8 {
+    margin-top: 8px;
+  }
+
+  .mt-16 {
+    margin-top: 16px;
+  }
+
+  .mt-24 {
+    margin-top: 24px;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--surface-2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}

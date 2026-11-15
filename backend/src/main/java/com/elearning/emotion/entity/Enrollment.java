@@ -25,6 +25,15 @@ public class Enrollment {
     @Column(name = "enrolled_at", nullable = false)
     private LocalDateTime enrolledAt;
 
+    @Column(name = "access_months")
+    private Integer accessMonths;
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Column(name = "progress_percent", nullable = false)
     @Builder.Default
     private Float progressPercent = 0f;

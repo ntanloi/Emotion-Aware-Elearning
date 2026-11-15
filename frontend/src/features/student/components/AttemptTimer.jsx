@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { Clock } from 'lucide-react'
 
 /**
  * AttemptTimer — Giai đoạn 6.
@@ -31,7 +32,8 @@ export default function AttemptTimer({ timeLimitMinutes, onTimeUp }) {
 
   return (
     <span className={`attempt-timer ${cls}`}>
-      ⏱ {String(mm).padStart(2, '0')}:{String(ss).padStart(2, '0')}
+      <Clock size={13} style={{ marginRight: 4, verticalAlign: 'middle', display: 'inline' }} />
+      {String(mm).padStart(2, '0')}:{String(ss).padStart(2, '0')}
     </span>
   )
 }

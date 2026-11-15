@@ -33,4 +33,12 @@ public class ContentGroup {
     @Column(name = "order_index", nullable = false)
     @Builder.Default
     private Integer orderIndex = 0;
+
+    /** LESSON | PRACTICE | REFERENCE */
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String kind = "LESSON";
+
+    @Column(name = "topic_code", length = 40)
+    private String topicCode;
 }

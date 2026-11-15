@@ -50,4 +50,33 @@ public class MediaController {
 
         return MediaAssetDto.from(mediaAssetRepository.save(asset));
     }
+
+    public record MediaLinkRequest(String url, String fileName, FileStorageService.MediaCategory type) {}
+
+    @PostMapping("/link")
+    public MediaAssetDto createFromLink(
+            @AuthenticationPrincipal String userId,
+            @RequestBody MediaLinkRequest req
+    ) {
+        if (req.url() == null || req.url().isBlank()) {
+            throw new IllegalArgumentException("Đường dẫn (URL) không được để trống");
+        }
+        User uploader = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay nguoi dung"));
+
+        String name = (req.fileName() != null && !req.fileName().isBlank())
+                ? req.fileName()
+                : (req.type() == FileStorageService.MediaCategory.VIDEO ? "Video liên kết" : "Liên kết ngoài");
+
+        MediaAsset asset = MediaAsset.builder()
+                .uploader(uploader)
+                .type(req.type() != null ? req.type().name() : FileStorageService.MediaCategory.VIDEO.name())
+                .url(req.url().trim())
+                .fileName(name)
+                .publicId(null)
+                .durationSec(null)
+                .build();
+
+        return MediaAssetDto.from(mediaAssetRepository.save(asset));
+    }
 }

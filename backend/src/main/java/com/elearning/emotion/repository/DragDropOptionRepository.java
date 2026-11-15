@@ -8,4 +8,5 @@ import java.util.List;
 public interface DragDropOptionRepository extends JpaRepository<DragDropOption, String> {
     List<DragDropOption> findByQuestionId(String questionId);
     List<DragDropOption> findByQuestionIdOrderByDisplayOrder(String questionId);
+    List<DragDropOption> findByQuestionIdInOrderByDisplayOrder(List<String> questionIds);
 }

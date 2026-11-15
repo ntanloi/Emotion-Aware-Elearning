@@ -22,5 +22,6 @@ public record QuestionUpdateRequest(
         List<WordChoicePairRequest> wordChoicePairs,
         List<SentenceFillBlankRequest> sentenceFillBlanks,
         List<DragDropOptionRequest> dragDropOptions,
-        String explanation // Giai thich dap an (tuy chon)
+        String explanation, // Giai thich dap an (tuy chon)
+        String status // ACTIVE hoac DISABLED
 ) {}

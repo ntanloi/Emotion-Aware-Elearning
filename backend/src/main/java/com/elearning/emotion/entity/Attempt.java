@@ -23,6 +23,10 @@ public class Attempt {
     @JoinColumn(name = "content_item_id", nullable = false)
     private ContentItem contentItem;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "test_attempt_id")
+    private TestAttempt testAttempt;
+
     @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
 

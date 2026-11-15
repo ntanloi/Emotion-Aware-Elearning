@@ -4,6 +4,7 @@ import ConfirmDeleteModal from '@teacher/components/ConfirmDeleteModal.jsx'
 import VocabWordModal from '@teacher/components/modals/VocabWordModal.jsx'
 import VocabWordPickerModal from '@teacher/components/modals/VocabWordPickerModal.jsx'
 import { useVocabSetWords, useSetVocabSetWords } from '@teacher/hooks/useTeacherVocabSet.js'
+import { Pencil, Trash2, Plus, Lightbulb } from 'lucide-react'
 
 /**
  * VocabSetEditor — đúng luồng bạn mô tả: mỗi từ là 1 Flashcard hiển thị y hệt học viên sẽ
@@ -55,45 +56,97 @@ export default function VocabSetEditor({ item }) {
 
   return (
     <div>
-      <p className="text-dim text-sm">
-        Mỗi từ hiển thị dưới đây đúng như học viên sẽ thấy khi học. Không điền câu ví dụ thì mặt
-        sau Flashcard sẽ không có phần Ví dụ.
-      </p>
+      <div className="flex-between mb-16" style={{ alignItems: 'center' }}>
+        <div>
+          <span className="badge neutral" style={{ fontSize: 13, padding: '4px 12px' }}>
+            Tổng cộng: <strong>{(words || []).length}</strong> từ vựng
+          </span>
+        </div>
+        <div className="flex-row" style={{ gap: 10 }}>
+          <button type="button" className="btn secondary sm flex-row" style={{ gap: 6 }} onClick={() => setPickerOpen(true)}>
+            <Plus size={14} /> Chọn từ thư viện
+          </button>
+          <button type="button" className="btn sm flex-row" style={{ gap: 6 }} onClick={openCreate}>
+            <Plus size={14} /> Tạo từ mới
+          </button>
+        </div>
+      </div>
+
+      <div className="hint-box mb-16" style={{ fontSize: 13, color: 'var(--text-dim)', background: 'var(--surface-2)', padding: '10px 14px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+        <Lightbulb size={13} style={{ marginRight: 4, verticalAlign: 'middle', display: 'inline' }} /> Mỗi thẻ hiển thị đúng như học viên sẽ thấy khi học. Bấm vào nút <strong>Lật thẻ</strong> để xem mặt sau (nghĩa &amp; ví dụ).
+      </div>
+
       {error && <div className="form-error">{error}</div>}
 
-      {isLoading && <p className="text-dim">Đang tải...</p>}
+      {isLoading && <p className="text-dim">Đang tải danh sách từ vựng...</p>}
 
-      {!isLoading && (
+      {!isLoading && (words || []).length === 0 && (
+        <div className="empty-state" style={{ padding: '48px 20px', textAlign: 'center', background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border)' }}>
+          <p className="text-dim" style={{ marginBottom: 16 }}>Bộ từ vựng này hiện chưa có từ nào.</p>
+          <div className="flex-row" style={{ gap: 12, justifyContent: 'center' }}>
+            <button type="button" className="btn secondary" onClick={() => setPickerOpen(true)}>
+              <Plus size={15} /> Chọn từ có sẵn
+            </button>
+            <button type="button" className="btn" onClick={openCreate}>
+              <Plus size={15} /> Tạo từ vựng mới
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && (words || []).length > 0 && (
         <div className="vocab-set-grid mt-16">
           {(words || []).map((w) => (
-            <div key={w.id} className="vocab-word-tile editable-block">
-              <div className="editable-actions">
-                <button type="button" onClick={() => openEdit(w)} title="Sửa từ này">✏️</button>
-                <button type="button" className="danger" onClick={() => setRemovingWord(w)} title="Gỡ khỏi Bộ này">🗑️</button>
+            <div key={w.id} className="vocab-tile-container">
+              <div className="vocab-tile-card-body">
+                <FlashcardCard
+                  word={w.word}
+                  ipa={w.ipa}
+                  partOfSpeech={w.partOfSpeech}
+                  meaningVi={w.meaningVi}
+                  imageUrl={w.imageUrl}
+                  audioUkUrl={w.audioUkUrl}
+                  audioUsUrl={w.audioUsUrl}
+                  examples={w.examples}
+                />
               </div>
-              <FlashcardCard
-                word={w.word}
-                ipa={w.ipa}
-                partOfSpeech={w.partOfSpeech}
-                meaningVi={w.meaningVi}
-                imageUrl={w.imageUrl}
-                audioUkUrl={w.audioUkUrl}
-                audioUsUrl={w.audioUsUrl}
-                examples={w.examples}
-              />
+
+              {/* Thanh điều khiển tách biệt ở chân thẻ — không đè lên nút lật thẻ */}
+              <div className="vocab-tile-actions-footer">
+                <button
+                  type="button"
+                  className="vocab-action-btn edit"
+                  onClick={() => openEdit(w)}
+                  title="Chỉnh sửa từ vựng này"
+                >
+                  <Pencil size={13} />
+                  <span>Sửa từ</span>
+                </button>
+                <button
+                  type="button"
+                  className="vocab-action-btn delete"
+                  onClick={() => setRemovingWord(w)}
+                  title="Gỡ từ khỏi Bộ này"
+                >
+                  <Trash2 size={13} />
+                  <span>Gỡ khỏi bộ</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="flex-row mt-16" style={{ gap: 12 }}>
-        <button type="button" className="add-card-trigger compact" style={{ flex: 1 }} onClick={() => setPickerOpen(true)}>
-          <span className="plus-icon">+</span> Chọn từ có sẵn trong thư viện
-        </button>
-        <button type="button" className="add-card-trigger compact" style={{ flex: 1 }} onClick={openCreate}>
-          <span className="plus-icon">+</span> Tạo từ mới
-        </button>
-      </div>
+      {!isLoading && (words || []).length > 0 && (
+        <div className="flex-row mt-20" style={{ gap: 12 }}>
+          <button type="button" className="add-card-trigger compact" style={{ flex: 1 }} onClick={() => setPickerOpen(true)}>
+            <span className="plus-icon"><Plus size={15} /></span> Chọn thêm từ có sẵn trong thư viện
+          </button>
+          <button type="button" className="add-card-trigger compact" style={{ flex: 1 }} onClick={openCreate}>
+            <span className="plus-icon"><Plus size={15} /></span> Tạo thêm từ mới
+          </button>
+        </div>
+      )}
 
       <VocabWordModal
         open={wordModal.open}

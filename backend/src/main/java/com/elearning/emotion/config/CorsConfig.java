@@ -31,7 +31,7 @@ public class CorsConfig {
                 .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
                 .collect(Collectors.toList());
         config.setAllowedOrigins(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

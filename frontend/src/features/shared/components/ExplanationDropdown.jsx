@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 
 /**
  * ExplanationDropdown — Component hiển thị giải thích đáp án dưới dạng dropdown có thể xổ xuống.
@@ -24,7 +25,9 @@ export default function ExplanationDropdown({ explanation, className = '' }) {
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
       >
-        <span className="explanation-toggle-icon">{isOpen ? '▼' : '▶'}</span>
+        <span className="explanation-toggle-icon">
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </span>
         <span className="explanation-toggle-text">Giải thích</span>
       </button>
       {isOpen && (

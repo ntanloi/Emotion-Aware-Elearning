@@ -37,7 +37,7 @@ public class ContentItem {
     @Builder.Default
     private Integer orderIndex = 0;
 
-    /** Thời gian giới hạn làm bài (phút). Dùng cho PRACTICE_TEST/DICTATION_SET, NULL = không giới hạn */
+    /** Thoi gian gioi han lam bai (phut). Dung cho PRACTICE_TEST/DICTATION_SET, NULL = khong gioi han */
     @Column(name = "time_limit_minutes")
     private Integer timeLimitMinutes;
 
@@ -51,7 +51,33 @@ public class ContentItem {
     @Column(name = "body_html", columnDefinition = "LONGTEXT")
     private String bodyHtml;
 
+    /** Chu diem ngu phap (chi dung khi type = GRAMMAR_ARTICLE) */
+    @Column(name = "topic_code", length = 40)
+    private String topicCode;
+
+    /** Cho phep hoc vien hoc thu / xem truoc mien phi */
+    @Column(name = "is_preview", nullable = false)
+    @Builder.Default
+    private Boolean isPreview = false;
+
+    /** Thoi luong gioi han xem thu (giay). NULL hoac <= 0 nghia la xem tron ven toan bo video */
+    @Column(name = "preview_duration_seconds")
+    private Integer previewDurationSeconds;
+
     public boolean isVideoLecture() {
         return "VIDEO_LECTURE".equals(type);
+    }
+    public MediaAsset getVideo() {
+        return this.videoMedia;
+    }
+
+    public void setVideo(MediaAsset video) {
+        this.videoMedia = video;
+    }
+
+    public static class ContentItemBuilder {
+        public ContentItemBuilder video(MediaAsset video) {
+            return videoMedia(video);
+        }
     }
 }

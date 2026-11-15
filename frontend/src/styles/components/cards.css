@@ -1,0 +1,35 @@
+@layer components {
+  /* ---------- Card / Grid ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg, 12px);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+
+  .card.hoverable {
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      transform 0.15s,
+      box-shadow 0.2s ease;
+  }
+
+  .card.hoverable:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .grid.cols-2 {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}

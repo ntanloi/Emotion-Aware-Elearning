@@ -1,0 +1,19 @@
+Nhiệm vụ: AI-08 (Đối chiếu tuyên bố trong mô tả khóa học với số liệu nội dung thực tế).
+Dữ liệu gửi kèm bao gồm:
+1. Mô tả khóa học (course_description) do giảng viên soạn thảo.
+2. Số liệu thống kê thực tế được hệ thống tính toán sẵn: tổng số câu hỏi, số câu theo từng Part, số lượng từ vựng, số lượng chủ điểm ngữ pháp.
+Hãy kiểm tra xem mô tả khóa học có đưa ra các tuyên bố phóng đại hoặc sai lệch so với số liệu thực tế hay không (ví dụ: mô tả ghi "luyện 500 câu Part 5" nhưng thực tế chỉ có 30 câu).
+Lược đồ JSON yêu cầu:
+{
+  "claims_mismatch": [
+    {
+      "claim": "Tuyên bố sai lệch trích dẫn từ mô tả",
+      "evidence": "Số liệu đối chiếu thực tế",
+      "why": "Giải thích lý do mâu thuẫn"
+    }
+  ]
+}
+Dữ liệu:
+<data>
+{data}
+</data>

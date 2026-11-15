@@ -38,3 +38,19 @@ export const updateQuestion = (id, payload) =>
 
 export const deleteQuestion = (id) =>
   apiClient.delete(`/questions/${id}`).then((r) => r.data);
+
+export const toggleQuestionStatus = (id, status) =>
+  apiClient
+    .put(`/questions/${id}/status`, null, {
+      params: status ? { status } : {},
+    })
+    .then((r) => r.data);
+
+export const bulkUpdateQuestionStatus = (contentItemId, status) =>
+  apiClient
+    .put('/questions/bulk-status', null, {
+      params: { contentItemId, status },
+    })
+    .then((r) => r.data);
+
+

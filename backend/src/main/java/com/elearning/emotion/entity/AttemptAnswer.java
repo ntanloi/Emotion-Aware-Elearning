@@ -3,6 +3,7 @@ package com.elearning.emotion.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attempt_answers")
@@ -30,4 +31,14 @@ public class AttemptAnswer {
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

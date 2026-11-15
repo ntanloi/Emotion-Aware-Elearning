@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 /**
  * TranscriptDropdown — Hiển thị transcript hội thoại (Part 3/4) dưới dạng dropdown, ẩn mặc định.
@@ -24,7 +25,9 @@ export default function TranscriptDropdown({ html, className = "" }) {
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
       >
-        <span className="explanation-toggle-icon">{isOpen ? "▼" : "▶"}</span>
+        <span className="explanation-toggle-icon">
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </span>
         <span className="explanation-toggle-text">Transcript</span>
       </button>
       {isOpen && (

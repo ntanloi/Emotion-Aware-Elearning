@@ -1,0 +1,12 @@
+Nhiệm vụ: AI-02 (Phát hiện câu hỏi mơ hồ, có nhiều lựa chọn cùng đúng).
+Hãy đánh giá xem câu hỏi TOEIC trong dữ liệu có bị mơ hồ, thiếu ngữ cảnh dẫn đến nhiều hơn 1 lựa chọn đều đúng hay không.
+Lược đồ JSON yêu cầu:
+{
+  "ambiguous": true | false,
+  "options_ok": ["A", "B", ...],
+  "reason": "Giải thích chi tiết tại sao các lựa chọn này đều có thể chấp nhận được trong ngữ cảnh"
+}
+Dữ liệu câu hỏi:
+<data>
+{data}
+</data>

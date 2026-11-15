@@ -1,0 +1,78 @@
+@layer components {
+  /* ---------- Badges ---------- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm, 6px);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .badge.good {
+    background: var(--good-soft);
+    color: var(--emotion-engaged, #047857);
+    border: 1px solid var(--good-border, #a7f3d0);
+  }
+
+  .badge.warn {
+    background: var(--warn-soft);
+    color: var(--emotion-confused, #b45309);
+    border: 1px solid var(--warn-border, #fde68a);
+  }
+
+  .badge.bad {
+    background: var(--bad-soft);
+    color: var(--emotion-bored, #b91c1c);
+    border: 1px solid var(--bad-border, #fecaca);
+  }
+
+  .badge.neutral {
+    background: var(--surface-2);
+    color: var(--text-dim, #475569);
+    border: 1px solid var(--border);
+  }
+
+  .emotion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm, 6px);
+    background: var(--surface-2);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+  }
+
+  .emotion-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+
+  /* ---------- Progress tick (ProgressBadge) ---------- */
+  .progress-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .progress-tick.done {
+    background: var(--good);
+    color: #ffffff;
+    border-color: var(--good);
+  }
+}

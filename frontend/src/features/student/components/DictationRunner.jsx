@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import DictationPlayer from '@shared/components/DictationPlayer.jsx'
 import TestResultCard from '@student/components/TestResultCard.jsx'
 import { useAttempt } from '@student/hooks/useAttempt.js'
@@ -79,7 +79,7 @@ export default function DictationRunner({ contentItem }) {
           {index < questions.length - 1 ? (
             <button className="btn" onClick={() => setIndex(index + 1)}>Câu tiếp →</button>
           ) : (
-            <button className="btn" onClick={handleSubmit}>✅ Nộp bài</button>
+            <button className="btn" onClick={handleSubmit}>Nộp bài</button>
           )}
         </div>
       </div>

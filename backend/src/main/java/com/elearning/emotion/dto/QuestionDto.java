@@ -8,7 +8,7 @@ public record QuestionDto(
         String promptText, String tag, String imageUrl, String audioUrl, Integer orderIndex,
         List<AnswerOptionDto> options, String hint, String correctText, List<MatchingPairDto> matchingPairs,
         List<WordChoicePairDto> wordChoicePairs, List<SentenceFillBlankDto> sentenceFillBlanks,
-        List<DragDropOptionDto> dragDropOptions, String explanation
+        List<DragDropOptionDto> dragDropOptions, String explanation, String status
 ) {
     /**
      * correctText: dap an dung dang chu (FILL_BLANK/DICTATION) - CHI truyen gia tri thuc cho
@@ -32,7 +32,8 @@ public record QuestionDto(
                 q.getQuestionKind(), q.getPromptText(), q.getTag(),
                 q.getImage() != null ? q.getImage().getUrl() : null,
                 q.getAudio() != null ? q.getAudio().getUrl() : null,
-                q.getOrderIndex(), options, hint, correctText, pairs, wordChoicePairs, List.of(), List.of(), explanation
+                q.getOrderIndex(), options, hint, correctText, pairs, wordChoicePairs, List.of(), List.of(), explanation,
+                q.getStatus() != null ? q.getStatus() : "ACTIVE"
         );
     }
 
@@ -43,7 +44,8 @@ public record QuestionDto(
                 q.getQuestionKind(), q.getPromptText(), q.getTag(),
                 q.getImage() != null ? q.getImage().getUrl() : null,
                 q.getAudio() != null ? q.getAudio().getUrl() : null,
-                q.getOrderIndex(), List.of(), null, null, List.of(), List.of(), sentenceFillBlanks, List.of(), explanation
+                q.getOrderIndex(), List.of(), null, null, List.of(), List.of(), sentenceFillBlanks, List.of(), explanation,
+                q.getStatus() != null ? q.getStatus() : "ACTIVE"
         );
     }
 
@@ -54,7 +56,8 @@ public record QuestionDto(
                 q.getQuestionKind(), q.getPromptText(), q.getTag(),
                 q.getImage() != null ? q.getImage().getUrl() : null,
                 q.getAudio() != null ? q.getAudio().getUrl() : null,
-                q.getOrderIndex(), List.of(), null, null, List.of(), List.of(), List.of(), dragDropOptions, explanation
+                q.getOrderIndex(), List.of(), null, null, List.of(), List.of(), List.of(), dragDropOptions, explanation,
+                q.getStatus() != null ? q.getStatus() : "ACTIVE"
         );
     }
 }

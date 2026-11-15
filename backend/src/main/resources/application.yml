@@ -2,25 +2,60 @@ spring:
   application:
     name: emotion-elearning-backend
 
+  task:
+    scheduling:
+      pool:
+        size: 4
+
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
 
   jpa:
+    open-in-view: true
     hibernate:
       # Flyway quan ly schema -> JPA chi validate, khong tu sinh/sua bang
       ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    sender-name: ${MAIL_SENDER_NAME:E-Learning AI}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
   # Gioi han upload: video bai giang co the toi 500MB (~1.5 tieng), can nang len dang ke so voi
   # mac dinh (1MB) cua Spring. 550MB de co du dia troi cho video ~500MB + metadata multipart.
@@ -67,7 +102,103 @@ app:
     batch-size: 6
     capture-interval-seconds: 10
     min-confidence-threshold: 0.5   # BR-11
+    alert:
+      student-neg-threshold: ${EMOTION_ALERT_STUDENT_NEG_THRESHOLD:0.5}
+      min-valid-samples-per-bucket: ${EMOTION_ALERT_MIN_VALID_SAMPLES:3}
+      min-neg-buckets-per-episode: ${EMOTION_ALERT_MIN_NEG_BUCKETS:2}
+      max-recovery-gap-buckets: ${EMOTION_ALERT_MAX_RECOVERY_GAP:3}
+      reaction-lag-seconds: ${EMOTION_ALERT_REACTION_LAG:5}
+      min-students: ${EMOTION_ALERT_MIN_STUDENTS:5}
+      negative-ratio-threshold: ${EMOTION_ALERT_NEGATIVE_RATIO:0.30}
+      std-dev-multiplier: ${EMOTION_ALERT_STD_DEV:1.5}
+      ignore-warmup-seconds: ${EMOTION_ALERT_WARMUP_SEC:60}
+      min-consecutive-buckets: ${EMOTION_ALERT_MIN_BUCKETS:2}
+      demo-seed-enabled: ${ALERT_DEMO_SEED_ENABLED:false}
   ai-service:
     # Dia chi ai-service (Python). Doi khi ban cua ban deploy that.
     base-url: ${AI_SERVICE_URL:http://localhost:8000}
-    timeout-ms: 4000
+    timeout-ms: 10000
+    mock: ${AI_SERVICE_MOCK:false}
+    secret: ${AI_SERVICE_SECRET:}
+  payment:
+    bank-id: ${PAYMENT_BANK_ID:MB}
+    account-no: ${PAYMENT_ACCOUNT_NO:}
+    account-name: ${PAYMENT_ACCOUNT_NAME:E-Learning AI}
+    template: ${PAYMENT_QR_TEMPLATE:compact2}
+    sepay-api-key: ${SEPAY_API_KEY:}
+    platform-fee-percent: ${PLATFORM_FEE_PERCENT:5}
+    min-payout-amount: ${MIN_PAYOUT_AMOUNT:50000}
+    order-expire-hours: ${ORDER_EXPIRE_HOURS:24}
+  reward:
+    tracking-enabled: true          # luôn theo dõi lượt xem (phục vụ chạy bóng)
+    enabled: ${REWARD_ENABLED:false} # false: chưa giữ tiền 10%, chỉ theo dõi
+    escrow-percent: 10
+    required-video-percent: 70
+    max-bad-percent: 30
+    min-coverage-percent: 90
+    bin-seconds: 10
+    max-playback-rate: 1.5
+    holding-days: 180               # giá trị dự phòng khi đơn không có hạn khóa
+    attempt-window-hours: 24
+    face-lost-pause-batches: 5      # số lô liên tiếp toàn NO_FACE thì tạm dừng (1 lô khoảng 1 giây)
+    face-lost-max-minutes: 10       # rời cam quá lâu thì đóng phiên
+    policy-version: v1
+    frames-per-second: 5
+    min-access-months: 6
+    start-deadline-days: 365
+    bored-idle:
+      counts-as-bad: false          # chỉ bật sau khi chạy bóng xác nhận nhãn BORED đáng tin (mục 8.6)
+      min-confidence: 0.7           # khung BORED độ tin cậy thấp coi như cảm xúc khác
+      run-min-seconds: 60
+      run-max-seconds: 300
+      run-video-percent: 10         # giới hạn = 10% thời lượng video, kẹp trong [60, 300] giây
+      gap-tolerance-seconds: 2      # cảm xúc khác xen vào quá 2 giây thì cắt đoạn BORED
+  wallet:
+    legacy-qr-enabled: true
+    withdraw-bonus-allowed: true
+    min-withdraw: 50000
+    cash-withdraw-hold-months: 1
+  moderation:
+    languagetool:
+      enabled: ${LANGUAGETOOL_ENABLED:true}
+      url: ${LANGUAGETOOL_URL:http://localhost:8010/v2/check}
+      timeout-ms: 3000
+    ai-service:
+      enabled: ${MODERATION_AI_ENABLED:true}
+      url: ${AI_SERVICE_URL:http://localhost:8000}
+      timeout-ms: 4000
+    llm:
+      enabled: ${MODERATION_LLM_ENABLED:false}
+      provider: ${LLM_PROVIDER:openai}
+      model: ${LLM_MODEL:gpt-4o-mini}
+      api-key: ${LLM_API_KEY:}
+      api-url: ${LLM_API_URL:https://api.openai.com/v1/chat/completions}
+      timeout-ms: ${LLM_TIMEOUT_MS:15000}
+      confidence-min: ${LLM_CONFIDENCE_MIN:0.75}
+      batch-size: ${LLM_BATCH_SIZE:5}
+      max-calls-per-course: ${LLM_MAX_CALLS_PER_COURSE:20}
+      max-calls-per-day: ${LLM_MAX_CALLS_PER_DAY:100}
+  chat:
+    llm:
+      enabled: ${CHAT_LLM_ENABLED:false}
+      model: ${CHAT_LLM_MODEL:gpt-4o-mini}
+      api-key: ${CHAT_LLM_API_KEY:${LLM_API_KEY:}}
+      api-url: ${CHAT_LLM_API_URL:https://api.openai.com/v1/chat/completions}
+      timeout-ms: ${CHAT_LLM_TIMEOUT_MS:60000}
+      max-user-msgs-per-day: ${CHAT_LLM_MAX_USER_MSGS_PER_DAY:30}
+      max-calls-per-day: ${CHAT_LLM_MAX_CALLS_PER_DAY:500}
+  realtime:
+    enabled: ${APP_REALTIME_ENABLED:true}
+    max-connections-per-user: 5
+    heartbeat-interval-seconds: 20
+    replay-buffer-size: 50
+    timeout-minutes: 30
+
+logging:
+  level:
+    org.springframework.data.web.config.PageModule$PlainPageSerializationWarning: OFF
+    org.apache.catalina.connector.CoyoteAdapter: WARN
+
+
+
+

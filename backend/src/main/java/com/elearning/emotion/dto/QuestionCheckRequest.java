@@ -11,11 +11,13 @@ import java.util.List;
  *  - SENTENCE_FILL -> sentenceFillAnswers (kiểm tra 1 blank khi học viên nhấn "Kiểm tra")
  *  - DRAG_DROP -> dragDropSelections (kiểm tra TẤT CẢ ô trống cùng lúc, sau khi học viên đã
  *    kéo thả hết các thẻ và nhấn "Kiểm tra")
+ *  - attemptId -> mã lượt làm bài khi đang làm đề thi / bài luyện tập
  */
 public record QuestionCheckRequest(
         String selectedOptionId,
         String submittedText,
         List<WordChoiceSelectionSubmission> wordChoiceSelections,
         List<SentenceFillAnswerSubmission> sentenceFillAnswers,
-        List<DragDropSelectionSubmission> dragDropSelections
+        List<DragDropSelectionSubmission> dragDropSelections,
+        String attemptId
 ) {}

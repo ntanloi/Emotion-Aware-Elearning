@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { Image, Headphones, Video } from 'lucide-react'
 import { uploadMedia } from '@shared/api/media.js'
 
 const ACCEPT_BY_TYPE = {
@@ -8,7 +9,11 @@ const ACCEPT_BY_TYPE = {
   VIDEO: { 'video/*': [] },
 }
 
-const ICON_BY_TYPE = { IMAGE: '🖼️', AUDIO: '🎧', VIDEO: '🎬' }
+const ICON_BY_TYPE = {
+  IMAGE: <Image size={28} />,
+  AUDIO: <Headphones size={28} />,
+  VIDEO: <Video size={28} />,
+}
 
 /**
  * MediaUploader — Giai đoạn 5, component #2.

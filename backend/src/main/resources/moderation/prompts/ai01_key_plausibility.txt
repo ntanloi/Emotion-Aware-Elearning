@@ -1,0 +1,14 @@
+Nhiệm vụ: AI-01 (Kiểm tra tính hợp lý của đáp án câu hỏi TOEIC).
+Hãy giải câu hỏi trắc nghiệm tiếng Anh trong dữ liệu và xác định đáp án đúng chính xác nhất.
+So sánh đáp án bạn chọn (pred) với đáp án hiện tại do giảng viên đặt (current_key).
+Lược đồ JSON yêu cầu:
+{
+  "pred": "A|B|C|D",
+  "key_ok": true | false,
+  "confidence": float (0.0 đến 1.0),
+  "reason": "Giải thích ngắn gọn lý do chọn đáp án này"
+}
+Dữ liệu câu hỏi:
+<data>
+{data}
+</data>

@@ -1,0 +1,11 @@
+Nhiệm vụ: AI-07 (Đánh giá văn phong và ngữ cảnh phù hợp chuẩn TOEIC).
+Hãy đánh giá xem bài luyện tập hoặc đề câu hỏi có sử dụng văn phong tiếng Anh tự nhiên, chuẩn mực trong môi trường làm việc quốc tế và giao tiếp kinh doanh đặc trưng của bài thi TOEIC hay không.
+Lược đồ JSON yêu cầu:
+{
+  "fit": true | false,
+  "note": "Nhận xét ngắn gọn về văn phong và gợi ý hoàn thiện nếu fit là false"
+}
+Dữ liệu:
+<data>
+{data}
+</data>

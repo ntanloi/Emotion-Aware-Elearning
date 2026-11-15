@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class AttemptService {
 
     private final AttemptRepository attemptRepository;
+    private final AttemptAnswerRepository attemptAnswerRepository;
     private final ContentItemRepository contentItemRepository;
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
@@ -38,11 +41,14 @@ public class AttemptService {
     private final VocabWordRepository vocabWordRepository;
     private final VocabPracticeGeneratorService vocabGenerator;
     private final ContentItemProgressRepository contentItemProgressRepository;
+    private final ProgressService progressService;
+    private final CourseAccessService courseAccessService;
 
     @Transactional
     public AttemptStartResponse start(String userId, AttemptStartRequest req) {
         ContentItem item = contentItemRepository.findById(req.contentItemId())
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay noi dung"));
+        courseAccessService.validateCanLearn(userId, item.getCourse());
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay nguoi dung"));
 
@@ -51,19 +57,40 @@ public class AttemptService {
                 throw new IllegalArgumentException("VOCAB_SET can practiceType (FLASHCARD/MULTIPLE_CHOICE/...)");
             }
             var type = VocabPracticeGeneratorService.PracticeType.valueOf(req.practiceType().toUpperCase());
-            var questions = vocabGenerator.generate(item.getId(), type, false);
+            var questions = vocabGenerator.generate(item.getId(), type, true);
 
             Attempt attempt = attemptRepository.save(Attempt.builder()
                     .user(user).contentItem(item).totalQuestions(questions.size()).build());
             return new AttemptStartResponse(attempt.getId(), null, null, questions);
         }
 
-        List<Question> realQuestions = questionRepository.findByContentItemIdOrderByOrderIndex(item.getId());
-        var questionDtos = realQuestions.stream().map(questionService::toStudentDto).toList();
+        List<Question> realQuestions = questionRepository.findByContentItemIdWithMedia(item.getId()).stream()
+                .filter(q -> q.getStatus() == null || "ACTIVE".equalsIgnoreCase(q.getStatus()))
+                .toList();
+        var questionDtos = questionService.toStudentDtos(realQuestions);
+
+        List<AttemptAnswer> prevAnswers = attemptAnswerRepository.findByUserAndContentItemId(userId, item.getId());
+        List<String> prevAnsweredQIds = new ArrayList<>();
+        Map<String, String> initialAnswers = new HashMap<>();
+        for (AttemptAnswer aa : prevAnswers) {
+            String qId = aa.getQuestion().getId();
+            if (!prevAnsweredQIds.contains(qId)) {
+                prevAnsweredQIds.add(qId);
+            }
+            if (aa.getSelectedOption() != null) {
+                initialAnswers.put(qId, aa.getSelectedOption().getId());
+            } else if (aa.getSubmittedText() != null
+                    && !aa.getSubmittedText().startsWith("WORD_CHOICE:")
+                    && !aa.getSubmittedText().startsWith("SENTENCE_FILL:")
+                    && !aa.getSubmittedText().startsWith("DRAG_DROP:")
+                    && !aa.getSubmittedText().startsWith("MATCHED:")) {
+                initialAnswers.put(qId, aa.getSubmittedText());
+            }
+        }
 
         Attempt attempt = attemptRepository.save(Attempt.builder()
                 .user(user).contentItem(item).totalQuestions(realQuestions.size()).build());
-        return new AttemptStartResponse(attempt.getId(), item.getTimeLimitMinutes(), questionDtos, null);
+        return new AttemptStartResponse(attempt.getId(), item.getTimeLimitMinutes(), questionDtos, null, prevAnsweredQIds, initialAnswers);
     }
 
     @Transactional
@@ -74,6 +101,7 @@ public class AttemptService {
             throw new SecurityException("Day khong phai luot lam bai cua ban");
         }
         ContentItem item = attempt.getContentItem();
+        courseAccessService.validateCanLearn(userId, item.getCourse());
 
         AttemptResultDto result = "VOCAB_SET".equals(item.getType())
                 ? gradeVocabPractice(item, req)
@@ -84,7 +112,37 @@ public class AttemptService {
         attempt.setCorrectCount(result.correctCount());
         attemptRepository.save(attempt);
 
+        // Lưu từng câu hỏi đã làm vào bảng attempt_answers để theo dõi chi tiết từng question_id
+        if (!"VOCAB_SET".equals(item.getType()) && req.answers() != null) {
+            Map<String, AttemptAnswerResultDto> detailMap = result.details().stream()
+                    .filter(d -> d.questionId() != null)
+                    .collect(Collectors.toMap(AttemptAnswerResultDto::questionId, d -> d, (a, b) -> a));
+
+            List<AttemptAnswer> answersToSave = new ArrayList<>();
+            for (AnswerSubmission ans : req.answers()) {
+                if (ans.questionId() != null && ProgressService.isAnswerProvided(ans)) {
+                    var detail = detailMap.get(ans.questionId());
+                    AttemptAnswer aa = AttemptAnswer.builder()
+                            .attempt(attempt)
+                            .question(questionRepository.getReferenceById(ans.questionId()))
+                            .selectedOption(ans.selectedOptionId() != null
+                                    ? answerOptionRepository.findById(ans.selectedOptionId()).orElse(null)
+                                    : null)
+                            .submittedText(ProgressService.extractSubmittedText(ans))
+                            .isCorrect(detail != null ? detail.correct() : null)
+                            .build();
+                    answersToSave.add(aa);
+                }
+            }
+            if (!answersToSave.isEmpty()) {
+                attemptAnswerRepository.saveAll(answersToSave);
+            }
+        }
+
         recordProgress(userId, item, req.practiceType(), result);
+
+        // Kích hoạt cập nhật lại tiến độ toàn khóa học
+        progressService.updateCourseEnrollmentProgress(userId, item.getCourse().getId());
 
         return new AttemptResultDto(attempt.getId(), result.score(), result.totalQuestions(),
                 result.correctCount(), result.details());
@@ -231,15 +289,44 @@ public class AttemptService {
                         .practiceType(key)
                         .build());
 
-        // Nguong hoan thanh: >=70% coi la da hoan thanh (co the dieu chinh sau theo yeu cau thuc te)
-        boolean completed = result.score() != null && result.score() >= 70f;
+        boolean completed;
+        if ("VOCAB_SET".equals(item.getType())) {
+            // Flashcard: chỉ cần xem qua toàn bộ thẻ là đủ 100% hoàn thành
+            completed = "FLASHCARD".equalsIgnoreCase(practiceType) || (result.score() != null && result.score() >= 70f);
+        } else {
+            // Với các dạng bài tập câu hỏi (Practice / Grammar / Dictation):
+            // Kiểm tra tổng số câu duy nhất đã làm đối chiếu với tổng số câu hỏi của bài
+            long activeCount = questionRepository.countActiveQuestionsByItemIds(List.of(item.getId()))
+                    .stream().map(r -> ((Number) r[1]).intValue()).findFirst().orElse(0);
+            long answeredCount = attemptAnswerRepository.countDistinctQuestionsAnsweredByUserAndItem(userId, item.getId());
+            completed = (activeCount > 0 && answeredCount >= activeCount);
+        }
+
         progress.setCompleted(completed || progress.isCompleted());
         BigDecimal newScore = BigDecimal.valueOf(result.score() == null ? 0 : result.score());
         if (progress.getBestScore() == null || newScore.compareTo(progress.getBestScore()) > 0) {
             progress.setBestScore(newScore);
         }
-        if (completed) progress.setCompletedAt(LocalDateTime.now());
+        if (progress.isCompleted() && progress.getCompletedAt() == null) {
+            progress.setCompletedAt(LocalDateTime.now());
+        }
         contentItemProgressRepository.save(progress);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttemptSummaryDto> getMyAttempts(String userId) {
+        return attemptRepository.findByUserIdOrderByStartedAtDesc(userId).stream()
+                .map(a -> new AttemptSummaryDto(
+                        a.getId(),
+                        a.getContentItem() != null ? a.getContentItem().getId() : null,
+                        a.getContentItem() != null ? a.getContentItem().getTitle() : null,
+                        a.getStartedAt(),
+                        a.getSubmittedAt(),
+                        a.getScore(),
+                        a.getTotalQuestions(),
+                        a.getCorrectCount()
+                ))
+                .toList();
     }
 
     private String normalize(String s) {

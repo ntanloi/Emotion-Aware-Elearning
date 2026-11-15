@@ -1,0 +1,18 @@
+Nhiệm vụ: AI-04 (Kiểm tra bài giảng ngữ pháp khớp chủ điểm và phát hiện phát biểu khả nghi).
+Hãy đọc bài giảng ngữ pháp và chủ điểm ngữ pháp được khai báo (topic_code / topic_name).
+Kiểm tra xem nội dung bài giảng có khớp với chủ điểm hay không, và tìm các phát biểu sai lệch về quy tắc ngữ pháp tiếng Anh.
+LƯU Ý: Trường "quote" BẮT BUỘC phải trích dẫn NGUYÊN VĂN chính xác một câu có trong bài giảng. Tuyệt đối không tự suy diễn nếu bài học không chứa câu đó.
+Lược đồ JSON yêu cầu:
+{
+  "topic_match": true | false,
+  "suspicious_statements": [
+    {
+      "quote": "Trích dẫn nguyên văn từ bài giảng",
+      "why": "Giải thích tại sao phát biểu này sai hoặc gây hiểu nhầm"
+    }
+  ]
+}
+Dữ liệu:
+<data>
+{data}
+</data>

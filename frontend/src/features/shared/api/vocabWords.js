@@ -1,7 +1,7 @@
 import apiClient from './client.js'
 
-/** FR-TCH-03: thư viện từ vựng riêng của giáo viên, dùng lại được giữa nhiều Unit/khoá học */
-export const listMyVocabWords = () => apiClient.get('/vocab-words/mine').then((r) => r.data)
+/** FR-TCH-03: thư viện từ vựng riêng của giáo viên, dùng lại được giữa nhiều Unit/khoá học. Có hỗ trợ params phân trang: { page, size, search, partOfSpeech } */
+export const listMyVocabWords = (params) => apiClient.get('/vocab-words/mine', { params }).then((r) => r.data)
 
 /** payload: { word, ipa?, partOfSpeech?, meaningVi, imageMediaId?, audioUkMediaId?, audioUsMediaId?, examples?: [{sentenceEn, sentenceVi, audioMediaId?}] } */
 export const createVocabWord = (payload) => apiClient.post('/vocab-words', payload).then((r) => r.data)
