@@ -76,6 +76,8 @@ export default function EmotionPrivacyModal({ onClose, onDataDeleted }) {
         style={{
           width: '100%',
           maxWidth: 520,
+          maxHeight: '90vh',
+          overflowY: 'auto',
           padding: 24,
           borderRadius: 14,
           boxShadow: '0 20px 40px rgba(0,0,0,0.2)',

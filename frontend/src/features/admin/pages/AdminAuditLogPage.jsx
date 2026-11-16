@@ -289,15 +289,15 @@ export default function AdminAuditLogPage() {
         </div>
       ) : (
         <div
-          className="admin-table-wrap"
+          className="admin-table-wrap admin-table-wrap-cards"
           style={{
             background: 'var(--surface, #fff)',
             borderRadius: 8,
             border: '1px solid var(--c-border, #e2e8f0)',
-            overflow: 'hidden',
+            overflowX: 'auto',
           }}
         >
-          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="admin-table admin-table-card-mobile" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr
                 style={{
@@ -329,7 +329,7 @@ export default function AdminAuditLogPage() {
 
                 return (
                   <tr key={log.id} style={{ borderBottom: '1px solid var(--c-border, #f1f5f9)', fontSize: 13 }}>
-                    <td style={{ padding: '14px 18px' }}>
+                    <td data-label="Hành động & Diễn giải" style={{ padding: '14px 18px' }}>
                       <div style={{ fontSize: 13.5, color: '#0f172a', lineHeight: 1.5 }}>
                         {sentence}
                       </div>
@@ -338,7 +338,7 @@ export default function AdminAuditLogPage() {
                       </div>
                     </td>
 
-                    <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
+                    <td data-label="Loại thao tác" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
                       <span
                         style={{
                           fontSize: 11.5,
@@ -358,8 +358,8 @@ export default function AdminAuditLogPage() {
                       </span>
                     </td>
 
-                    <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
-                      <div>
+                    <td data-label="Đối tượng" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                         <span
                           style={{
                             fontSize: 10,
@@ -375,26 +375,24 @@ export default function AdminAuditLogPage() {
                         >
                           {log.targetType}
                         </span>
+                        <code className="audit-id-tag" title={`ID: ${log.targetId}`}>
+                          #{log.targetId?.slice(0, 8)}…
+                        </code>
                       </div>
-                      <code className="audit-id-tag" title={`ID: ${log.targetId}`}>
-                        #{log.targetId?.slice(0, 8)}…
-                      </code>
                     </td>
 
-                    <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
-                      {log.createdAt ? (
-                        <div>
-                          <div style={{ fontSize: 12.5, fontWeight: 500, color: '#0f172a' }}>
-                            {new Date(log.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </div>
-                          <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                            {new Date(log.createdAt).toLocaleDateString('vi-VN')}
-                          </div>
+                    <td data-label="Thời gian" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 500, color: '#0f172a' }}>
+                          {new Date(log.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </div>
-                      ) : '—'}
+                        <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                          {new Date(log.createdAt).toLocaleDateString('vi-VN')}
+                        </div>
+                      </div>
                     </td>
 
-                    <td style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <td data-label="Chi tiết" style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button
                         type="button"
                         className="btn secondary sm"

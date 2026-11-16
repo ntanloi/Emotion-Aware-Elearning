@@ -216,12 +216,7 @@ export default function TeacherWalletRevenueView() {
       )}
 
       {/* 2a. Thẻ dài: Số dư có thể rút */}
-      <div style={{
-        background: 'var(--surface, #fff)', border: '1px solid rgba(16,185,129,0.35)',
-        borderRadius: 'var(--radius-lg, 12px)', padding: '22px 26px', boxShadow: 'var(--shadow-sm)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
-        marginBottom: 16
-      }}>
+      <div className="teacher-wallet-balance-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
             <Wallet size={26} />
@@ -251,7 +246,7 @@ export default function TeacherWalletRevenueView() {
       </div>
 
       {/* 2b. Ba thẻ con */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: 16, marginBottom: 12 }}>
         <StatCard
           label="Chờ duyệt chi" value={pendingPayout} icon={Clock} color="#d97706" bg="rgba(245,158,11,0.15)"
           hint={summary?.hasPendingPayoutRequest ? 'Đã trừ khỏi số dư, đang chờ ban quản trị chuyển khoản' : 'Không có lệnh rút nào đang chờ'}
@@ -306,26 +301,26 @@ export default function TeacherWalletRevenueView() {
 
       {/* 3. Cảnh báo thông tin ngân hàng nếu chưa cập nhật */}
       {!hasBank && (
-        <div style={{ padding: '14px 18px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 10, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <AlertCircle size={20} color="#d97706" />
+        <div className="teacher-wallet-bank-alert">
+          <div className="teacher-wallet-bank-alert-content">
+            <AlertCircle size={20} color="#d97706" style={{ flexShrink: 0 }} />
             <div>
-              <strong style={{ fontSize: 13.5, color: '#92400e' }}>Chưa cập nhật tài khoản ngân hàng thụ hưởng</strong>
-              <p className="text-dim text-xs" style={{ margin: '2px 0 0' }}>
+              <strong style={{ fontSize: 13.5, color: '#92400e', display: 'block' }}>Chưa cập nhật tài khoản ngân hàng thụ hưởng</strong>
+              <p className="text-dim text-xs" style={{ margin: '3px 0 0', lineHeight: 1.45 }}>
                 Vui lòng cập nhật số tài khoản và ngân hàng tại trang Thông tin cá nhân để có thể nhận tiền rút.
               </p>
             </div>
           </div>
           <Link
             to="/profile"
-            className="btn sm"
+            className="btn sm teacher-wallet-bank-alert-btn"
             style={{
               background: '#d97706',
               color: '#ffffff',
               border: '1px solid #b45309',
               fontWeight: 600,
               fontSize: 13,
-              padding: '6px 16px',
+              padding: '7px 16px',
               borderRadius: 8,
               textDecoration: 'none',
               display: 'inline-flex',
@@ -341,72 +336,39 @@ export default function TeacherWalletRevenueView() {
       )}
 
       {/* 4. Tab điều hướng Sổ cái ví vs Lịch sử rút tiền */}
-      <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border)', marginBottom: 18 }}>
+      <div className="teacher-wallet-tabs-nav">
         <button
+          type="button"
+          className={`teacher-wallet-tab-btn ${subTab === 'entries' ? 'active' : ''}`}
           onClick={() => setSubTab('entries')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '10px 16px',
-            fontSize: 14,
-            fontWeight: subTab === 'entries' ? 700 : 500,
-            color: subTab === 'entries' ? 'var(--primary)' : 'var(--text-dim)',
-            borderBottom: subTab === 'entries' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}
         >
           <History size={16} />
           <span>Biến động số dư (Sổ cái)</span>
-          <span className="badge" style={{ fontSize: 11, background: 'var(--surface-hover)' }}>
+          <span className="badge" style={{ fontSize: 11, background: subTab === 'entries' ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-hover)' }}>
             {entries.length}
           </span>
         </button>
 
         <button
+          type="button"
+          className={`teacher-wallet-tab-btn ${subTab === 'payouts' ? 'active' : ''}`}
           onClick={() => setSubTab('payouts')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '10px 16px',
-            fontSize: 14,
-            fontWeight: subTab === 'payouts' ? 700 : 500,
-            color: subTab === 'payouts' ? 'var(--primary)' : 'var(--text-dim)',
-            borderBottom: subTab === 'payouts' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}
         >
           <CreditCard size={16} />
           <span>Lịch sử yêu cầu rút tiền</span>
-          <span className="badge" style={{ fontSize: 11, background: 'var(--surface-hover)' }}>
+          <span className="badge" style={{ fontSize: 11, background: subTab === 'payouts' ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-hover)' }}>
             {payouts.length}
           </span>
         </button>
 
         <button
+          type="button"
+          className={`teacher-wallet-tab-btn ${subTab === 'escrows' ? 'active' : ''}`}
           onClick={() => setSubTab('escrows')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '10px 16px',
-            fontSize: 14,
-            fontWeight: subTab === 'escrows' ? 700 : 500,
-            color: subTab === 'escrows' ? 'var(--primary)' : 'var(--text-dim)',
-            borderBottom: subTab === 'escrows' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}
         >
           <ShieldCheck size={16} />
           <span>Khoản giữ hộ</span>
-          <span className="badge" style={{ fontSize: 11, background: 'var(--surface-hover)' }}>
+          <span className="badge" style={{ fontSize: 11, background: subTab === 'escrows' ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-hover)' }}>
             {escrows.length}
           </span>
         </button>
@@ -424,8 +386,8 @@ export default function TeacherWalletRevenueView() {
               </p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="table-scroll" style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
                     <th style={{ padding: '12px 16px' }}>Loại giao dịch</th>
@@ -520,8 +482,8 @@ export default function TeacherWalletRevenueView() {
               </p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="table-scroll" style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
                     <th style={{ padding: '12px 16px' }}>Số tiền rút</th>
@@ -586,11 +548,11 @@ export default function TeacherWalletRevenueView() {
 
       {/* 6b. Nội dung Tab 3: Khoản giữ hộ (Reward Escrows) */}
       {subTab === 'escrows' && (
-        <div style={{ overflowX: 'auto', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
+        <div className="table-scroll" style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
           {escrows.length === 0 ? (
             <p className="text-dim text-xs" style={{ padding: 24, textAlign: 'center' }}>Chưa có khoản giữ hộ nào.</p>
           ) : (
-            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 540 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
                   <th style={{ padding: '12px 16px' }}>Khóa học</th>

@@ -113,11 +113,11 @@ export default function WalletPage() {
   const lockedCash = Number(wallet?.lockedCashAmount || 0)
 
   return (
-    <div className="container" style={{ maxWidth: 1080, padding: '24px 16px', margin: '0 auto' }}>
+    <div className="wallet-page-container">
       {/* Tiêu đề & badge cập nhật */}
-      <div className="flex-between" style={{ marginBottom: 20 }}>
+      <div className="wallet-page-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 className="wallet-page-header-title">
             <Wallet size={26} color="var(--accent, #2563eb)" />
             <span>Ví học viên</span>
           </h2>
@@ -152,7 +152,7 @@ export default function WalletPage() {
       )}
 
       {/* KHỐI SỐ DƯ & THẺ TỔNG QUAN */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div className="wallet-overview-grid">
         {/* Card 1: Tổng số dư & hai ngăn */}
         <div className="card" style={{ padding: 20, borderRadius: 12, background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e2e8f0)' }}>
           <div className="flex-between" style={{ marginBottom: 12 }}>
@@ -167,7 +167,7 @@ export default function WalletPage() {
             {total.toLocaleString('vi-VN')} <span style={{ fontSize: 18, fontWeight: 600 }}>đ</span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, borderTop: '1px solid var(--border, #e2e8f0)', paddingTop: 14 }}>
+          <div className="wallet-balance-split">
             <div>
               <div style={{ fontSize: 12, color: 'var(--text-dim, #64748b)', marginBottom: 2 }}>Tiền nạp (CASH)</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#059669' }}>
@@ -235,9 +235,9 @@ export default function WalletPage() {
           <span>Nạp tiền vào ví qua chuyển khoản VietQR</span>
         </h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, alignItems: 'center' }}>
+        <div className="wallet-topup-grid">
           {/* Cột trái: Mã QR động */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div className="wallet-qr-pane">
             <div
               style={{
                 padding: 12,
@@ -267,7 +267,7 @@ export default function WalletPage() {
           </div>
 
           {/* Cột phải: Thông tin tài khoản & Mã nạp bắt buộc */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="wallet-topup-details">
             {/* Chọn nhanh số tiền nạp */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text, #0f172a)', display: 'block', marginBottom: 6 }}>
@@ -370,8 +370,8 @@ export default function WalletPage() {
       {withdrawals.length > 0 && (
         <div className="card" style={{ padding: 20, borderRadius: 12, marginBottom: 28, background: 'var(--surface, #ffffff)', border: '1px solid var(--border, #e2e8f0)' }}>
           <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Yêu cầu rút tiền gần đây</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div className="wallet-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 600 }}>
               <thead>
                 <tr style={{ borderBottom: '1.5px solid var(--border, #e2e8f0)', textAlign: 'left', color: 'var(--text-dim)' }}>
                   <th style={{ padding: '8px 12px' }}>Thời gian</th>
@@ -435,8 +435,8 @@ export default function WalletPage() {
         ) : entries.length === 0 ? (
           <p style={{ color: 'var(--text-dim)', padding: 12, textAlign: 'center' }}>Chưa có giao dịch nào.</p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div className="wallet-table-wrap">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
               <thead>
                 <tr style={{ borderBottom: '1.5px solid var(--border, #e2e8f0)', textAlign: 'left', color: 'var(--text-dim)' }}>
                   <th style={{ padding: '8px 12px' }}>Thời gian</th>
@@ -523,29 +523,11 @@ export default function WalletPage() {
       {/* MODAL YÊU CẦU RÚT TIỀN */}
       {showWithdrawModal && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-          }}
+          className="wallet-modal-overlay"
           onClick={() => setShowWithdrawModal(false)}
         >
           <div
-            className="card"
-            style={{
-              width: '100%',
-              maxWidth: 480,
-              padding: 24,
-              borderRadius: 14,
-              background: 'var(--surface, #ffffff)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-            }}
+            className="wallet-modal-card"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex-between" style={{ marginBottom: 14, borderBottom: '1px solid var(--border, #e2e8f0)', paddingBottom: 10 }}>

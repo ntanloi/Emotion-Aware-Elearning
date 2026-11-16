@@ -1,0 +1,636 @@
+/* ==========================================================================
+   Mobile & Layout Fix (Root-Cause Solution for Flex/Grid Overflow & Sticky)
+   ========================================================================== */
+
+/* 1. Cho phép khung co lại, không bị nội dung con đẩy rộng */
+.layout,
+.layout-content,
+.main,
+.admin-layout-wrapper,
+.admin-main-viewport,
+.admin-page-body,
+.course-learn-layout,
+.course-learn-content {
+  min-width: 0;
+}
+
+.layout-content > .main {
+  width: 100%;
+}
+
+.main > *,
+.admin-page-body > *,
+.course-learn-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 2. Cực quan trọng: grid con (kể cả 52 grid inline) không được ép rộng cha */
+[style*="display: grid"] > *,
+[style*="grid-template-columns"] > *,
+.admin-action-card-grid > *,
+.admin-finance-kpi-grid > *,
+.teacher-stats-kpi-grid > * {
+  min-width: 0;
+}
+
+/* 3. Vùng cuộn ngang: không cho min-content của bảng đẩy cha rộng ra */
+.admin-table-wrap,
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  contain: inline-size;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Các thanh tab điều hướng: giữ kích thước tự nhiên trên Desktop, cuộn ngang mượt mà trên Mobile */
+.tests-tabs-group,
+.reports-tabs-group,
+.reports-tabs-row,
+.vocab-tabs-track,
+.vocab-tabs-bar-container,
+.vocab-list-category-tabs,
+.runner-part-tabs,
+.home-level-tabs,
+.admin-segmented-tabs,
+.admin-finance-tabs-nav,
+.teacher-wallet-tabs-nav {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.vocab-list-category-tabs {
+  flex-shrink: 0;
+}
+
+.list-filter-tab {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .vocab-list-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .vocab-list-category-tabs {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .vocab-list-search-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+.tests-tabs-group::-webkit-scrollbar,
+.reports-tabs-group::-webkit-scrollbar,
+.reports-tabs-row::-webkit-scrollbar,
+.vocab-tabs-track::-webkit-scrollbar,
+.vocab-list-category-tabs::-webkit-scrollbar,
+.runner-part-tabs::-webkit-scrollbar,
+.home-level-tabs::-webkit-scrollbar,
+.admin-segmented-tabs::-webkit-scrollbar,
+.admin-finance-tabs-nav::-webkit-scrollbar,
+.teacher-wallet-tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-segmented-tab {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* 4. Lưới an toàn thay cho overflow hidden, không phá sticky */
+body {
+  overflow-x: clip;
+}
+
+/* 5. Chiều cao navbar dùng một biến duy nhất */
+:root {
+  --navbar-h: 64px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-h: 56px;
+  }
+}
+
+.navbar {
+  height: var(--navbar-h) !important;
+}
+
+.admin-mobile-topbar,
+.course-learn-mobile-topbar {
+  top: var(--navbar-h) !important;
+}
+
+.sidebar {
+  top: var(--navbar-h);
+  height: calc(100dvh - var(--navbar-h));
+}
+
+.admin-sidebar {
+  top: var(--navbar-h);
+  height: calc(100dvh - var(--navbar-h));
+}
+
+@media (max-width: 1024px) {
+  .admin-sidebar,
+  .sidebar {
+    top: 0 !important;
+    height: 100dvh !important;
+  }
+}
+
+/* ==========================================================================
+   BƯỚC 2: CÁC TRANG CỤ THỂ (Teacher Dashboard, Profile, Admin Reviews)
+   ========================================================================== */
+
+/* 6. Teacher Dashboard KPI Grid (Desktop: 4 cột, Tablet: 2 cột 2x2, Mobile: 1 cột) */
+.teacher-stats-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .teacher-stats-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-stats-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 7. Profile Page Form Grids (Thông tin 2 cột -> 1 cột; Ngân hàng 3 cột -> 2 cột -> 1 cột) */
+.profile-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .profile-form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.profile-form-grid-bank {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .profile-form-grid-bank {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-form-grid-bank {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 8. Admin Reviews: Trạng thái Filter Pills luôn dàn hàng ngang flex-wrap */
+.admin-status-filter-pills {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-status-filter-pills .admin-filter-pill {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   BƯỚC 3: Bảng Admin chuyển thành dạng Card View trên Mobile (<= 640px)
+   Áp dụng cho: AdminUserListPage, AdminAuditLogPage, AdminCourseListPage
+   ========================================================================== */
+@media (max-width: 640px) {
+  .admin-table-wrap-cards {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    overflow-x: visible !important;
+  }
+
+  .admin-table.admin-table-card-mobile {
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    border: none !important;
+  }
+
+  .admin-table.admin-table-card-mobile thead {
+    display: none !important;
+  }
+
+  .admin-table.admin-table-card-mobile tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .admin-table.admin-table-card-mobile tr {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 14px 16px !important;
+    background: var(--surface, #ffffff) !important;
+    border: 1px solid var(--c-border, #e2e8f0) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    gap: 8px !important;
+  }
+
+  .admin-table.admin-table-card-mobile td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    white-space: normal !important;
+  }
+
+  .admin-table.admin-table-card-mobile td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-dim, #64748b);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: left;
+    flex-shrink: 0;
+    margin-right: 12px;
+  }
+
+  /* Ẩn nhãn nếu ô không có data-label hoặc data-label rỗng */
+  .admin-table.admin-table-card-mobile td:not([data-label])::before,
+  .admin-table.admin-table-card-mobile td[data-label=""]::before {
+    display: none !important;
+  }
+
+  /* Cột thẻ tiêu đề chính (Người dùng, Khóa học, Hành động & Diễn giải): hiển thị đầu thẻ */
+  .admin-table.admin-table-card-mobile td[data-label="Người dùng"],
+  .admin-table.admin-table-card-mobile td[data-label="Khóa học"],
+  .admin-table.admin-table-card-mobile td[data-label="Hành động & Diễn giải"] {
+    display: block !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid var(--c-border, #f1f5f9) !important;
+    margin-bottom: 4px !important;
+  }
+
+  .admin-table.admin-table-card-mobile td[data-label="Người dùng"]::before,
+  .admin-table.admin-table-card-mobile td[data-label="Khóa học"]::before,
+  .admin-table.admin-table-card-mobile td[data-label="Hành động & Diễn giải"]::before {
+    display: none !important;
+  }
+
+  /* Cột thao tác: hiển thị cuối thẻ có đường phân cách trên */
+  .admin-table.admin-table-card-mobile td[data-label="Hành động"],
+  .admin-table.admin-table-card-mobile td[data-label="Thao tác"],
+  .admin-table.admin-table-card-mobile td[data-label="Chi tiết"] {
+    display: flex !important;
+    justify-content: flex-end !important;
+    padding-top: 10px !important;
+    border-top: 1px solid var(--c-border, #f1f5f9) !important;
+    margin-top: 4px !important;
+  }
+
+  .admin-table.admin-table-card-mobile td[data-label="Hành động"]::before,
+  .admin-table.admin-table-card-mobile td[data-label="Thao tác"]::before,
+  .admin-table.admin-table-card-mobile td[data-label="Chi tiết"]::before {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   BƯỚC 4: Tối ưu Navbar Tablet (769px - 1024px)
+   ========================================================================== */
+.navbar-nav a,
+.navbar-nav .nav-link {
+  white-space: nowrap !important;
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .navbar-nav {
+    margin: 0 8px !important;
+    gap: 4px !important;
+  }
+  .navbar-nav a,
+  .navbar-nav .nav-link {
+    padding: 6px 8px !important;
+    font-size: 12.5px !important;
+  }
+}
+
+/* Khu vực Giảng viên: nhiều mục menu và nút chuyển đổi -> chuyển sang Drawer đến 1024px */
+@media (max-width: 1024px) {
+  .navbar--teacher .navbar-nav {
+    display: none !important;
+  }
+  .navbar--teacher .navbar-actions .navbar-switch-role,
+  .navbar--teacher .navbar-actions .navbar-user-link,
+  .navbar--teacher .navbar-actions .navbar-logout-btn {
+    display: none !important;
+  }
+  .navbar--teacher .navbar-mobile-toggle {
+    display: inline-flex !important;
+  }
+}
+
+/* ==========================================================================
+   BƯỚC 5: Dọn dẹp khoảng cách & Lưới an toàn giao diện Mobile
+   ========================================================================== */
+/* Chat FAB (nút tròn góc phải) không che khuất nội dung cuối trang */
+@media (max-width: 768px) {
+  .main {
+    padding-bottom: 84px !important;
+  }
+}
+
+/* Drawer và modal chống giật cuộn trên cảm ứng */
+.mobile-nav-drawer,
+.admin-sidebar {
+  overscroll-behavior: contain;
+}
+
+/* ==========================================================================
+   TEACHER WALLET & REVENUE RESPONSIVENESS
+   ========================================================================== */
+@media (max-width: 640px) {
+  .teacher-dashboard-main-card {
+    padding: 14px 12px !important;
+  }
+}
+
+.teacher-wallet-balance-card {
+  background: var(--surface, #fff);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-lg, 12px);
+  padding: 22px 26px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  .teacher-wallet-balance-card {
+    padding: 16px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .teacher-wallet-balance-card > button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Hộp cảnh báo cập nhật tài khoản ngân hàng thụ hưởng */
+.teacher-wallet-bank-alert {
+  padding: 14px 18px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teacher-wallet-bank-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .teacher-wallet-bank-alert {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .teacher-wallet-bank-alert-content {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .teacher-wallet-bank-alert-btn {
+    align-self: stretch;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Thanh Tab điều hướng Ví: Biến động số dư vs Lịch sử rút tiền */
+.teacher-wallet-tabs-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  margin-bottom: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  contain: inline-size;
+  max-width: 100%;
+  padding-bottom: 2px;
+}
+
+.teacher-wallet-tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim, #64748b);
+  border-bottom: 2.5px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease;
+}
+
+.teacher-wallet-tab-btn:hover {
+  color: var(--primary, #2563eb);
+}
+
+.teacher-wallet-tab-btn.active {
+  font-weight: 700;
+  color: var(--primary, #2563eb);
+  border-bottom-color: var(--primary, #2563eb);
+}
+
+@media (max-width: 640px) {
+  .teacher-wallet-tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   TEACHER DASHBOARD: CẢM XÚC AI & TÌM KIẾM RESPONSIVE
+   ========================================================================== */
+.teacher-emotion-subtabs-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle, #f1f5f9);
+}
+
+.teacher-emotion-subtabs-nav {
+  display: inline-flex;
+  background: var(--surface-2, #f8fafc);
+  padding: 4px;
+  border-radius: 10px;
+  gap: 4px;
+  border: 1px solid var(--border-subtle, #f1f5f9);
+  max-width: 100%;
+}
+
+.teacher-emotion-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-dim, #64748b);
+  cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  transition: all 0.18s ease;
+}
+
+.teacher-emotion-subtab-btn.active-video {
+  font-weight: 600;
+  background: var(--surface, #ffffff);
+  color: var(--accent, #2563eb);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.teacher-emotion-subtab-btn.active-live {
+  font-weight: 600;
+  background: var(--surface, #ffffff);
+  color: #dc2626;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 640px) {
+  .teacher-emotion-subtabs-nav {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    contain: inline-size;
+  }
+  .teacher-emotion-subtabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .teacher-emotion-subtab-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.teacher-section-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.teacher-section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text, #0f172a);
+}
+
+.teacher-search-box {
+  box-sizing: border-box !important;
+}
+
+.teacher-search-box input {
+  min-width: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .teacher-section-header-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px;
+  }
+
+  .teacher-section-title {
+    width: 100%;
+    font-size: 13.5px;
+  }
+
+  .teacher-search-box {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+
+
+

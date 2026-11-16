@@ -105,8 +105,8 @@ export default function ChatWidget() {
         <div
           className="chat-panel"
           style={{
-            width: 380,
-            maxHeight: 520,
+            width: 'min(380px, calc(100vw - 24px))',
+            maxHeight: 'min(520px, calc(100vh - 100px))',
             display: 'flex',
             flexDirection: 'column',
           }}

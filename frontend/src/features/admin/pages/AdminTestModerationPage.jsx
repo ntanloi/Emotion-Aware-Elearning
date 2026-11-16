@@ -210,7 +210,7 @@ export default function AdminTestModerationPage() {
 
       {/* Bộ lọc trạng thái & Tìm kiếm */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <div style={{ display: 'flex', background: 'var(--surface-2)', padding: 4, borderRadius: 'var(--radius-md)', gap: 4 }}>
+        <div className="admin-segmented-tabs">
           {[
             { id: 'PENDING_REVIEW', label: 'Chờ duyệt' },
             { id: 'PUBLISHED', label: 'Đã xuất bản' },
@@ -221,39 +221,21 @@ export default function AdminTestModerationPage() {
             <button
               key={tab.id}
               type="button"
-              style={{
-                border: 'none',
-                background: statusFilter === tab.id ? 'var(--surface)' : 'transparent',
-                color: statusFilter === tab.id ? 'var(--accent)' : 'var(--text-dim)',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 13,
-                fontWeight: statusFilter === tab.id ? 600 : 500,
-                cursor: 'pointer',
-                boxShadow: statusFilter === tab.id ? 'var(--shadow-sm)' : 'none',
-              }}
+              className={`admin-segmented-tab ${statusFilter === tab.id ? 'active' : ''}`}
               onClick={() => setStatusFilter(tab.id)}
             >
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        <div style={{ position: 'relative', width: 280 }}>
-          <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+        <div className="search-input-wrap" style={{ minWidth: 260, maxWidth: 360, flex: 1 }}>
+          <Search size={15} style={{ color: 'var(--c-muted, #94a3b8)' }} />
           <input
             type="text"
             placeholder="Tìm đề theo tên hoặc giáo viên..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 12px 8px 32px',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 13.5,
-              background: 'var(--surface)',
-            }}
           />
         </div>
       </div>

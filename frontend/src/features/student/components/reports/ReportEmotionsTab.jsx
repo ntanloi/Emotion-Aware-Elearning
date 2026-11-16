@@ -189,7 +189,7 @@ export default function ReportEmotionsTab({
                     >
                       {/* 1. Header bài giảng: sectionCode, lessonTitle, lần học gần nhất, nút Timeline 10s */}
                       <div className="flex-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-                        <div style={{ flex: 1, minWidth: 260 }}>
+                        <div style={{ flex: '1 1 240px', minWidth: 0 }}>
                           <div className="flex-row" style={{ gap: 8, alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' }}>
                             <span
                               style={{

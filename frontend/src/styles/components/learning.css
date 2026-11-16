@@ -288,4 +288,24 @@
   color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.25);
 }
+
+/* 5. Mobile Learning Layout Optimization */
+@media (max-width: 640px) {
+  .section-overview-banner {
+    padding: 14px !important;
+  }
+  .content-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .content-group-progress-box {
+    width: 100%;
+    min-width: 0;
+  }
+  .activity-row {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+}
 }

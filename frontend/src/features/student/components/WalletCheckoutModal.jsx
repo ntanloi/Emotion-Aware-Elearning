@@ -62,6 +62,8 @@ export default function WalletCheckoutModal({ course, holdsReward = true, onClos
         style={{
           width: '100%',
           maxWidth: 520,
+          maxHeight: '90vh',
+          overflowY: 'auto',
           padding: 24,
           borderRadius: 14,
           background: 'var(--surface, #ffffff)',

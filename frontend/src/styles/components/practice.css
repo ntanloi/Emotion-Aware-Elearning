@@ -733,8 +733,15 @@
 
   @media (max-width: 640px) {
     .matching-board-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .matching-card {
+      min-height: 46px;
+      padding: 8px 10px;
+    }
+    .matching-card-text {
+      font-size: 12.5px;
     }
   }
 

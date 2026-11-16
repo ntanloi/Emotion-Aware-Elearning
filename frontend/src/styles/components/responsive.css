@@ -1,72 +1,333 @@
 @layer components {
 /* ==========================================================================
-   PHASE U5: MOBILE RESPONSIVENESS & CLEANUP ENHANCEMENTS
+   RESPONSIVE ENHANCEMENTS & MOBILE/TABLET FOUNDATION (PHASE R1)
    ========================================================================== */
 
-/* Navbar responsive on mobile devices */
-@media (max-width: 768px) {
+/* 2. Nút bấm mở Drawer di động trên thanh Navbar */
+.navbar-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: var(--radius, 8px);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.navbar-mobile-toggle:hover,
+.navbar-mobile-toggle:active {
+  background: var(--surface-2, #f1f5f9);
+  color: var(--accent, #2563eb);
+}
+
+/* 3. Lớp nền mờ (Backdrop) khi mở Drawer di động */
+.mobile-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.mobile-nav-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 4. Khung ngăn kéo điều hướng di động (Mobile Navigation Drawer) */
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(320px, 86vw);
+  background: var(--surface, #ffffff);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.16);
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.mobile-nav-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.mobile-nav-close {
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim, #64748b);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mobile-nav-close:hover {
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text, #0f172a);
+}
+
+.mobile-nav-user-card {
+  padding: 16px 18px;
+  background: var(--surface-2, #f8fafc);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-nav-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface, #ffffff);
+  border: 1.5px solid var(--border, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #2563eb);
+  flex-shrink: 0;
+}
+
+.mobile-nav-links {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius, 8px);
+  color: var(--text-dim, #475569);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 44px;
+  transition: all 0.15s ease;
+}
+
+.mobile-nav-item:hover {
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text, #0f172a);
+}
+
+.mobile-nav-item.active {
+  background: var(--accent-soft, rgba(37, 99, 235, 0.08));
+  color: var(--accent, #2563eb);
+  font-weight: 700;
+}
+
+.mobile-nav-footer {
+  padding: 16px 18px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+}
+
+/* 5. Cấu hình Admin Mobile/Tablet Topbar & Sidebar */
+.admin-mobile-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  position: sticky;
+  top: var(--navbar-h, 64px);
+  z-index: 20;
+}
+
+.admin-mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2, #f1f5f9);
+  border: 1px solid var(--border, #e2e8f0);
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-mobile-menu-btn:hover {
+  background: var(--accent-soft, rgba(37, 99, 235, 0.08));
+  color: var(--accent, #2563eb);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
+.admin-sidebar-header-mobile {
+  display: none;
+}
+
+/* ==========================================================================
+   BREAKPOINTS: TABLET (768px - 1023px)
+   ========================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
   .navbar {
-    padding: 0 12px;
-    height: 56px;
-  }
-  .navbar-brand {
-    font-size: 15px;
-    gap: 6px;
-  }
-  .navbar-brand-badge {
-    width: 28px;
-    height: 28px;
+    padding: 0 16px;
+    height: 60px;
   }
   .navbar-nav {
-    margin: 0 6px;
-    gap: 3px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .navbar-nav::-webkit-scrollbar {
-    display: none;
+    margin: 0 12px;
+    gap: 2px;
   }
   .navbar-nav a,
   .navbar-nav .nav-link {
-    padding: 6px 9px;
-    font-size: 12px;
-    white-space: nowrap;
-    gap: 4px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    gap: 5px;
   }
   .navbar-actions {
-    gap: 6px;
+    gap: 8px;
   }
-  .navbar-actions .navbar-user-link span {
+  .navbar-username {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .navbar-actions .navbar-logout-btn span {
     display: none;
   }
-  .navbar-actions .btn.sm span {
-    display: none;
-  }
-  .navbar-actions .btn.sm {
-    padding: 6px 8px;
+  .main {
+    padding: 24px 20px;
   }
 }
 
-/* Today's learning strip mobile responsive */
-@media (max-width: 640px) {
-  .today-learning-strip {
+/* Tablet & Mobile Admin Layout (< 1024px) */
+@media (max-width: 1024px) {
+  .admin-mobile-topbar {
+    display: flex;
+  }
+
+  .admin-layout-wrapper {
     flex-direction: column;
-    align-items: stretch !important;
-    padding: 14px !important;
-    gap: 12px;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .admin-sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 270px !important;
+    min-width: 270px !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-header-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+  }
+
+  .admin-sidebar-close-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    color: var(--text-dim, #64748b);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-page-body {
+    padding: 20px 16px;
   }
 }
 
-/* Review Summary Grid mobile responsive */
-.review-summary-grid {
-  display: grid;
-  grid-template-columns: minmax(160px, 220px) 1fr auto;
-  gap: 24px;
-  align-items: center;
-}
-
+/* ==========================================================================
+   BREAKPOINTS: MOBILE (< 768px)
+   ========================================================================== */
 @media (max-width: 768px) {
+  .navbar {
+    padding: 0 14px;
+    height: 56px;
+  }
+  .navbar-brand-text {
+    font-size: 15.5px;
+  }
+  .navbar-teacher-badge {
+    display: none;
+  }
+  .navbar-nav {
+    display: none !important;
+  }
+  .navbar-actions .navbar-switch-role,
+  .navbar-actions .navbar-user-link,
+  .navbar-actions .navbar-logout-btn {
+    display: none !important;
+  }
+  .navbar-mobile-toggle {
+    display: inline-flex !important;
+  }
+
+  .main {
+    padding: 16px 12px;
+  }
+
+  /* Review Summary Grid */
   .review-summary-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -82,8 +343,24 @@
   }
 }
 
-/* Course filter bar mobile responsive */
+/* ==========================================================================
+   BREAKPOINTS: SMALL MOBILE (< 640px)
+   ========================================================================== */
 @media (max-width: 640px) {
+  .app-footer-minimal > div {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px !important;
+    justify-content: center !important;
+  }
+
+  .today-learning-strip {
+    flex-direction: column;
+    align-items: stretch !important;
+    padding: 14px !important;
+    gap: 12px;
+  }
+
   .home-filter-bar {
     flex-direction: column;
     align-items: stretch;
@@ -105,9 +382,20 @@
     justify-content: space-between;
     padding-left: 0;
   }
+
+  /* Chuẩn WCAG 2.5.5 cho các nút chạm */
+  .btn,
+  .btn.primary,
+  .btn.secondary,
+  .auth-btn-primary,
+  .banner-btn-primary,
+  .banner-btn-secondary,
+  .course-preview-action-btn {
+    min-height: 44px;
+  }
 }
 
-/* Auth & Navigation Shared Helper Classes */
+/* Shared helper styles */
 .auth-info-chip {
   display: inline-flex;
   align-items: center;
@@ -136,18 +424,5 @@
   opacity: 0.6;
   cursor: not-allowed;
   text-decoration: none;
-}
-
-/* Mobile Touch Target Standards (WCAG 2.5.5 / >= 44px on mobile) */
-@media (max-width: 640px) {
-  .btn,
-  .btn.primary,
-  .btn.secondary,
-  .auth-btn-primary,
-  .banner-btn-primary,
-  .banner-btn-secondary,
-  .course-preview-action-btn {
-    min-height: 44px;
-  }
 }
 }
