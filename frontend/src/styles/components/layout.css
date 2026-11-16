@@ -4,6 +4,8 @@
     display: flex;
     min-height: 100vh;
     flex-direction: column;
+    width: 100%;
+    position: relative;
   }
 
   /* Navbar cố định trên cùng */
@@ -14,7 +16,7 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
-    height: 64px;
+    height: var(--navbar-h, 64px);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -170,6 +172,126 @@
     font-weight: 600;
   }
 
+  /* Mobile Course Sidebar Drawer (< 960px) */
+  .course-learn-mobile-topbar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: var(--navbar-h, 56px);
+    z-index: 20;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .course-learn-mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .course-learn-mobile-menu-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .course-sidebar-backdrop {
+    display: none;
+  }
+
+  .course-sidebar-mobile-header {
+    display: none;
+  }
+
+  @media (max-width: 960px) {
+    .course-learn-mobile-topbar {
+      display: flex;
+    }
+
+    .course-learn-layout {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .course-sidebar-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 998;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .course-sidebar-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      width: 280px !important;
+      height: 100vh !important;
+      z-index: 999 !important;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.16);
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .course-sidebar-mobile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .course-sidebar-close-btn {
+      background: transparent;
+      border: none;
+      padding: 6px;
+      border-radius: 6px;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .course-learn-content {
+      padding: 20px 16px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .course-learn-content {
+      padding: 14px 12px;
+    }
+  }
+
   .layout-content {
     display: flex;
     flex: 1;
@@ -185,5 +307,303 @@
 
   .main.full {
     max-width: none;
+  }
+
+  /* ---------- Application Modern Footer (Dark Navy / Midnight Slate Theme) ---------- */
+  .app-footer {
+    width: 100%;
+    margin-top: auto;
+    background: #0b1329;
+    background-image: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+    border-top: 1px solid #1e293b;
+    color: #94a3b8;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .app-footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Main Footer Columns */
+  .app-footer-main {
+    padding: 44px 0 36px;
+  }
+
+  .app-footer-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1.1fr 1.1fr 1.3fr;
+    gap: 36px;
+  }
+
+  .app-footer-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .app-footer-brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 14px;
+  }
+
+  .app-footer-brand-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+  }
+
+  .app-footer-brand-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+  }
+
+  .app-footer-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .app-footer-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    letter-spacing: 0.02em;
+  }
+
+  .app-footer-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .app-footer-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+    animation: footerPulse 2s infinite ease-in-out;
+  }
+
+  @keyframes footerPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(0.9);
+    }
+  }
+
+  .app-footer-col-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 16px 0;
+    display: inline-block;
+    position: relative;
+  }
+
+  .app-footer-col-title::after {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #3b82f6;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+    border-radius: 2px;
+    margin-top: 6px;
+  }
+
+  .app-footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .app-footer-link-btn,
+  .app-footer-links a {
+    font-size: 13px;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+  }
+
+  .app-footer-link-btn svg,
+  .app-footer-links a svg {
+    color: #3b82f6;
+    transition: transform 0.15s ease;
+  }
+
+  .app-footer-link-btn:hover,
+  .app-footer-links a:hover {
+    color: #60a5fa;
+    transform: translateX(3px);
+  }
+
+  .app-footer-link-btn:hover svg,
+  .app-footer-links a:hover svg {
+    color: #93c5fd;
+  }
+
+  .app-footer-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .app-footer-contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.45;
+  }
+
+  .app-footer-contact-item svg {
+    color: #60a5fa;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .app-footer-support-note {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.45;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-footer-support-note span {
+    color: #e2e8f0;
+  }
+
+  /* Bottom Bar */
+  .app-footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 20px 0;
+    background: #060b18;
+  }
+
+  .app-footer-bottom-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12.5px;
+    color: #64748b;
+  }
+
+  .app-footer-copyright strong {
+    color: #cbd5e1;
+  }
+
+  .app-footer-copyright {
+    line-height: 1.5;
+  }
+
+  .app-footer-legal-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .app-footer-legal-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.15s ease;
+  }
+
+  .app-footer-legal-btn:hover {
+    color: #60a5fa;
+    text-decoration: underline;
+  }
+
+  .app-footer-legal-sep {
+    color: #334155;
+    font-size: 10px;
+  }
+
+  /* Responsive styles for Footer */
+  @media (max-width: 1024px) {
+    .app-footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+    .app-footer-col-brand {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .app-footer-container {
+      padding: 0 16px;
+    }
+    .app-footer-main {
+      padding: 32px 0 24px;
+    }
+    .app-footer-grid {
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+    .app-footer-col-brand {
+      grid-column: span 1;
+    }
+    .app-footer-bottom {
+      padding: 18px 0 76px; /* 76px bottom clearance for floating Chat FAB on mobile */
+    }
+    .app-footer-bottom-flex {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+    .app-footer-legal-links {
+      justify-content: center;
+    }
   }
 }

@@ -188,13 +188,7 @@ export default function ReportOverviewTab({
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
-                gap: 16,
-              }}
-            >
+            <div className="daily-reports-grid">
               {visibleDailyReports.map((r) => (
                 <DailyReportCard key={r.id} report={r} onMarkAsRead={onMarkAsRead} />
               ))}

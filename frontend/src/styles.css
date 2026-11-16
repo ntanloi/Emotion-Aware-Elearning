@@ -17,6 +17,7 @@
 @import "./styles/components/learning.css";
 @import "./styles/components/reports.css";
 @import "./styles/components/responsive.css";
+@import "./styles/mobile-fix.css";
 
 @tailwind base;
 @tailwind components;

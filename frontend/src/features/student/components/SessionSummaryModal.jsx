@@ -47,13 +47,16 @@ export default function SessionSummaryModal({ isOpen, onClose, summary, onReplay
     >
       <div
         style={{
-          background: 'var(--surface-1, #1e293b)',
-          border: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.1))',
+          background: 'var(--surface-1, #ffffff)',
+          border: '1px solid var(--border-subtle, #e2e8f0)',
           borderRadius: 20,
           maxWidth: 580,
           width: '100%',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.25)',
           animation: 'scaleUpFade 0.25s ease-out',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -109,7 +112,7 @@ export default function SessionSummaryModal({ isOpen, onClose, summary, onReplay
         </div>
 
         {/* Body */}
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
           {/* Banner điểm tập trung */}
           <div
             style={{

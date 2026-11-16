@@ -30,6 +30,8 @@ export default function SectionCard({
             marginBottom: noPadding ? 0 : 'var(--sp-4, 16px)',
             padding: noPadding ? 'var(--sp-4, 16px) var(--sp-5, 20px)' : 0,
             borderBottom: noPadding ? '1px solid var(--border, #e2e8f0)' : 'none',
+            flexWrap: 'wrap',
+            gap: 12,
           }}
         >
           <div>

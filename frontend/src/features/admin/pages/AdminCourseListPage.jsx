@@ -311,15 +311,15 @@ export default function AdminCourseListPage() {
         </div>
       ) : (
         <div
-          className="admin-table-wrap"
+          className="admin-table-wrap admin-table-wrap-cards"
           style={{
             background: 'var(--surface, #ffffff)',
             borderRadius: 8,
             border: '1px solid var(--c-border, #e2e8f0)',
-            overflow: 'hidden',
+            overflowX: 'auto',
           }}
         >
-          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="admin-table admin-table-card-mobile" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr
                 style={{
@@ -382,7 +382,7 @@ export default function AdminCourseListPage() {
                     }}
                     className="admin-interactive-row"
                   >
-                    <td style={{ padding: '12px 14px' }}>
+                    <td data-label="Khóa học" style={{ padding: '12px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         {c.coverUrl && (
                           <img
@@ -437,7 +437,7 @@ export default function AdminCourseListPage() {
                       </div>
                     </td>
 
-                    <td style={{ padding: '12px 14px' }}>
+                    <td data-label="Giảng viên" style={{ padding: '12px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text, #334155)' }}>
                         <User size={14} style={{ color: 'var(--c-muted, #94a3b8)' }} />
                         <span>{c.teacherName || 'Chưa rõ'}</span>
@@ -447,18 +447,20 @@ export default function AdminCourseListPage() {
                     {/* Cột theo từng tab */}
                     {currentTab === 'PENDING_REVIEW' && (
                       <>
-                        <td style={{ padding: '12px 14px' }}>
-                          <div style={{ fontSize: 12, color: 'var(--text-dim, #475569)' }}>
-                            {c.submittedAt ? new Date(c.submittedAt).toLocaleDateString('vi-VN') : '—'}
-                          </div>
-                          {waitingTime && (
-                            <div className={`urgency-badge ${urgencyClass}`} style={{ marginTop: 4 }}>
-                              <Clock size={11} />
-                              <span>{waitingTime}</span>
+                        <td data-label="Thời gian chờ" style={{ padding: '12px 14px' }}>
+                          <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: 12, color: 'var(--text-dim, #475569)' }}>
+                              {c.submittedAt ? new Date(c.submittedAt).toLocaleDateString('vi-VN') : '—'}
                             </div>
-                          )}
+                            {waitingTime && (
+                              <div className={`urgency-badge ${urgencyClass}`} style={{ marginTop: 4 }}>
+                                <Clock size={11} />
+                                <span>{waitingTime}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
-                        <td style={{ padding: '12px 14px' }}>
+                        <td data-label="Kiểm tra AI" style={{ padding: '12px 14px' }}>
                           <CourseAiBadge reportJson={c.aiModerationReport} />
                         </td>
                       </>
@@ -466,12 +468,12 @@ export default function AdminCourseListPage() {
 
                     {currentTab === 'PUBLISHED' && (
                       <>
-                        <td style={{ padding: '12px 14px' }}>
+                        <td data-label="Học phí" style={{ padding: '12px 14px' }}>
                           <span style={{ fontWeight: 500 }}>
                             {c.price ? `${Number(c.price).toLocaleString()} đ` : 'Miễn phí'}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
+                        <td data-label="Cập nhật" style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
                           {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('vi-VN') : '—'}
                         </td>
                       </>
@@ -479,10 +481,10 @@ export default function AdminCourseListPage() {
 
                     {currentTab === 'FLAGGED' && (
                       <>
-                        <td style={{ padding: '12px 14px' }}>
+                        <td data-label="Trạng thái" style={{ padding: '12px 14px' }}>
                           <StatusBadge status={isModifiedAfterPublish ? 'MODIFIED' : c.status} />
                         </td>
-                        <td style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
+                        <td data-label="Thời điểm sửa" style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
                           {c.contentChangedAt ? new Date(c.contentChangedAt).toLocaleDateString('vi-VN') : '—'}
                         </td>
                       </>
@@ -490,32 +492,34 @@ export default function AdminCourseListPage() {
 
                     {currentTab === 'ALL' && (
                       <>
-                        <td style={{ padding: '12px 14px' }}>
+                        <td data-label="Học phí" style={{ padding: '12px 14px' }}>
                           <span style={{ fontWeight: 500 }}>
                             {c.price ? `${Number(c.price).toLocaleString()} đ` : 'Miễn phí'}
                           </span>
                         </td>
-                        <td style={{ padding: '12px 14px' }}>
-                          <StatusBadge status={c.status} />
-                          {c.rejectReason && (
-                            <div
-                              style={{
-                                fontSize: 11,
-                                color: 'var(--c-danger, #b91c1c)',
-                                marginTop: 4,
-                                maxWidth: 200,
-                              }}
-                              title={c.rejectReason}
-                            >
-                              {c.rejectReason.slice(0, 40)}...
-                            </div>
-                          )}
+                        <td data-label="Trạng thái" style={{ padding: '12px 14px' }}>
+                          <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <StatusBadge status={c.status} />
+                            {c.rejectReason && (
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  color: 'var(--c-danger, #b91c1c)',
+                                  marginTop: 4,
+                                  maxWidth: 200,
+                                }}
+                                title={c.rejectReason}
+                              >
+                                {c.rejectReason.slice(0, 40)}...
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </>
                     )}
 
                     {/* Thao tác */}
-                    <td style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <td data-label="Thao tác" style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <div
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}
                         onClick={(e) => e.stopPropagation()}

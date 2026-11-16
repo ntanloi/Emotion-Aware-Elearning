@@ -934,4 +934,67 @@
     color: #ef4444;
     font-size: 13px;
   }
+
+  /* ==========================================================================
+     PHASE R2: MOBILE & TABLET VIDEO PLAYER & EMOTION CAMERA OPTIMIZATION
+     ========================================================================== */
+  @media (max-width: 768px) {
+    .video-wrap:not(.is-fullscreen) {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    .video-wrap:not(.is-fullscreen) iframe,
+    .video-wrap:not(.is-fullscreen) video {
+      height: 100% !important;
+      aspect-ratio: 16 / 9;
+    }
+
+    .camera-preview-wrapper {
+      width: 90px !important;
+      border-radius: 8px !important;
+      bottom: 38px !important;
+      right: 8px !important;
+      border-width: 1px !important;
+    }
+
+    .camera-preview-handle {
+      height: 14px;
+    }
+
+    .camera-status-overlay {
+      top: 8px;
+      right: 8px;
+      gap: 4px;
+    }
+
+    .learning-state-pill {
+      padding: 3px 7px;
+      font-size: 10px;
+    }
+
+    .capturing-indicator {
+      display: none;
+    }
+
+    .video-fullscreen-pill {
+      top: 8px;
+      left: 8px;
+      padding: 4px 8px;
+      font-size: 10.5px;
+    }
+
+    .face-lost-content {
+      padding: 18px 16px;
+      margin: 12px;
+    }
+
+    .face-lost-content h3 {
+      font-size: 16px;
+    }
+
+    .face-lost-content p {
+      font-size: 12px;
+    }
+  }
 }

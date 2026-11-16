@@ -1102,13 +1102,22 @@
   }
 
   .home-banner-slide {
-    padding: 28px 24px 36px;
-    min-height: auto;
+    padding: 20px 16px;
+    min-height: 0;
+    gap: 16px;
+    flex-direction: column;
   }
 
   .home-banner-slide.slide-image-only {
-    min-height: 160px;
-    aspect-ratio: 2048 / 768;
+    padding: 0;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  .home-banner-pure-img {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    object-fit: cover;
   }
 
   .home-banner-title {

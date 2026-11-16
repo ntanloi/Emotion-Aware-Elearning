@@ -346,12 +346,7 @@ export default function TeacherDashboardPage() {
       </div>
 
       {/* 2. BỘ 4 THẺ CHỈ SỐ GỌN GÀNG, SỐNG ĐỘNG (SaaS Card Layout) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-        gap: 16,
-        marginBottom: 24
-      }}>
+      <div className="teacher-stats-kpi-grid">
         {metricTabs.map((tab) => {
           const isActive = activeTab === tab.id
           const t = tab.theme
@@ -471,8 +466,7 @@ export default function TeacherDashboardPage() {
       </div>
 
       {/* 3. KHUNG NỘI DUNG CHI TIẾT */}
-      <div className="card" style={{
-        padding: '24px',
+      <div className="card teacher-dashboard-main-card" style={{
         borderRadius: 12,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
         border: '1px solid var(--border-subtle)'
@@ -536,7 +530,7 @@ export default function TeacherDashboardPage() {
                 </p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="table-scroll">
                 <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
@@ -728,7 +722,7 @@ export default function TeacherDashboardPage() {
                 </p>
               </div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
+              <div className="table-scroll">
                 <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
@@ -851,42 +845,12 @@ export default function TeacherDashboardPage() {
         {activeTab === 'emotions' && (
           <div>
             {/* Thanh chuyển đổi 2 Sub-tab: Bài giảng Video vs Lớp học trực tiếp (Live) */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 12,
-              paddingBottom: 20,
-              marginBottom: 20,
-              borderBottom: '1px solid var(--border-subtle)'
-            }}>
-              <div style={{
-                display: 'inline-flex',
-                background: 'var(--surface-2)',
-                padding: '4px',
-                borderRadius: 10,
-                gap: 4,
-                border: '1px solid var(--border-subtle)'
-              }}>
+            <div className="teacher-emotion-subtabs-wrap">
+              <div className="teacher-emotion-subtabs-nav">
                 <button
                   type="button"
                   onClick={() => setEmotionSubTab('video')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 18px',
-                    borderRadius: 8,
-                    border: 'none',
-                    fontSize: 13.5,
-                    fontWeight: emotionSubTab === 'video' ? 600 : 500,
-                    background: emotionSubTab === 'video' ? 'var(--surface)' : 'transparent',
-                    color: emotionSubTab === 'video' ? 'var(--accent)' : 'var(--text-dim)',
-                    boxShadow: emotionSubTab === 'video' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.18s ease'
-                  }}
+                  className={`teacher-emotion-subtab-btn ${emotionSubTab === 'video' ? 'active-video' : ''}`}
                 >
                   <Video size={16} />
                   <span>Bài giảng Video</span>
@@ -895,21 +859,7 @@ export default function TeacherDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setEmotionSubTab('live')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 18px',
-                    borderRadius: 8,
-                    border: 'none',
-                    fontSize: 13.5,
-                    fontWeight: emotionSubTab === 'live' ? 600 : 500,
-                    background: emotionSubTab === 'live' ? 'var(--surface)' : 'transparent',
-                    color: emotionSubTab === 'live' ? '#dc2626' : 'var(--text-dim)',
-                    boxShadow: emotionSubTab === 'live' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.18s ease'
-                  }}
+                  className={`teacher-emotion-subtab-btn ${emotionSubTab === 'live' ? 'active-live' : ''}`}
                 >
                   <Radio size={16} />
                   <span>Lớp học trực tiếp (Live)</span>
@@ -1047,7 +997,7 @@ export default function TeacherDashboardPage() {
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
                       gap: 14,
                     }}
                   >
@@ -1248,7 +1198,7 @@ export default function TeacherDashboardPage() {
                 {/* 4 Thống kê cảm xúc tổng quan của giáo viên */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                   gap: 16,
                   marginBottom: 28
                 }}>
@@ -1339,11 +1289,11 @@ export default function TeacherDashboardPage() {
 
                 {/* Bảng Danh sách Khóa học để chọn */}
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <BookOpen size={17} color="var(--accent)" />
+                  <div className="teacher-section-header-wrap">
+                    <h4 className="teacher-section-title">
+                      <BookOpen size={17} color="var(--accent)" style={{ flexShrink: 0 }} />
                       <span>Chọn Khóa học để xem Hiệu quả Cảm xúc</span>
-                      <span className="badge" style={{ background: 'var(--surface-2)', fontSize: 12 }}>
+                      <span className="badge" style={{ background: 'var(--surface-2)', fontSize: 12, flexShrink: 0 }}>
                         {filteredCourses.length} khóa học
                       </span>
                     </h4>
@@ -1369,7 +1319,7 @@ export default function TeacherDashboardPage() {
                   </div>
 
                   {filteredCourses.length > 0 ? (
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="table-scroll">
                       <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                           <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
@@ -1638,10 +1588,11 @@ export default function TeacherDashboardPage() {
 
                   return (
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                        <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="teacher-section-header-wrap">
+                        <h4 className="teacher-section-title">
+                          <Video size={17} color="var(--accent)" style={{ flexShrink: 0 }} />
                           <span>Hiệu quả Cảm xúc theo từng Bài giảng Video</span>
-                          <span className="badge" style={{ background: 'var(--surface-2)', fontSize: 12 }}>
+                          <span className="badge" style={{ background: 'var(--surface-2)', fontSize: 12, flexShrink: 0 }}>
                             {filteredLessons.length} bài giảng video ({totalSessionsInCourse} phiên học)
                           </span>
                         </h4>
@@ -1667,7 +1618,7 @@ export default function TeacherDashboardPage() {
                       </div>
 
                       {filteredLessons.length > 0 ? (
-                        <div style={{ overflowX: 'auto' }}>
+                        <div className="table-scroll">
                           <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                               <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>

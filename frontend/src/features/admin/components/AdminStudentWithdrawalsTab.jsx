@@ -140,13 +140,13 @@ export default function AdminStudentWithdrawalsTab({ showToast }) {
       </div>
 
       {/* Bảng danh sách yêu cầu rút tiền */}
-      <div className="admin-table-wrap" style={{ background: 'var(--surface, #ffffff)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+      <div className="admin-table-wrap" style={{ background: 'var(--surface, #ffffff)', border: '1px solid var(--border)', borderRadius: 10, overflowX: 'auto' }}>
         {loading ? (
           <p style={{ padding: 24, textAlign: 'center', color: 'var(--text-dim)' }}>Đang tải danh sách rút tiền...</p>
         ) : items.length === 0 ? (
           <p style={{ padding: 32, textAlign: 'center', color: 'var(--text-dim)' }}>Không có yêu cầu rút tiền nào.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', minWidth: 680, borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--surface-hover, #f8fafc)', borderBottom: '1.5px solid var(--border)', textAlign: 'left', color: 'var(--text-dim)' }}>
                 <th style={{ padding: '10px 14px' }}>Thời gian</th>

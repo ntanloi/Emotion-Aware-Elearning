@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Clock, Send, AlertTriangle, ArrowLeft, ArrowRight, Check, Volume2, Bookmark } from 'lucide-react'
+import { Clock, Send, AlertTriangle, ArrowLeft, ArrowRight, Check, Volume2, Bookmark, List, X } from 'lucide-react'
 import { getAttemptContent, saveDraft, submitAttempt } from '@student/api/tests.js'
 import AudioPlayer from '@shared/components/AudioPlayer.jsx'
 import QuestionImage from '@shared/components/QuestionImage.jsx'
@@ -21,6 +21,7 @@ export default function TestRunnerPage() {
   const [answers, setAnswers] = useState({}) // questionId -> optionId hoặc text
   const [savedDraftStatus, setSavedDraftStatus] = useState('')
   const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [showQuestionPaletteMobile, setShowQuestionPaletteMobile] = useState(false)
 
   // Đồng hồ đếm ngược server deadline
   const [remainingSeconds, setRemainingSeconds] = useState(null)
@@ -213,7 +214,7 @@ export default function TestRunnerPage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div className="runner-header-controls">
           {remainingSeconds !== null && (
             <div className={`runner-timer-pill ${isUrgent ? 'urgent' : ''}`}>
               <Clock size={16} />
@@ -223,12 +224,23 @@ export default function TestRunnerPage() {
 
           <button
             type="button"
+            className="runner-mobile-palette-toggle"
+            onClick={() => setShowQuestionPaletteMobile((v) => !v)}
+            aria-label="Mở bảng câu hỏi"
+          >
+            <List size={15} />
+            <span>Câu hỏi ({answeredCount}/{allQuestions.length})</span>
+          </button>
+
+          <button
+            type="button"
             className="btn-test-action"
             style={{ padding: '8px 18px', fontWeight: 600 }}
             onClick={() => setShowSubmitModal(true)}
           >
             <Send size={15} />
-            <span>Nộp bài ({answeredCount}/{allQuestions.length})</span>
+            <span className="runner-submit-btn-text">Nộp bài ({answeredCount}/{allQuestions.length})</span>
+            <span className="runner-submit-btn-text-mobile">Nộp</span>
           </button>
         </div>
       </header>
@@ -274,27 +286,11 @@ export default function TestRunnerPage() {
             return (
               <div
                 key={gIdx}
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 20,
-                  display: hasPassage ? 'grid' : 'block',
-                  gridTemplateColumns: hasPassage ? '1fr 1fr' : '1fr',
-                  gap: 20,
-                  boxShadow: 'var(--shadow-sm)',
-                }}
+                className={`runner-group-card ${hasPassage ? 'has-passage' : ''}`}
               >
                 {/* Cột Passage/Audio nếu có */}
                 {hasPassage && (
-                  <div
-                    style={{
-                      borderRight: '1px solid var(--border)',
-                      paddingRight: 20,
-                      maxHeight: '75vh',
-                      overflowY: 'auto',
-                    }}
-                  >
+                  <div className="runner-group-passage">
                     <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--accent)', marginBottom: 8 }}>
                       Đoạn thông tin / Bài đọc
                     </div>
@@ -310,6 +306,7 @@ export default function TestRunnerPage() {
                     )}
                     {group.passage.passageHtml && (
                       <div
+                        className="runner-passage-html"
                         style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}
                         dangerouslySetInnerHTML={{ __html: group.passage.passageHtml }}
                       />
@@ -318,7 +315,7 @@ export default function TestRunnerPage() {
                 )}
 
                 {/* Cột câu hỏi */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div className="runner-group-questions">
                   {group.questions.map((q) => {
                     const globalItem = allQuestions.find((item) => item.id === q.id)
                     const qIndex = globalItem ? globalItem.globalIndex : '?'
@@ -396,12 +393,29 @@ export default function TestRunnerPage() {
         </div>
 
         {/* Cột phải: Bảng điều hướng câu hỏi (Question Palette) */}
-        <aside className="runner-sidebar-panel">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h4 style={{ margin: 0, fontSize: 14, color: 'var(--text)' }}>Mục lục câu hỏi</h4>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--accent)' }}>
-              {answeredCount}/{allQuestions.length} đã làm
-            </span>
+        {showQuestionPaletteMobile && (
+          <div
+            className="runner-sidebar-backdrop"
+            onClick={() => setShowQuestionPaletteMobile(false)}
+            aria-hidden="true"
+          />
+        )}
+        <aside className={`runner-sidebar-panel ${showQuestionPaletteMobile ? 'mobile-open' : ''}`}>
+          <div className="runner-sidebar-header">
+            <div>
+              <h4 style={{ margin: 0, fontSize: 14.5, color: 'var(--text)' }}>Mục lục câu hỏi</h4>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+                {answeredCount}/{allQuestions.length} đã làm
+              </span>
+            </div>
+            <button
+              type="button"
+              className="runner-sidebar-close-btn"
+              onClick={() => setShowQuestionPaletteMobile(false)}
+              aria-label="Đóng bảng câu hỏi"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <div className="palette-grid">
@@ -422,6 +436,7 @@ export default function TestRunnerPage() {
                     if (targetPartIdx !== -1 && targetPartIdx !== activePartIndex) {
                       setActivePartIndex(targetPartIdx)
                     }
+                    setShowQuestionPaletteMobile(false)
                     setTimeout(() => {
                       const el = document.getElementById(`question-${q.id}`)
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })

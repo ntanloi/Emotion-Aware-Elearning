@@ -182,7 +182,7 @@ export default function ProfilePage() {
       <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Khối 1: Thông tin tài khoản */}
         <SectionCard title="Thông tin cá nhân" subtitle="Tên hiển thị và vai trò trong hệ thống">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="profile-form-grid-2">
             <div className="form-group">
               <label className="form-label" style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, display: 'block' }}>
                 Họ và tên hiển thị
@@ -215,7 +215,7 @@ export default function ProfilePage() {
         {/* Khối 2: Thiết lập mục tiêu học tập (chỉ dành cho học viên) */}
         {isStudent && (
           <SectionCard title="Mục tiêu học tập" subtitle="Hệ thống dựa trên mục tiêu này để tối ưu hóa lộ trình cá nhân">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="profile-form-grid-2">
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, display: 'block' }}>
                   Mục tiêu điểm số TOEIC
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                 : 'Thông tin tài khoản ngân hàng của bạn dùng để nhận giải ngân khi tạo yêu cầu rút doanh thu từ ví giảng viên.'
             }
           >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div className="profile-form-grid-bank">
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, display: 'block' }}>
                   Ngân hàng

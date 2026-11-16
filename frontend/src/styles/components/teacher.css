@@ -1379,4 +1379,82 @@
 .teacher-search-box.sm input {
   font-size: 12.5px !important;
 }
+
+/* ==========================================================================
+   TEACHER SPACE RESPONSIVE OVERHAUL (TABLET & MOBILE)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .teacher-course-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .teacher-dashboard-container {
+    padding: 16px 14px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .teacher-toolbar > * {
+    width: 100%;
+  }
+
+  .teacher-search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .teacher-search-box.sm {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .teacher-course-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .teacher-dashboard-container {
+    padding: 12px 10px 36px;
+  }
+
+  .teacher-course-card .course-cover-wrapper {
+    height: 150px;
+  }
+
+  .stack-list {
+    max-width: 100%;
+  }
+
+  .content-group {
+    padding: 14px 12px;
+  }
+
+  .activity-row {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .activity-row-title {
+    font-size: 14px;
+  }
+
+  .unit-card {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .unit-card-title {
+    font-size: 14.5px;
+  }
+}
 }

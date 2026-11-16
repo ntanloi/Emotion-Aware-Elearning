@@ -224,15 +224,15 @@ export default function AdminUserListPage() {
         </div>
       ) : (
         <div
-          className="admin-table-wrap"
+          className="admin-table-wrap admin-table-wrap-cards"
           style={{
             background: 'var(--surface, #fff)',
             borderRadius: 8,
             border: '1px solid var(--c-border, #e2e8f0)',
-            overflow: 'hidden',
+            overflowX: 'auto',
           }}
         >
-          <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="admin-table admin-table-card-mobile" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr
                 style={{
@@ -254,7 +254,7 @@ export default function AdminUserListPage() {
             <tbody>
               {users.map((u) => (
                 <tr key={u.id} style={{ borderBottom: '1px solid var(--c-border, #f1f5f9)', fontSize: 13 }}>
-                  <td style={{ padding: '14px 18px' }}>
+                  <td data-label="Người dùng" style={{ padding: '14px 18px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div className="admin-user-avatar">
                         {u.fullName ? u.fullName.charAt(0).toUpperCase() : 'U'}
@@ -265,7 +265,7 @@ export default function AdminUserListPage() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
+                  <td data-label="Vai trò" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
                     <span
                       style={{
                         fontSize: 11.5,
@@ -294,28 +294,30 @@ export default function AdminUserListPage() {
                       <span>{u.role === 'TEACHER' ? 'Giảng viên' : u.role === 'STUDENT' ? 'Học viên' : 'Quản trị viên'}</span>
                     </span>
                   </td>
-                  <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
-                    <StatusBadge status={u.status} />
-                    {u.statusReason && (
-                      <div
-                        style={{ fontSize: 11, color: 'var(--c-danger, #dc2626)', marginTop: 4, maxWidth: 220 }}
-                        title={u.statusReason}
-                      >
-                        Lý do: {u.statusReason}
-                      </div>
-                    )}
+                  <td data-label="Trạng thái" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <StatusBadge status={u.status} />
+                      {u.statusReason && (
+                        <div
+                          style={{ fontSize: 11, color: 'var(--c-danger, #dc2626)', marginTop: 4, maxWidth: 220 }}
+                          title={u.statusReason}
+                        >
+                          Lý do: {u.statusReason}
+                        </div>
+                      )}
+                    </div>
                   </td>
-                  <td style={{ padding: '14px 18px', fontSize: 12, color: 'var(--text-dim, #475569)', whiteSpace: 'nowrap' }}>
+                  <td data-label="Khóa học" style={{ padding: '14px 18px', fontSize: 12, color: 'var(--text-dim, #475569)', whiteSpace: 'nowrap' }}>
                     {u.role === 'STUDENT'
                       ? `${u.enrolledCoursesCount || 0} đã ghi danh`
                       : u.role === 'TEACHER'
                       ? `${u.createdCoursesCount || 0} đã tạo`
                       : '—'}
                   </td>
-                  <td style={{ padding: '14px 18px', fontSize: 12, color: 'var(--c-muted, #64748b)', whiteSpace: 'nowrap' }}>
+                  <td data-label="Ngày tạo" style={{ padding: '14px 18px', fontSize: 12, color: 'var(--c-muted, #64748b)', whiteSpace: 'nowrap' }}>
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—'}
                   </td>
-                  <td style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <td data-label="Hành động" style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {u.role === 'TEACHER' && u.status === 'PENDING_APPROVAL' ? (
                       <div style={{ display: 'inline-flex', gap: 6 }}>
                         <button

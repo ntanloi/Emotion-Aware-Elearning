@@ -318,7 +318,7 @@ export default function AdminReviewsPage() {
       {activeTab === 'reports' && (
         <div>
           {/* Bộ lọc trạng thái Báo cáo dạng pills thanh lịch */}
-          <div className="admin-filter-bar" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+          <div className="admin-status-filter-pills" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-muted)' }}>Trạng thái:</span>
             {[
               { key: 'PENDING', label: 'Chờ xử lý' },

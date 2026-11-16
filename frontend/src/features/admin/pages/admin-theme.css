@@ -234,10 +234,12 @@
   border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
   overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
   width: 100% !important;
+  min-width: 680px;
   border-collapse: collapse !important;
   font-size: 13.5px !important;
   text-align: left !important;
@@ -1306,6 +1308,113 @@
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
+
+/* ==========================================================================
+   Admin Responsive Overhaul (Phase R5)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .admin-page-body {
+    padding: 20px 20px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-page-body {
+    padding: 14px 12px 36px;
+  }
+
+  .admin-page-header-unified h2,
+  .admin-page-header-unified h3 {
+    font-size: 18px;
+  }
+
+  .admin-filter-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .admin-filter-bar .search-input-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-filter-bar .filter-select-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-segmented-tabs {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px;
+  }
+  .admin-segmented-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-segmented-tab {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+
+  .admin-finance-tabs-nav {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px;
+  }
+  .admin-finance-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-finance-tab-btn {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-action-card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-action-card {
+    padding: 16px 18px;
+  }
+
+  .admin-stat-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .admin-stat-divider {
+    display: none;
+  }
+
+  .finance-quick-filters {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding-bottom: 6px;
+  }
+  .finance-filter-chip {
+    flex-shrink: 0;
+  }
+}
+
 
 
 
