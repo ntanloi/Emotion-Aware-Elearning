@@ -32,7 +32,7 @@ export function useCreateVocabWord() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: vocabWordsApi.createVocabWord,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }) },
   })
 }
 
@@ -40,7 +40,7 @@ export function useUpdateVocabWord() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }) => vocabWordsApi.updateVocabWord(id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }) },
   })
 }
 
@@ -48,6 +48,6 @@ export function useDeleteVocabWord() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: vocabWordsApi.deleteVocabWord,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vocab-words', 'mine'] }) },
   })
 }

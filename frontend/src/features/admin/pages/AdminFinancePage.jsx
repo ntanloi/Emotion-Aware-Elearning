@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import * as financeApi from '@admin/api/finance.js'
 import AdminPageHeader from '@admin/components/ui/AdminPageHeader.jsx'
 import Modal from '@shared/components/ui/Modal.jsx'
@@ -34,6 +34,7 @@ import {
   Award
 } from 'lucide-react'
 
+import { formatVnDate, formatVnDateTime } from '@shared/utils/dateTime.js'
 // Avatar initials helper
 function getInitials(name) {
   if (!name) return '—'
@@ -49,7 +50,16 @@ function formatVND(amount) {
 }
 
 export default function AdminFinancePage() {
-  const [activeTab, setActiveTab] = useState('orders') // 'orders' | 'transactions' | 'payouts'
+  // Cho phép mở thẳng tab qua ?tab=... (từ thông báo chuông)
+  const tabsNavRef = useRef(null)
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get('tab')
+      return ['orders', 'transactions', 'payouts', 'student-withdrawals', 'rewards-escrow'].includes(t) ? t : 'orders'
+    } catch {
+      return 'orders'
+    }
+  })
 
   // Summary Metrics State
   const [summary, setSummary] = useState(null)
@@ -106,7 +116,9 @@ export default function AdminFinancePage() {
     txRef: '',
     note: '',
     submitting: false,
-    error: null
+    error: null,
+    checkingSepay: false,
+    sepayResult: null
   })
 
   const [rejectPayoutModal, setRejectPayoutModal] = useState({
@@ -198,6 +210,27 @@ export default function AdminFinancePage() {
     }
   }, [payoutStatus, payoutPage])
 
+  // Thanh tab: lăn chuột dọc để cuộn ngang, và tự cuộn tới tab đang chọn
+  useEffect(() => {
+    const nav = tabsNavRef.current
+    if (!nav) return undefined
+    const onWheel = (e) => {
+      if (nav.scrollWidth <= nav.clientWidth || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      const atStart = nav.scrollLeft <= 0 && e.deltaY < 0
+      const atEnd = nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1 && e.deltaY > 0
+      if (atStart || atEnd) return // hết đầu/cuối thì để trang cuộn dọc bình thường
+      e.preventDefault()
+      nav.scrollLeft += e.deltaY
+    }
+    nav.addEventListener('wheel', onWheel, { passive: false })
+    return () => nav.removeEventListener('wheel', onWheel)
+  }, [])
+
+  useEffect(() => {
+    const active = tabsNavRef.current?.querySelector('.admin-finance-tab-btn.active')
+    active?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+  }, [activeTab])
+
   useEffect(() => {
     fetchSummary()
   }, [fetchSummary])
@@ -231,26 +264,72 @@ export default function AdminFinancePage() {
     }
   }
 
+  // Kiểm tra đối soát giao dịch SePay (Luồng tiền chuyển đi)
+  const handleCheckSepay = async (txRefOverride, targetPayout) => {
+    const currentPayout = targetPayout || approvePayoutModal.payout
+    if (!currentPayout) return
+    const refToTest = txRefOverride !== undefined ? txRefOverride : approvePayoutModal.txRef
+
+    try {
+      setApprovePayoutModal(m => ({ ...m, checkingSepay: true, error: null }))
+      const res = await financeApi.checkPayoutSepay(currentPayout.id, { transactionRef: refToTest })
+      setApprovePayoutModal(m => ({
+        ...m,
+        checkingSepay: false,
+        sepayResult: res,
+        txRef: (!m.txRef && res.matched && res.transaction?.referenceCode)
+          ? res.transaction.referenceCode
+          : (!m.txRef && res.matched && res.transaction?.sepayId)
+            ? String(res.transaction.sepayId)
+            : m.txRef,
+        error: res.matched ? null : (res.message || 'Chưa tìm thấy giao dịch chuyển tiền hợp lệ trên SePay')
+      }))
+    } catch (err) {
+      setApprovePayoutModal(m => ({
+        ...m,
+        checkingSepay: false,
+        sepayResult: null,
+        error: err.response?.data?.message || err.message || 'Lỗi khi kiểm tra đối soát SePay'
+      }))
+    }
+  }
+
   // Xử lý Duyệt chi rút tiền
   const handleConfirmApprovePayout = async (e) => {
     e.preventDefault()
-    if (!approvePayoutModal.txRef.trim()) {
-      setApprovePayoutModal(m => ({ ...m, error: 'Bắt buộc nhập mã giao dịch ngân hàng đã chuyển' }))
+    if (!approvePayoutModal.sepayResult?.matched) {
+      setApprovePayoutModal(m => ({
+        ...m,
+        error: 'Chưa vượt qua bước kiểm tra SePay! Hệ thống bắt buộc phải xác nhận đúng số tiền, đúng mã giảng viên và đúng tài khoản thụ hưởng trên luồng tiền chuyển đi của SePay trước khi duyệt chi.'
+      }))
       return
     }
 
     try {
       setApprovePayoutModal(m => ({ ...m, submitting: true, error: null }))
       await financeApi.approvePayout(approvePayoutModal.payout.id, {
-        transactionRef: approvePayoutModal.txRef.trim(),
+        transactionRef: (approvePayoutModal.txRef || '').trim(),
         adminNote: approvePayoutModal.note.trim()
       })
       showToast(`Đã xác nhận giải ngân thành công cho giảng viên ${approvePayoutModal.payout.teacherName}`)
-      setApprovePayoutModal({ open: false, payout: null, txRef: '', note: '', submitting: false, error: null })
+      setApprovePayoutModal({
+        open: false,
+        payout: null,
+        txRef: '',
+        note: '',
+        submitting: false,
+        error: null,
+        checkingSepay: false,
+        sepayResult: null
+      })
       fetchPayouts()
       fetchSummary()
     } catch (err) {
-      setApprovePayoutModal(m => ({ ...m, submitting: false, error: err.response?.data?.message || err.message || 'Lỗi duyệt chi rút tiền' }))
+      setApprovePayoutModal(m => ({
+        ...m,
+        submitting: false,
+        error: err.response?.data?.message || err.message || 'Lỗi duyệt chi rút tiền'
+      }))
     }
   }
 
@@ -471,7 +550,7 @@ export default function AdminFinancePage() {
       {/* ========================================================================= */}
       {/* SEGMENTED NAVIGATION 3 TABS */}
       {/* ========================================================================= */}
-      <div className="admin-finance-tabs-nav">
+      <div className="admin-finance-tabs-nav" ref={tabsNavRef}>
         <button
           className={`admin-finance-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           onClick={() => setActiveTab('orders')}
@@ -753,18 +832,18 @@ export default function AdminFinancePage() {
 
                         {/* Thời gian tạo */}
                         <td style={{ fontSize: 12, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
-                          {order.createdAt ? new Date(order.createdAt).toLocaleString('vi-VN') : '—'}
+                          {order.createdAt ? formatVnDateTime(order.createdAt) : '—'}
                         </td>
 
                         {/* Thời gian thanh toán / hoàn */}
                         <td style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
                           {order.status === 'PAID' && order.paidAt ? (
                             <span style={{ color: 'var(--c-success)', fontWeight: 600 }}>
-                              {new Date(order.paidAt).toLocaleString('vi-VN')}
+                              {formatVnDateTime(order.paidAt)}
                             </span>
                           ) : order.status === 'REFUNDED' && order.refundedAt ? (
                             <div style={{ color: 'var(--c-danger)' }}>
-                              <span style={{ fontWeight: 600 }}>{new Date(order.refundedAt).toLocaleString('vi-VN')}</span>
+                              <span style={{ fontWeight: 600 }}>{formatVnDateTime(order.refundedAt)}</span>
                               {order.refundRefCode && (
                                 <div style={{ fontSize: 12, color: 'var(--c-danger)', fontFamily: 'monospace' }}>
                                   Mã: {order.refundRefCode}
@@ -955,11 +1034,11 @@ export default function AdminFinancePage() {
                   <tr>
                     <th style={{ whiteSpace: 'nowrap' }}>ID SePay</th>
                     <th style={{ whiteSpace: 'nowrap' }}>Thời gian GD</th>
-                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Số tiền vào</th>
-                    <th style={{ whiteSpace: 'nowrap' }}>Tài khoản nhận</th>
+                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Số tiền</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>Tài khoản nguồn/nhận</th>
                     <th style={{ whiteSpace: 'nowrap' }}>Nội dung chuyển khoản</th>
                     <th style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Trạng thái đối soát</th>
-                    <th style={{ whiteSpace: 'nowrap' }}>Mã đơn khớp</th>
+                    <th style={{ whiteSpace: 'nowrap' }}>Khớp Đơn / GV</th>
                     <th style={{ whiteSpace: 'nowrap' }}>Ghi chú kiểm toán</th>
                     <th style={{ textAlign: 'center', whiteSpace: 'nowrap', minWidth: 160, paddingRight: 24 }}>Thao tác</th>
                   </tr>
@@ -990,16 +1069,28 @@ export default function AdminFinancePage() {
 
                         {/* Thời gian GD */}
                         <td style={{ fontSize: 12, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
-                          {tx.transactionDate ? new Date(tx.transactionDate).toLocaleString('vi-VN') : (
-                            tx.createdAt ? new Date(tx.createdAt).toLocaleString('vi-VN') : '—'
+                          {tx.transactionDate ? formatVnDateTime(tx.transactionDate) : (
+                            tx.createdAt ? formatVnDateTime(tx.createdAt) : '—'
                           )}
                         </td>
 
-                        {/* Số tiền vào */}
+                        {/* Số tiền */}
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          <strong style={{ color: 'var(--c-success)', fontSize: 14, whiteSpace: 'nowrap' }}>
-                            +{Number(tx.transferAmount || 0).toLocaleString('vi-VN')}&nbsp;đ
-                          </strong>
+                          {tx.transferType === 'out' ? (
+                            <div>
+                              <strong style={{ color: 'var(--c-danger, #ef4444)', fontSize: 14, whiteSpace: 'nowrap' }}>
+                                -{Number(tx.transferAmount || 0).toLocaleString('vi-VN')}&nbsp;đ
+                              </strong>
+                              <div style={{ fontSize: 11, color: 'var(--c-danger)', opacity: 0.85 }}>Tiền ra (Giải ngân)</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <strong style={{ color: 'var(--c-success)', fontSize: 14, whiteSpace: 'nowrap' }}>
+                                +{Number(tx.transferAmount || 0).toLocaleString('vi-VN')}&nbsp;đ
+                              </strong>
+                              <div style={{ fontSize: 11, color: 'var(--c-success)', opacity: 0.85 }}>Tiền vào</div>
+                            </div>
+                          )}
                         </td>
 
                         {/* Tài khoản nhận */}
@@ -1039,7 +1130,7 @@ export default function AdminFinancePage() {
                           </span>
                         </td>
 
-                        {/* Mã đơn khớp */}
+                        {/* Mã đơn khớp / Yêu cầu rút khớp */}
                         <td style={{ whiteSpace: 'nowrap' }}>
                           {tx.orderCode ? (
                             <div
@@ -1049,6 +1140,11 @@ export default function AdminFinancePage() {
                             >
                               <span>{tx.orderCode}</span>
                               <Copy size={11} style={{ opacity: 0.6 }} />
+                            </div>
+                          ) : tx.payoutTeacherName ? (
+                            <div style={{ fontSize: 12 }}>
+                              <span style={{ color: 'var(--c-warning)', fontWeight: 600 }}>Rút GV:</span>{' '}
+                              <span>{tx.payoutTeacherName}</span>
                             </div>
                           ) : (
                             <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -1272,6 +1368,19 @@ export default function AdminFinancePage() {
                               <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
                                 {req.teacherEmail}
                               </div>
+                              {req.teacherCode && (
+                                <div style={{ marginTop: 2 }}>
+                                  <span
+                                    className="finance-code-pill"
+                                    onClick={() => copyToClipboard(req.teacherCode, 'mã giảng viên')}
+                                    title="Bấm sao chép Mã GV"
+                                    style={{ fontSize: 11, padding: '2px 6px', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                  >
+                                    <span>Mã GV: <strong>{req.teacherCode}</strong></span>
+                                    <Copy size={10} style={{ opacity: 0.6 }} />
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -1306,6 +1415,22 @@ export default function AdminFinancePage() {
                             <span className="status-dot" />
                             <span>{statusLabel}</span>
                           </span>
+                          {req.status === 'PENDING' && req.sepayMatched && (
+                            <div style={{ marginTop: 4 }}>
+                              <span style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: 'var(--c-success, #16a34a)',
+                                background: 'var(--good-soft, #dcfce7)',
+                                border: '1px solid var(--good-border, #bbf7d0)',
+                                borderRadius: 12,
+                                padding: '2px 8px',
+                                display: 'inline-block'
+                              }}>
+                                ⚡ SePay đã chuyển
+                              </span>
+                            </div>
+                          )}
                         </td>
 
                         {/* Mã GD ngân hàng */}
@@ -1326,7 +1451,7 @@ export default function AdminFinancePage() {
 
                         {/* Thời gian gửi */}
                         <td style={{ fontSize: 12, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
-                          {req.createdAt ? new Date(req.createdAt).toLocaleString('vi-VN') : '—'}
+                          {req.createdAt ? formatVnDateTime(req.createdAt) : '—'}
                         </td>
 
                         {/* Người xử lý */}
@@ -1335,7 +1460,7 @@ export default function AdminFinancePage() {
                             <div>
                               <div style={{ fontWeight: 500, color: 'var(--text)' }}>{req.processedByName}</div>
                               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                                {new Date(req.processedAt).toLocaleDateString('vi-VN')}
+                                {formatVnDate(req.processedAt)}
                               </div>
                             </div>
                           ) : (
@@ -1350,15 +1475,21 @@ export default function AdminFinancePage() {
                               <button
                                 type="button"
                                 className="admin-action-btn-success"
-                                onClick={() => setApprovePayoutModal({
-                                  open: true,
-                                  payout: req,
-                                  txRef: '',
-                                  note: '',
-                                  submitting: false,
-                                  error: null
-                                })}
-                                title="Xác nhận đã chuyển khoản ngân hàng"
+                                onClick={() => {
+                                  const initRef = req.sepayReferenceCode || (req.sepayTransactionId ? String(req.sepayTransactionId) : '')
+                                  setApprovePayoutModal({
+                                    open: true,
+                                    payout: req,
+                                    txRef: initRef,
+                                    note: '',
+                                    submitting: false,
+                                    error: null,
+                                    checkingSepay: false,
+                                    sepayResult: null
+                                  })
+                                  handleCheckSepay(initRef, req)
+                                }}
+                                title="Kiểm tra SePay & Duyệt chi"
                               >
                                 <CheckCircle2 size={13} />
                                 <span>Duyệt đã chi</span>
@@ -1557,71 +1688,196 @@ export default function AdminFinancePage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: DUYỆT CHI RÚT TIỀN */}
+      {/* MODAL 3: DUYỆT CHI RÚT TIỀN & ĐỐI SOÁT SEPAY */}
       {/* ========================================================================= */}
       {approvePayoutModal.open && (
         <Modal
           open={approvePayoutModal.open}
-          title="Xác nhận đã giải ngân tiền rút"
-          onClose={() => setApprovePayoutModal({ open: false, payout: null, txRef: '', note: '', submitting: false, error: null })}
-          width={520}
+          title="Duyệt chi giải ngân & Đối soát SePay"
+          onClose={() => setApprovePayoutModal({ open: false, payout: null, txRef: '', note: '', submitting: false, error: null, checkingSepay: false, sepayResult: null })}
+          width={650}
         >
           <form onSubmit={handleConfirmApprovePayout}>
             {approvePayoutModal.error && (
-              <div style={{ padding: '10px 14px', background: 'var(--bad-soft)', border: '1px solid var(--bad-border)', color: 'var(--c-danger)', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
-                {approvePayoutModal.error}
+              <div style={{ padding: '10px 14px', background: 'var(--bad-soft)', border: '1px solid var(--bad-border)', color: 'var(--c-danger)', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+                <strong>Lỗi xác thực:</strong> {approvePayoutModal.error}
               </div>
             )}
 
-            {/* Thông tin giải ngân */}
-            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '14px 16px', borderRadius: 10, fontSize: 14, marginBottom: 16 }}>
-              <div style={{ marginBottom: 6 }}>
-                <span style={{ color: 'var(--text-dim)' }}>Giảng viên:</span>{' '}
-                <strong>{approvePayoutModal.payout?.teacherName}</strong> ({approvePayoutModal.payout?.teacherEmail})
+            {/* 1. Thông tin giải ngân */}
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', padding: '14px 16px', borderRadius: 10, fontSize: 13.5, marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                <div>
+                  <span style={{ color: 'var(--text-dim)' }}>Giảng viên:</span>{' '}
+                  <strong>{approvePayoutModal.payout?.teacherName}</strong> ({approvePayoutModal.payout?.teacherEmail})
+                </div>
+                {approvePayoutModal.payout?.teacherCode && (
+                  <span
+                    className="finance-code-pill"
+                    style={{ background: 'var(--surface-hover)', cursor: 'pointer', padding: '3px 8px' }}
+                    onClick={() => copyToClipboard(approvePayoutModal.payout.teacherCode, 'mã giảng viên')}
+                    title="Bấm sao chép Mã GV"
+                  >
+                    <span>Mã GV: <strong>{approvePayoutModal.payout.teacherCode}</strong></span>
+                    <Copy size={11} style={{ opacity: 0.6 }} />
+                  </span>
+                )}
               </div>
-              <div style={{ marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: 8 }}>
+
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ color: 'var(--text-dim)' }}>Số tiền chi trả:</span>{' '}
-                <strong style={{ color: 'var(--accent)', fontSize: 16 }}>
+                <strong style={{ color: 'var(--accent)', fontSize: 18 }}>
                   {formatVND(approvePayoutModal.payout?.amount)}
                 </strong>
               </div>
-              <div style={{ marginBottom: 6 }}>
+
+              <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ color: 'var(--text-dim)' }}>Số tài khoản nhận:</span>{' '}
-                <strong style={{ fontFamily: 'monospace' }}>{approvePayoutModal.payout?.bankAccountNo}</strong>{' '}
-                ({approvePayoutModal.payout?.bankId})
+                <span
+                  className="finance-code-pill"
+                  onClick={() => copyToClipboard(approvePayoutModal.payout?.bankAccountNo, 'số tài khoản')}
+                  title="Bấm để sao chép số tài khoản"
+                >
+                  <strong style={{ fontFamily: 'monospace' }}>{approvePayoutModal.payout?.bankAccountNo}</strong>{' '}
+                  <Copy size={11} style={{ opacity: 0.6 }} />
+                </span>
+                <span>({approvePayoutModal.payout?.bankId} • {approvePayoutModal.payout?.bankAccountName})</span>
               </div>
-              <div>
-                <span style={{ color: 'var(--text-dim)' }}>Chủ tài khoản:</span>{' '}
-                <strong>{approvePayoutModal.payout?.bankAccountName}</strong>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Cú pháp chuyển tiền chuẩn:</span>{' '}
+                <span
+                  className="finance-code-pill"
+                  style={{ background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => copyToClipboard(`RUT ${approvePayoutModal.payout?.teacherCode || ''} ${approvePayoutModal.payout?.bankAccountNo}`, 'cú pháp chuyển khoản')}
+                  title="Bấm để sao chép cú pháp"
+                >
+                  <span>{`RUT ${approvePayoutModal.payout?.teacherCode || ''} ${approvePayoutModal.payout?.bankAccountNo}`}</span>
+                  <Copy size={11} />
+                </span>
               </div>
             </div>
 
-            {/* Mã giao dịch ngân hàng */}
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 6, color: 'var(--text)' }}>
-                Mã giao dịch chuyển khoản ngân hàng <span style={{ color: 'var(--c-danger)' }}>*</span>
-              </label>
-              <input
-                type="text"
-                className="search-input-wrap"
-                style={{ width: '100%', borderRadius: 8, padding: '9px 12px', fontFamily: 'monospace', boxSizing: 'border-box' }}
-                placeholder="VD: FT24102899887766 hoặc MB12345678"
-                value={approvePayoutModal.txRef}
-                onChange={(e) => setApprovePayoutModal(m => ({ ...m, txRef: e.target.value }))}
-                required
-              />
+            {/* VietQR chuyển khoản nhanh */}
+            <div style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+                <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>
+                  📱 Quét VietQR chuyển khoản nhanh
+                </div>
+                <a
+                  href={`https://img.vietqr.io/image/${approvePayoutModal.payout?.bankId}-${approvePayoutModal.payout?.bankAccountNo}-qr_only.png?amount=${approvePayoutModal.payout?.amount}&addInfo=${encodeURIComponent(`RUT ${approvePayoutModal.payout?.teacherCode || ''} ${approvePayoutModal.payout?.bankAccountNo}`)}&accountName=${encodeURIComponent(approvePayoutModal.payout?.bankAccountName || '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Bấm để mở mã QR cỡ lớn"
+                  style={{ display: 'block', width: '100%', maxWidth: 320 }}
+                >
+                  <img
+                    src={`https://img.vietqr.io/image/${approvePayoutModal.payout?.bankId}-${approvePayoutModal.payout?.bankAccountNo}-qr_only.png?amount=${approvePayoutModal.payout?.amount}&addInfo=${encodeURIComponent(`RUT ${approvePayoutModal.payout?.teacherCode || ''} ${approvePayoutModal.payout?.bankAccountNo}`)}&accountName=${encodeURIComponent(approvePayoutModal.payout?.bankAccountName || '')}`}
+                    alt="VietQR Chuyển khoản"
+                    style={{ width: '100%', height: 'auto', aspectRatio: '1 / 1', objectFit: 'contain', background: '#fff', borderRadius: 10, padding: 10, border: '1px solid var(--border)', display: 'block' }}
+                  />
+                </a>
+                <div style={{ fontSize: 12.5, color: 'var(--text-dim)', maxWidth: 420 }}>
+                  Quét mã QR từ ứng dụng ngân hàng của bạn. Mã đã điền sẵn số tài khoản, số tiền và nội dung chuyển tiền chứa <strong>Mã GV</strong> để hệ thống đối soát tự động.
+                </div>
+              </div>
             </div>
 
-            {/* Ghi chú */}
+            {/* 2. Kiểm tra đối soát SePay */}
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <label style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>Kiểm tra giao dịch SePay (Luồng tiền ra)</span>
+                  <span style={{ color: 'var(--c-danger)' }}>*</span>
+                </label>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: 12 }}
+                  disabled={approvePayoutModal.checkingSepay || approvePayoutModal.submitting}
+                  onClick={() => handleCheckSepay()}
+                >
+                  <RefreshCw size={12} className={approvePayoutModal.checkingSepay ? 'spinner' : ''} />
+                  <span>{approvePayoutModal.checkingSepay ? 'Đang kiểm tra...' : 'Kiểm tra SePay'}</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <input
+                  type="text"
+                  className="search-input-wrap"
+                  style={{ flex: 1, borderRadius: 8, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13, boxSizing: 'border-box' }}
+                  placeholder="Mã GD ngân hàng (FT... hoặc mã SePay) hoặc để trống để tự tìm"
+                  value={approvePayoutModal.txRef}
+                  onChange={(e) => setApprovePayoutModal(m => ({ ...m, txRef: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-primary"
+                  style={{ padding: '8px 14px', fontSize: 12.5, whiteSpace: 'nowrap' }}
+                  disabled={approvePayoutModal.checkingSepay || approvePayoutModal.submitting}
+                  onClick={() => handleCheckSepay()}
+                >
+                  {approvePayoutModal.checkingSepay ? 'Đang dò...' : 'Dò SePay'}
+                </button>
+              </div>
+
+              {/* Hộp kết quả kiểm tra SePay */}
+              {approvePayoutModal.sepayResult && (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  background: approvePayoutModal.sepayResult.matched ? 'var(--good-soft)' : 'var(--warn-soft)',
+                  border: `1px solid ${approvePayoutModal.sepayResult.matched ? 'var(--good-border)' : 'var(--warn-border)'}`,
+                  color: approvePayoutModal.sepayResult.matched ? 'var(--c-success)' : 'var(--c-warning)'
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {approvePayoutModal.sepayResult.matched ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                    <span>{approvePayoutModal.sepayResult.matched ? 'Giao dịch SePay hợp lệ và đã khớp 100%' : 'Chưa khớp toàn bộ điều kiện SePay'}</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 6, marginTop: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{approvePayoutModal.sepayResult.checks?.amountMatched ? '✅' : '❌'}</span>
+                      <span>Số tiền: <strong>{formatVND(approvePayoutModal.payout?.amount)}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{approvePayoutModal.sepayResult.checks?.teacherCodeMatched ? '✅' : '❌'}</span>
+                      <span>Mã GV: <strong>{approvePayoutModal.payout?.teacherCode || 'N/A'}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{approvePayoutModal.sepayResult.checks?.bankAccountMatched ? '✅' : '❌'}</span>
+                      <span>STK nhận: <strong>{approvePayoutModal.payout?.bankAccountNo}</strong></span>
+                    </div>
+                  </div>
+
+                  {approvePayoutModal.sepayResult.transaction && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed rgba(0,0,0,0.1)', fontSize: 12, color: 'var(--text-dim)' }}>
+                      <div>GD SePay: <strong>#{approvePayoutModal.sepayResult.transaction.sepayId}</strong> {approvePayoutModal.sepayResult.transaction.referenceCode && `(Mã ref: ${approvePayoutModal.sepayResult.transaction.referenceCode})`}</div>
+                      <div>Nội dung: <em>"{approvePayoutModal.sepayResult.transaction.content || approvePayoutModal.sepayResult.transaction.description}"</em></div>
+                    </div>
+                  )}
+
+                  {!approvePayoutModal.sepayResult.matched && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--c-danger)', fontWeight: 500 }}>
+                      {approvePayoutModal.sepayResult.message}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Ghi chú */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, marginBottom: 6, color: 'var(--text)' }}>
-                Ghi chú thêm (tùy chọn)
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text)' }}>
+                Ghi chú kiểm toán (tùy chọn)
               </label>
               <input
                 type="text"
                 className="search-input-wrap"
-                style={{ width: '100%', borderRadius: 8, padding: '9px 12px', boxSizing: 'border-box' }}
-                placeholder="VD: Đã chuyển khoản qua app MBBank..."
+                style={{ width: '100%', borderRadius: 8, padding: '8px 12px', fontSize: 13, boxSizing: 'border-box' }}
+                placeholder="VD: Đã đối soát khớp lệnh qua SePay..."
                 value={approvePayoutModal.note}
                 onChange={(e) => setApprovePayoutModal(m => ({ ...m, note: e.target.value }))}
               />
@@ -1632,7 +1888,7 @@ export default function AdminFinancePage() {
               <button
                 type="button"
                 className="admin-btn admin-btn-secondary"
-                onClick={() => setApprovePayoutModal({ open: false, payout: null, txRef: '', note: '', submitting: false, error: null })}
+                onClick={() => setApprovePayoutModal({ open: false, payout: null, txRef: '', note: '', submitting: false, error: null, checkingSepay: false, sepayResult: null })}
                 disabled={approvePayoutModal.submitting}
               >
                 Hủy
@@ -1640,10 +1896,16 @@ export default function AdminFinancePage() {
               <button
                 type="submit"
                 className="admin-action-btn-success"
-                disabled={approvePayoutModal.submitting}
-                style={{ padding: '8px 18px', fontSize: 14 }}
+                disabled={approvePayoutModal.submitting || !approvePayoutModal.sepayResult?.matched}
+                title={!approvePayoutModal.sepayResult?.matched ? 'Vui lòng kiểm tra SePay thành công trước khi duyệt chi' : 'Xác nhận duyệt chi'}
+                style={{
+                  padding: '9px 20px',
+                  fontSize: 14,
+                  opacity: approvePayoutModal.sepayResult?.matched ? 1 : 0.6,
+                  cursor: approvePayoutModal.sepayResult?.matched ? 'pointer' : 'not-allowed'
+                }}
               >
-                {approvePayoutModal.submitting ? 'Đang lưu...' : 'Xác nhận đã chi tiền'}
+                {approvePayoutModal.submitting ? 'Đang lưu...' : 'Xác nhận đã chi tiền (Đã kiểm tra SePay)'}
               </button>
             </div>
           </form>

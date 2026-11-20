@@ -196,14 +196,23 @@ public class QuestionService {
         question = questionRepository.save(question);
 
         // Xoa sach dap an cu (bat ke kieu cu la gi) roi tao lai theo dung kieu MOI
-        answerOptionRepository.deleteAll(answerOptionRepository.findByQuestionId(question.getId()));
+        // MULTIPLE_CHOICE: SUA TAI CHO theo label (giu nguyen id) vi attempt_answers.selected_option_id
+        // tham chieu answer_options(id) -> xoa roi tao lai se vi pham FK (409) khi hoc vien da lam bai.
+        // Kieu khac: xoa het, nhung go tham chieu attempt_answers truoc de khong dinh FK.
+        if ("MULTIPLE_CHOICE".equals(kind)) {
+            syncOptions(question, req.options());
+        } else {
+            removeOptions(question.getId(), answerOptionRepository.findByQuestionId(question.getId()));
+        }
         textAnswerRepository.findByQuestionId(question.getId()).ifPresent(textAnswerRepository::delete);
         matchingPairRepository.deleteAll(matchingPairRepository.findByQuestionId(question.getId()));
         wordChoicePairRepository.deleteAll(wordChoicePairRepository.findByQuestionIdOrderByOrderIndex(question.getId()));
         dragDropOptionRepository.deleteAll(dragDropOptionRepository.findByQuestionId(question.getId()));
+        // Hibernate chay INSERT truoc DELETE khi flush -> ep xoa xong ngay de dap an moi khong dung khoa UNIQUE (text_answers.question_id)
+        textAnswerRepository.flush();
 
         switch (kind) {
-            case "MULTIPLE_CHOICE" -> createOptions(question, req.options());
+            case "MULTIPLE_CHOICE" -> { /* da dong bo o tren bang syncOptions */ }
             case "FILL_BLANK", "DICTATION" -> createTextAnswer(question, req.textAnswer());
             case "MATCHING" -> createMatchingPairs(question, req.matchingPairs());
             case "WORD_CHOICE" -> createWordChoicePairs(question, req.wordChoicePairs());
@@ -212,6 +221,50 @@ public class QuestionService {
             default -> throw new IllegalStateException("unreachable");
         }
         return question;
+    }
+
+    /** Cap nhat dap an trac nghiem tai cho: trung label -> sua noi dung/dung-sai, moi -> tao, thua -> xoa. */
+    private void syncOptions(Question question, List<AnswerOptionRequest> reqs) {
+        if (reqs == null || reqs.size() < 2) {
+            throw new IllegalArgumentException("MULTIPLE_CHOICE can toi thieu 2 dap an");
+        }
+        if (reqs.stream().noneMatch(AnswerOptionRequest::isCorrect)) {
+            throw new IllegalArgumentException("Phai co it nhat 1 dap an dung");
+        }
+        List<AnswerOption> leftovers = new java.util.ArrayList<>(answerOptionRepository.findByQuestionId(question.getId()));
+        for (var r : reqs) {
+            AnswerOption match = null;
+            for (var e : leftovers) {
+                if (java.util.Objects.equals(e.getLabel(), r.label())) { match = e; break; }
+            }
+            if (match != null) {
+                leftovers.remove(match);
+                match.setContent(r.content());
+                match.setIsCorrect(r.isCorrect());
+                answerOptionRepository.save(match);
+            } else {
+                answerOptionRepository.save(AnswerOption.builder()
+                        .question(question).label(r.label()).content(r.content())
+                        .isCorrect(r.isCorrect()).build());
+            }
+        }
+        removeOptions(question.getId(), leftovers);
+    }
+
+    /** Xoa dap an; truoc do go tham chieu selected_option_id trong attempt_answers (giu lai is_correct/lich su). */
+    private void removeOptions(String questionId, List<AnswerOption> toRemove) {
+        if (toRemove == null || toRemove.isEmpty()) return;
+        Set<String> ids = toRemove.stream().map(AnswerOption::getId).collect(Collectors.toSet());
+        var affected = attemptAnswerRepository.findByQuestionId(questionId).stream()
+                .filter(a -> a.getSelectedOption() != null && ids.contains(a.getSelectedOption().getId()))
+                .toList();
+        if (!affected.isEmpty()) {
+            affected.forEach(a -> a.setSelectedOption(null));
+            attemptAnswerRepository.saveAll(affected);
+            attemptAnswerRepository.flush();
+        }
+        answerOptionRepository.deleteAll(toRemove);
+        answerOptionRepository.flush();
     }
 
     /**

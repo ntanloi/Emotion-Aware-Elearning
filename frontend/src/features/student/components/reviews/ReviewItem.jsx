@@ -1,6 +1,7 @@
 import StarRating from '@shared/components/StarRating.jsx'
 import { Flag, Sparkles } from 'lucide-react'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 export default function ReviewItem({
   review: r,
   isFeatured = false,
@@ -79,7 +80,7 @@ export default function ReviewItem({
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <StarRating value={r.rating} size={13} />
               <span className="text-dim text-xs">
-                {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                {formatVnDate(r.createdAt)}
                 {r.isEdited && ' • (đã sửa)'}
               </span>
             </div>
@@ -172,7 +173,7 @@ export default function ReviewItem({
             </strong>
             {r.teacherRepliedAt && (
               <span className="text-dim text-xs">
-                • {new Date(r.teacherRepliedAt).toLocaleDateString('vi-VN')}
+                • {formatVnDate(r.teacherRepliedAt)}
               </span>
             )}
           </div>

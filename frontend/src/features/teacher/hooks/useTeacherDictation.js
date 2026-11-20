@@ -6,6 +6,6 @@ export function useGenerateDictation(contentItemId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload) => generateDictationQuestions(contentItemId, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['questions', 'teacher-view', contentItemId] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['questions', 'teacher-view', contentItemId] }) },
   })
 }

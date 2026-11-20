@@ -1,6 +1,7 @@
 package com.elearning.emotion.service;
 
 import com.elearning.emotion.config.PaymentProperties;
+import com.elearning.emotion.dto.PayoutRequestDto;
 import com.elearning.emotion.entity.*;
 import com.elearning.emotion.repository.*;
 import com.elearning.emotion.service.realtime.RealtimePublisher;
@@ -61,6 +62,8 @@ class OrderServiceRealtimeTest {
     private EnrollmentLifecycleService enrollmentLifecycleService;
     @Mock
     private RewardEscrowService rewardEscrowService;
+    @Mock
+    private SepayPayoutVerificationService sepayPayoutVerificationService;
 
     private OrderService orderService;
 
@@ -83,7 +86,8 @@ class OrderServiceRealtimeTest {
                 rewardProperties,
                 walletProperties,
                 enrollmentLifecycleService,
-                rewardEscrowService
+                rewardEscrowService,
+                sepayPayoutVerificationService
         );
     }
 
@@ -159,5 +163,84 @@ class OrderServiceRealtimeTest {
         Map<String, Object> payload = captor.getValue();
         assertEquals("order-2", payload.get("orderId"));
         assertEquals("PAID", payload.get("status"));
+    }
+
+    @Test
+    @DisplayName("approvePayout: Thành công duyệt chi khi SePay xác nhận đúng số tiền, mã GV và STK")
+    void testApprovePayoutSucceedsWhenSepayMatches() {
+        String adminId = "admin-1";
+        String payoutId = "payout-101";
+        String txRef = "FT26110800123";
+
+        User admin = User.builder().id(adminId).fullName("Admin System").build();
+        User teacher = User.builder().id("teacher-1").fullName("Lê Hoàng Nam").teacherCode("GV1001").email("nam.le@test.edu.vn").build();
+
+        PayoutRequest req = PayoutRequest.builder()
+                .id(payoutId)
+                .teacher(teacher)
+                .amount(BigDecimal.valueOf(562000))
+                .bankId("MB")
+                .bankAccountNo("0398123456")
+                .bankAccountName("LE HOANG NAM")
+                .status("PENDING")
+                .build();
+
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(payoutRequestRepository.findById(payoutId)).thenReturn(Optional.of(req));
+        when(payoutRequestRepository.save(any(PayoutRequest.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        com.elearning.emotion.dto.SepayPayoutCheckResult checkSuccess = com.elearning.emotion.dto.SepayPayoutCheckResult.success(
+                "Khớp SePay 100%",
+                new com.elearning.emotion.dto.SepayPayoutCheckResult.Checks(true, BigDecimal.valueOf(562000), BigDecimal.valueOf(562000), true, "GV1001", true, "0398123456"),
+                new com.elearning.emotion.dto.SepayPayoutCheckResult.SepayTransactionInfo(12345L, txRef, BigDecimal.valueOf(562000), "out", "RUT GV1001 0398123456", "description", LocalDateTime.now(), "0123456789")
+        );
+        when(sepayPayoutVerificationService.verifyPayoutTransaction(req, txRef)).thenReturn(checkSuccess);
+
+        PayoutRequestDto result = orderService.approvePayout(adminId, payoutId, txRef, "Đã đối soát SePay");
+
+        assertNotNull(result);
+        assertEquals("APPROVED", result.status());
+        assertEquals(txRef, result.transactionRef());
+        verify(teacherWalletEntryRepository).save(any(TeacherWalletEntry.class));
+        verify(notificationService).send(eq("teacher-1"), anyString(), anyString(), eq("FINANCE"), eq(payoutId), anyString());
+    }
+
+    @Test
+    @DisplayName("approvePayout: Thất bại và chặn duyệt chi khi SePay không khớp điều kiện")
+    void testApprovePayoutFailsWhenSepayVerificationFails() {
+        String adminId = "admin-1";
+        String payoutId = "payout-102";
+        String txRef = "MB_INVALID";
+
+        User admin = User.builder().id(adminId).fullName("Admin System").build();
+        User teacher = User.builder().id("teacher-1").fullName("Lê Hoàng Nam").teacherCode("GV1001").email("nam.le@test.edu.vn").build();
+
+        PayoutRequest req = PayoutRequest.builder()
+                .id(payoutId)
+                .teacher(teacher)
+                .amount(BigDecimal.valueOf(562000))
+                .bankId("MB")
+                .bankAccountNo("0398123456")
+                .bankAccountName("LE HOANG NAM")
+                .status("PENDING")
+                .build();
+
+        when(userRepository.findById(adminId)).thenReturn(Optional.of(admin));
+        when(payoutRequestRepository.findById(payoutId)).thenReturn(Optional.of(req));
+
+        com.elearning.emotion.dto.SepayPayoutCheckResult checkFailed = com.elearning.emotion.dto.SepayPayoutCheckResult.failure(
+                "Không tìm thấy giao dịch chuyển tiền ra nào trên SePay khớp với số tiền 562.000 đ",
+                new com.elearning.emotion.dto.SepayPayoutCheckResult.Checks(false, BigDecimal.valueOf(562000), BigDecimal.ZERO, false, "GV1001", false, "0398123456"),
+                null
+        );
+        when(sepayPayoutVerificationService.verifyPayoutTransaction(req, txRef)).thenReturn(checkFailed);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                orderService.approvePayout(adminId, payoutId, txRef, "Duyệt chi")
+        );
+
+        assertTrue(ex.getMessage().contains("Xác thực SePay thất bại"));
+        verify(payoutRequestRepository, never()).save(any());
+        verify(teacherWalletEntryRepository, never()).save(any());
     }
 }

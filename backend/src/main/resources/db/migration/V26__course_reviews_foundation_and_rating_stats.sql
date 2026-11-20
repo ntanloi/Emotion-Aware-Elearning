@@ -3,11 +3,10 @@
 -- =========================================================================
 
 -- 1. Bổ sung các trường cốt lõi vào bảng course_reviews
-ALTER TABLE course_reviews
-    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED',
-    ADD COLUMN progress_at_review INT NULL,
-    ADD COLUMN is_edited BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN allow_feature BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE course_reviews ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED';
+ALTER TABLE course_reviews ADD COLUMN progress_at_review INT NULL;
+ALTER TABLE course_reviews ADD COLUMN is_edited BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE course_reviews ADD COLUMN allow_feature BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX idx_course_reviews_status ON course_reviews(status);
 CREATE INDEX idx_course_reviews_course_status ON course_reviews(course_id, status);
@@ -27,14 +26,13 @@ CREATE INDEX idx_review_images_review ON review_images(review_id);
 CREATE INDEX idx_review_images_media ON review_images(media_asset_id);
 
 -- 3. Bổ sung các trường thống kê đánh giá trực tiếp vào bảng courses (chống N+1 query)
-ALTER TABLE courses
-    ADD COLUMN avg_rating DOUBLE PRECISION NOT NULL DEFAULT 0.0,
-    ADD COLUMN review_count INT NOT NULL DEFAULT 0,
-    ADD COLUMN rating_1 INT NOT NULL DEFAULT 0,
-    ADD COLUMN rating_2 INT NOT NULL DEFAULT 0,
-    ADD COLUMN rating_3 INT NOT NULL DEFAULT 0,
-    ADD COLUMN rating_4 INT NOT NULL DEFAULT 0,
-    ADD COLUMN rating_5 INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN avg_rating DOUBLE PRECISION NOT NULL DEFAULT 0.0;
+ALTER TABLE courses ADD COLUMN review_count INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN rating_1 INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN rating_2 INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN rating_3 INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN rating_4 INT NOT NULL DEFAULT 0;
+ALTER TABLE courses ADD COLUMN rating_5 INT NOT NULL DEFAULT 0;
 
 -- 4. Backfill dữ liệu đánh giá hiện có vào courses
 UPDATE courses c

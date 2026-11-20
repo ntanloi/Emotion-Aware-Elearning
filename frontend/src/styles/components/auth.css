@@ -890,5 +890,52 @@
       justify-content: center;
       width: 100%;
     }
+
+    /* Điện thoại/máy tính bảng: bố cục xếp dọc nên bỏ lớp sóng trắng (nó che chữ trên nền xanh),
+       toàn trang là một nền xanh liền mạch, chỉ thẻ form màu trắng */
+    .auth-modern-wave-divider,
+    .auth-modern-dot-grid {
+      display: none;
+    }
+    .auth-modern-page {
+      min-height: 100vh;
+      min-height: 100dvh;
+      align-items: flex-start;
+      background:
+        radial-gradient(ellipse 80% 40% at 50% 0%, rgba(125, 185, 255, 0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 40% at 50% 100%, rgba(125, 185, 255, 0.4) 0%, transparent 70%),
+        linear-gradient(180deg, #1747d1 0%, #2a62ec 55%, #3f7ff8 100%);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .auth-modern-page {
+      padding: 24px 16px 32px;
+    }
+    .auth-modern-container {
+      gap: 24px;
+    }
+    .auth-modern-brand {
+      margin-bottom: 16px;
+    }
+    .auth-modern-brand-name {
+      font-size: 21px;
+    }
+    .auth-modern-hero-title {
+      font-size: 27px;
+      margin-bottom: 12px;
+    }
+    .auth-modern-hero-desc {
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .auth-modern-pills {
+      gap: 8px;
+    }
+    .auth-modern-card {
+      max-width: 100%;
+      padding: 28px 20px 24px;
+      border-radius: 22px;
+    }
   }
 }

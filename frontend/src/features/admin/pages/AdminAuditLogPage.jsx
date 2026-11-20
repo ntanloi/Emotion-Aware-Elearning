@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { formatVnDate, formatVnDateTime, formatVnTime } from '@shared/utils/dateTime.js'
 const ACTION_MAP = {
   APPROVE_COURSE: { label: 'Phê duyệt khóa học', bg: 'rgba(16, 185, 129, 0.12)', text: '#059669', icon: CheckCircle2 },
   REJECT_COURSE: { label: 'Từ chối khóa học', bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626', icon: XCircle },
@@ -384,10 +385,10 @@ export default function AdminAuditLogPage() {
                     <td data-label="Thời gian" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
                       <div>
                         <div style={{ fontSize: 12.5, fontWeight: 500, color: '#0f172a' }}>
-                          {new Date(log.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          {formatVnTime(log.createdAt, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </div>
                         <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                          {new Date(log.createdAt).toLocaleDateString('vi-VN')}
+                          {formatVnDate(log.createdAt)}
                         </div>
                       </div>
                     </td>
@@ -502,7 +503,7 @@ export default function AdminAuditLogPage() {
                 <strong>IP Client:</strong> <code>{detailModal.log.ip || '127.0.0.1'}</code>
               </div>
               <div>
-                <strong>Thời gian:</strong> {new Date(detailModal.log.createdAt).toLocaleString('vi-VN')}
+                <strong>Thời gian:</strong> {formatVnDateTime(detailModal.log.createdAt)}
               </div>
             </div>
 

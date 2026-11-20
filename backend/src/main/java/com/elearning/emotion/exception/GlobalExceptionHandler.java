@@ -1,8 +1,12 @@
 package com.elearning.emotion.exception;
 
 import com.elearning.emotion.service.StudentWalletService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -65,5 +70,43 @@ public class GlobalExceptionHandler {
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", msg));
+    }
+
+    // ---- Loi co so du lieu: ghi log day du len Render + tra thong bao ro rang thay vi "Internal Server Error" tron ----
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("[DB] Vi pham rang buoc du lieu: {}", rootMessage(ex), ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "Dữ liệu vi phạm ràng buộc của cơ sở dữ liệu (trùng lặp hoặc đang được tham chiếu).",
+                "detail", rootMessage(ex)));
+    }
+
+    @ExceptionHandler({DataAccessException.class, TransactionException.class, jakarta.persistence.PersistenceException.class})
+    public ResponseEntity<Map<String, String>> handleDatabase(Exception ex) {
+        String root = rootMessage(ex);
+        log.error("[DB] Loi truy cap co so du lieu: {}", root, ex);
+        // Het ket noi trong pool (Hikari timeout) -> 503 de phan biet voi loi code
+        boolean poolBusy = root.contains("Connection is not available") || root.contains("request timed out");
+        HttpStatus status = poolBusy ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.INTERNAL_SERVER_ERROR;
+        String msg = poolBusy
+                ? "Máy chủ đang bận (hết kết nối cơ sở dữ liệu). Vui lòng thử lại sau vài giây."
+                : "Lỗi cơ sở dữ liệu khi lưu dữ liệu.";
+        return ResponseEntity.status(status).body(Map.of("error", msg, "detail", root));
+    }
+
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<Map<String, String>> handleNpe(NullPointerException ex) {
+        log.error("[NPE] Loi xu ly du lieu null: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", "Lỗi xử lý dữ liệu trên máy chủ.",
+                "detail", String.valueOf(ex.getMessage())));
+    }
+
+    private static String rootMessage(Throwable ex) {
+        Throwable t = ex;
+        while (t.getCause() != null && t.getCause() != t) t = t.getCause();
+        String m = t.getClass().getSimpleName() + ": " + t.getMessage();
+        return m.length() > 300 ? m.substring(0, 300) : m;
     }
 }

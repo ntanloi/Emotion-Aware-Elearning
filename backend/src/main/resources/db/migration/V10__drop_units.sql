@@ -13,18 +13,16 @@
 -- ============================================================
 
 -- ---------- content_groups: them course_id/section_code, chuyen du lieu tu units ----------
-ALTER TABLE content_groups
-    ADD COLUMN course_id CHAR(36) NULL AFTER unit_id,
-    ADD COLUMN section_code VARCHAR(20) NULL AFTER course_id;
+ALTER TABLE content_groups ADD COLUMN course_id CHAR(36) NULL AFTER unit_id;
+ALTER TABLE content_groups ADD COLUMN section_code VARCHAR(20) NULL AFTER course_id;
 
 UPDATE content_groups cg
     JOIN units u ON u.id = cg.unit_id
     SET cg.course_id = u.course_id,
         cg.section_code = u.section_code;
 
-ALTER TABLE content_groups
-    MODIFY COLUMN course_id CHAR(36) NOT NULL,
-    MODIFY COLUMN section_code VARCHAR(20) NOT NULL;
+ALTER TABLE content_groups MODIFY COLUMN course_id CHAR(36) NOT NULL;
+ALTER TABLE content_groups MODIFY COLUMN section_code VARCHAR(20) NOT NULL;
 
 ALTER TABLE content_groups DROP FOREIGN KEY fk_group_unit;
 ALTER TABLE content_groups DROP COLUMN unit_id;
@@ -35,18 +33,16 @@ ALTER TABLE content_groups
 CREATE INDEX idx_group_course_section ON content_groups (course_id, section_code);
 
 -- ---------- content_items: them course_id/section_code, chuyen du lieu tu units ----------
-ALTER TABLE content_items
-    ADD COLUMN course_id CHAR(36) NULL AFTER unit_id,
-    ADD COLUMN section_code VARCHAR(20) NULL AFTER course_id;
+ALTER TABLE content_items ADD COLUMN course_id CHAR(36) NULL AFTER unit_id;
+ALTER TABLE content_items ADD COLUMN section_code VARCHAR(20) NULL AFTER course_id;
 
 UPDATE content_items ci
     JOIN units u ON u.id = ci.unit_id
     SET ci.course_id = u.course_id,
         ci.section_code = u.section_code;
 
-ALTER TABLE content_items
-    MODIFY COLUMN course_id CHAR(36) NOT NULL,
-    MODIFY COLUMN section_code VARCHAR(20) NOT NULL;
+ALTER TABLE content_items MODIFY COLUMN course_id CHAR(36) NOT NULL;
+ALTER TABLE content_items MODIFY COLUMN section_code VARCHAR(20) NOT NULL;
 
 ALTER TABLE content_items DROP FOREIGN KEY fk_item_unit;
 ALTER TABLE content_items DROP COLUMN unit_id;

@@ -4,6 +4,7 @@ import { useAuthStore } from '@auth/store/authStore.js'
 import ChatWidget from '@student/components/ChatWidget.jsx'
 import Footer from '@shared/components/Footer.jsx'
 import NotificationBell from '@shared/components/NotificationBell.jsx'
+import RouteErrorBoundary from '@shared/components/RouteErrorBoundary.jsx'
 import { RealtimeProvider } from '@shared/realtime/index.js'
 import {
   GraduationCap,
@@ -430,7 +431,9 @@ export default function Layout() {
         {/* Nội dung trang */}
         <div className="layout-content">
           <main className="main">
-            <Outlet />
+            <RouteErrorBoundary resetKey={location.pathname + location.search}>
+              <Outlet />
+            </RouteErrorBoundary>
           </main>
         </div>
 

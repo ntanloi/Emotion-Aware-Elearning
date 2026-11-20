@@ -15,6 +15,7 @@ import java.util.List;
 @Repository
 public interface PayoutRequestRepository extends JpaRepository<PayoutRequest, String>, JpaSpecificationExecutor<PayoutRequest> {
     List<PayoutRequest> findByTeacherIdOrderByCreatedAtDesc(String teacherId);
+    List<PayoutRequest> findByStatus(String status);
     boolean existsByTeacherIdAndStatus(String teacherId, String status);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PayoutRequest p WHERE p.teacher.id = :teacherId AND p.status = 'PENDING'")

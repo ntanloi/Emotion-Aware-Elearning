@@ -39,6 +39,7 @@ import AdminReviewsPage from "@admin/pages/AdminReviewsPage.jsx";
 import AdminFinancePage from "@admin/pages/AdminFinancePage.jsx";
 import AdminLexiconPage from "@admin/pages/AdminLexiconPage.jsx";
 import AdminTestModerationPage from "@admin/pages/AdminTestModerationPage.jsx";
+import NotFoundPage from "@shared/components/NotFoundPage.jsx";
 import { useAuthStore } from "@auth/store/authStore.js";
 
 function RootRedirect() {
@@ -122,6 +123,9 @@ export default function App() {
             element={<Navigate to="/teacher/courses?tab=vocab" replace />}
           />
         </Route>
+
+        {/* Đường dẫn không tồn tại: hiện trang 404 trong layout thay vì màn hình trắng */}
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

@@ -70,6 +70,13 @@ public class AdminFinanceController {
         return ResponseEntity.ok(orderService.getAdminPayoutRequests(status, pageable));
     }
 
+    @GetMapping("/payouts/{payoutId}/check-sepay")
+    public ResponseEntity<com.elearning.emotion.dto.SepayPayoutCheckResult> checkPayoutSepay(
+            @PathVariable String payoutId,
+            @RequestParam(required = false) String transactionRef) {
+        return ResponseEntity.ok(orderService.checkPayoutSepay(payoutId, transactionRef));
+    }
+
     @PostMapping("/payouts/{payoutId}/approve")
     public ResponseEntity<PayoutRequestDto> approvePayout(
             @AuthenticationPrincipal String adminId,

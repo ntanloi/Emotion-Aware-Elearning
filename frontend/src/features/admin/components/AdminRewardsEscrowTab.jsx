@@ -14,6 +14,7 @@ import {
   HelpCircle
 } from 'lucide-react'
 
+import { formatVnDate, formatVnDateTime } from '@shared/utils/dateTime.js'
 export default function AdminRewardsEscrowTab({ showToast }) {
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(0)
@@ -256,10 +257,10 @@ export default function AdminRewardsEscrowTab({ showToast }) {
                       )}
                     </td>
                     <td style={{ padding: '12px 14px', color: 'var(--text-dim)', fontSize: 12 }}>
-                      {e.holdingUntil ? new Date(e.holdingUntil).toLocaleDateString('vi-VN') : '---'}
+                      {e.holdingUntil ? formatVnDate(e.holdingUntil) : '---'}
                     </td>
                     <td style={{ padding: '12px 14px', color: 'var(--text-dim)', fontSize: 12 }}>
-                      {new Date(e.createdAt).toLocaleString('vi-VN')}
+                      {formatVnDateTime(e.createdAt)}
                     </td>
                   </tr>
                 )

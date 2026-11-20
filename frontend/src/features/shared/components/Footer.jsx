@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Modal from './ui/Modal.jsx'
 
+import { getVnYear } from '@shared/utils/dateTime.js'
 /**
  * Footer - Thiết kế chân trang đa cột hiện đại chuẩn SaaS / EdTech
  * Tối ưu hóa hiển thị trên Desktop, Tablet và Mobile.
@@ -161,7 +162,7 @@ export default function Footer() {
       <div className="app-footer-bottom">
         <div className="app-footer-container app-footer-bottom-flex">
           <div className="app-footer-copyright">
-            © {new Date().getFullYear()} <strong>E-Learning AI</strong>. Tất cả quyền được bảo lưu. Khóa luận tốt nghiệp Hệ thống E-Learning thích ứng cảm xúc.
+            © {getVnYear()} <strong>E-Learning AI</strong>. Tất cả quyền được bảo lưu. Khóa luận tốt nghiệp Hệ thống E-Learning thích ứng cảm xúc.
           </div>
 
           <div className="app-footer-legal-links">

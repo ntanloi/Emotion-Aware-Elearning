@@ -175,7 +175,7 @@ public class TeacherWalletService {
                 "Yêu cầu rút " + String.format("%,d", cleanAmount.longValue()) + " đ đã được gửi đến ban quản trị và đang chờ giải ngân.",
                 "FINANCE",
                 saved.getId(),
-                "/teacher/dashboard"
+                "/dashboard/teacher?tab=transactions"
         );
 
         try {

@@ -1,0 +1,19 @@
+# Chay ai-service tren LAPTOP + URL https cong khai (Cloudflare Quick Tunnel, mien phi).
+#   docker compose -f docker-compose.ai-local.yml up -d --build
+#   docker compose -f docker-compose.ai-local.yml logs cloudflared | grep trycloudflare
+# Dan URL https://....trycloudflare.com vao AI_SERVICE_URL cua backend tren Render, roi Restart backend.
+# URL doi moi lan chay lai tunnel; may phai bat suot luc test camera.
+name: toeic-ai
+services:
+  ai-service:
+    build: ./ai-service
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET:?Dat AI_SERVICE_SECRET trong .env hoac shell}
+      AI_ALLOW_NO_SECRET: "false"
+    mem_limit: 1500m
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on: [ai-service]
+    command: tunnel --no-autoupdate --url http://ai-service:8000

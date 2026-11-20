@@ -32,6 +32,7 @@ import ReportOverviewTab from '@student/components/reports/ReportOverviewTab.jsx
 import ReportEmotionsTab from '@student/components/reports/ReportEmotionsTab.jsx'
 import ReportPracticeTab from '@student/components/reports/ReportPracticeTab.jsx'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 export default function StudentReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -75,7 +76,11 @@ export default function StudentReportsPage() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const params = { days, ...(courseId ? { courseId } : {}) }
+      // Tab "Sổ câu sai cá nhân" luôn hiển thị toàn bộ câu sai nên không áp dụng bộ lọc số ngày
+      const params = {
+        ...(activeTab === 'practice' ? {} : { days }),
+        ...(courseId ? { courseId } : {}),
+      }
 
       if (activeTab === 'overview') {
         const [ov, reps] = await Promise.all([
@@ -156,8 +161,8 @@ export default function StudentReportsPage() {
             BÁO CÁO TIẾN ĐỘ VÀ KẾT QUẢ HỌC TẬP
           </h3>
           <div style={{ marginTop: 8, fontSize: 12, color: '#64748b', display: 'flex', gap: 20 }}>
-            <span>Ngày in: {new Date().toLocaleDateString('vi-VN')}</span>
-            <span>Khung thời gian: {days} ngày gần nhất</span>
+            <span>Ngày in: {formatVnDate(new Date())}</span>
+            {activeTab !== 'practice' && <span>Khung thời gian: {days} ngày gần nhất</span>}
           </div>
         </div>
       </div>
@@ -254,7 +259,8 @@ export default function StudentReportsPage() {
 
           {/* Bộ lọc ngày, khóa học và tùy chọn */}
           <div className="reports-actions-group">
-            {/* Pills chọn ngày */}
+            {/* Pills chọn ngày (ẩn ở tab Sổ câu sai cá nhân) */}
+            {activeTab !== 'practice' && (
             <div
               style={{
                 display: 'flex',
@@ -286,6 +292,7 @@ export default function StudentReportsPage() {
                 </button>
               ))}
             </div>
+            )}
 
             {/* Dropdown Khóa học */}
             <select

@@ -17,6 +17,7 @@ import {
   XCircle,
 } from 'lucide-react'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 export default function AdminUserListPage() {
   const toast = useToast()
   const [users, setUsers] = useState([])
@@ -315,7 +316,7 @@ export default function AdminUserListPage() {
                       : '—'}
                   </td>
                   <td data-label="Ngày tạo" style={{ padding: '14px 18px', fontSize: 12, color: 'var(--c-muted, #64748b)', whiteSpace: 'nowrap' }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : '—'}
+                    {u.createdAt ? formatVnDate(u.createdAt) : '—'}
                   </td>
                   <td data-label="Hành động" style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {u.role === 'TEACHER' && u.status === 'PENDING_APPROVAL' ? (

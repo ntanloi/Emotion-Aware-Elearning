@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ClipboardList, ArrowRight, CheckCircle2 } from 'lucide-react'
 
+import { formatVnDateTime } from '@shared/utils/dateTime.js'
 /**
  * AnswerHistoryTable — Bảng lịch sử điểm các lần làm bài tập / thi thử.
  */
@@ -46,7 +47,7 @@ export default function AnswerHistoryTable({ attempts }) {
                   <strong className="text-sm">{a.contentItemTitle || a.contentItemId}</strong>
                 </td>
                 <td className="text-dim text-sm">
-                  {a.submittedAt ? new Date(a.submittedAt).toLocaleString('vi-VN') : '—'}
+                  {a.submittedAt ? formatVnDateTime(a.submittedAt) : '—'}
                 </td>
                 <td className="text-sm">
                   {a.correctCount != null ? (

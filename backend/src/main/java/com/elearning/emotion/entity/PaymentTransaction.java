@@ -75,6 +75,10 @@ public class PaymentTransaction {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payout_request_id")
+    private PayoutRequest payoutRequest;
+
     @Column(name = "raw_payload", columnDefinition = "TEXT")
     private String rawPayload;
 

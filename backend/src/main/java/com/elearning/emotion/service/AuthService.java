@@ -12,6 +12,7 @@ import com.elearning.emotion.security.JwtService;
 import com.elearning.emotion.security.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,13 @@ public class AuthService {
     private final RateLimiterService rateLimiterService;
     private final EmailService emailService;
     private final NotificationService notificationService;
+
+    /**
+     * Chỉ bật (true) khi chạy local/dev: khi gửi mail thất bại, trả OTP về client để test.
+     * Production PHẢI để false, nếu không ai cũng lấy được OTP mà không cần mở hộp thư.
+     */
+    @Value("${app.auth.expose-dev-otp:false}")
+    private boolean exposeDevOtp;
 
     /**
      * Gửi mã OTP xác thực đăng ký tài khoản qua Gmail
@@ -78,24 +86,11 @@ public class AuthService {
                 .build();
         emailOtpVerificationRepository.save(verification);
 
-        // Gửi email qua SMTP
+        // Gửi email OTP (Brevo)
         boolean sent = emailService.sendRegisterOtpEmail(cleanEmail, fullName, otpCode);
-        log.info("[RegisterOTP] Đã tạo mã OTP cho {}: {} (Gửi mail thành công: {})", cleanEmail, otpCode, sent);
+        log.info("[RegisterOTP] Đã tạo mã OTP cho {} (Gửi mail thành công: {})", cleanEmail, sent);
 
-        String message;
-        if (sent) {
-            message = "Mã xác thực OTP đã được gửi đến email " + cleanEmail + ". Vui lòng kiểm tra hộp thư (cả mục Spam/Rác).";
-        } else if (!emailService.isConfigured()) {
-            message = "[Môi trường DEV] Chưa cấu hình SMTP Gmail trong backend/.env. Mã OTP kiểm thử của bạn là: " + otpCode;
-        } else {
-            message = "Không thể gửi email qua máy chủ SMTP. Mã OTP tạm thời là: " + otpCode + " (Vui lòng kiểm tra log backend).";
-        }
-
-        return Map.of(
-                "success", true,
-                "message", message,
-                "devOtp", !sent ? otpCode : ""
-        );
+        return buildOtpResponse(cleanEmail, otpCode, sent);
     }
 
     @Transactional
@@ -216,25 +211,36 @@ public class AuthService {
                 .build();
         emailOtpVerificationRepository.save(verification);
 
-        // Gửi email qua SMTP
+        // Gửi email OTP (Brevo)
         boolean sent = emailService.sendResetPasswordOtpEmail(cleanEmail, user.getFullName(), otpCode);
-        log.info("[PasswordResetOTP] Đã tạo mã OTP đặt lại mật khẩu cho {}: {} (Gửi mail thành công: {})",
-                cleanEmail, otpCode, sent);
+        log.info("[PasswordResetOTP] Đã tạo mã OTP đặt lại mật khẩu cho {} (Gửi mail thành công: {})",
+                cleanEmail, sent);
 
-        String message;
+        return buildOtpResponse(cleanEmail, otpCode, sent);
+    }
+
+    /**
+     * Dựng response sau khi gửi OTP.
+     * - Gửi thành công: chỉ trả thông báo.
+     * - Gửi thất bại + bật expose-dev-otp (local): trả OTP để test.
+     * - Gửi thất bại ở production: báo lỗi (transaction rollback, OTP không được lưu), KHÔNG lộ OTP.
+     */
+    private Map<String, Object> buildOtpResponse(String cleanEmail, String otpCode, boolean sent) {
         if (sent) {
-            message = "Mã xác thực OTP đã được gửi đến email " + cleanEmail + ". Vui lòng kiểm tra hộp thư (cả mục Spam/Rác).";
-        } else if (!emailService.isConfigured()) {
-            message = "[Môi trường DEV] Chưa cấu hình SMTP Gmail trong backend/.env. Mã OTP kiểm thử của bạn là: " + otpCode;
-        } else {
-            message = "Không thể gửi email qua máy chủ SMTP. Mã OTP tạm thời là: " + otpCode + " (Vui lòng kiểm tra log backend).";
+            return Map.of(
+                    "success", true,
+                    "message", "Mã xác thực OTP đã được gửi đến email " + cleanEmail + ". Vui lòng kiểm tra hộp thư.",
+                    "devOtp", ""
+            );
         }
-
-        return Map.of(
-                "success", true,
-                "message", message,
-                "devOtp", !sent ? otpCode : ""
-        );
+        if (exposeDevOtp) {
+            return Map.of(
+                    "success", true,
+                    "message", "[Môi trường DEV] Không gửi được email. Mã OTP kiểm thử của bạn là: " + otpCode,
+                    "devOtp", otpCode
+            );
+        }
+        throw new IllegalArgumentException("Không thể gửi email xác thực lúc này. Vui lòng thử lại sau ít phút.");
     }
 
     /**

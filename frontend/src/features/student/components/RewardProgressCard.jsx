@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Award, CheckCircle2, PlayCircle, Circle, HelpCircle, X, AlertTriangle, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import { getMyRewards } from '@student/api/wallet.js'
 
+import { formatVnDate, vnTime } from '@shared/utils/dateTime.js'
 export default function RewardProgressCard({ courseId }) {
   const [showCriteriaModal, setShowCriteriaModal] = useState(false)
   const [expanded, setExpanded] = useState(true)
@@ -39,7 +40,7 @@ export default function RewardProgressCard({ courseId }) {
   let daysLeft = null
   let isExpiringSoon = false
   if (holdingUntil) {
-    const diffTime = new Date(holdingUntil) - new Date()
+    const diffTime = vnTime(holdingUntil) - Date.now()
     daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     isExpiringSoon = daysLeft <= 30 && daysLeft >= 0 && !isClaimed && !isReleased
   }
@@ -142,7 +143,7 @@ export default function RewardProgressCard({ courseId }) {
             {holdingUntil && !isClaimed && !isReleased && (
               <span style={{ fontSize: 12, color: isExpiringSoon ? '#dc2626' : 'var(--text-dim)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Calendar size={13} />
-                <span>Hạn chót: {new Date(holdingUntil).toLocaleDateString('vi-VN')} ({daysLeft > 0 ? `còn ${daysLeft} ngày` : 'hôm nay'})</span>
+                <span>Hạn chót: {formatVnDate(holdingUntil)} ({daysLeft > 0 ? `còn ${daysLeft} ngày` : 'hôm nay'})</span>
               </span>
             )}
           </div>

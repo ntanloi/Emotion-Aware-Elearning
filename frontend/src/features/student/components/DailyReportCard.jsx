@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 
+import { parseVnDate, formatVnDateWith, getVnTodayIso } from '@shared/utils/dateTime.js'
 const STATUS_CONFIG = {
   DA_XEM: { label: 'Đã xem', badgeClass: 'badge neutral' },
   DA_TAO: { label: 'Mới • Chưa đọc', badgeClass: 'badge info' },
@@ -26,9 +27,9 @@ const STATUS_CONFIG = {
  */
 function formatVietnameseDate(dateStr) {
   if (!dateStr) return '—'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleDateString('vi-VN', {
+  const d = parseVnDate(dateStr)
+  if (!d) return dateStr
+  return formatVnDateWith(d, {
     weekday: 'long',
     year: 'numeric',
     month: 'numeric',
@@ -80,7 +81,7 @@ export default function DailyReportCard({ report, onMarkAsRead }) {
   const noActivity = metrics?.noActivity === true
   const isAiAdvice = metrics?.adviceSource === 'AI'
   const nextSteps = Array.isArray(metrics?.nextSteps) ? metrics.nextSteps : []
-  const todayVn = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }) // yyyy-mm-dd
+  const todayVn = getVnTodayIso() // yyyy-mm-dd, giờ Việt Nam
   const isToday = report.reportDate === todayVn
   const positiveEmotion =
     metrics && (metrics.engagedPercent != null || metrics.interestedPercent != null)

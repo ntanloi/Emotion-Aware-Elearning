@@ -36,6 +36,22 @@ export function useNotifications(limit = 20) {
     }
     // Invalidate để đảm bảo tính nhất quán hoàn toàn với cơ sở dữ liệu
     qc.invalidateQueries({ queryKey: ['notifications'] })
+
+    // Thông báo cũng là tín hiệu "dữ liệu của bạn vừa đổi do người khác thao tác" (admin duyệt/từ chối,
+    // chuyển tiền, ẩn đánh giá...) -> làm mới luôn các trang dữ liệu liên quan, không cần reload.
+    const type = payload?.notification?.type
+    if (['WALLET', 'FINANCE', 'TOPUP', 'PAYMENT'].includes(type)) {
+      qc.invalidateQueries({ queryKey: ['wallet'] })
+      qc.invalidateQueries({ queryKey: ['walletEntries'] })
+      qc.invalidateQueries({ queryKey: ['myWithdrawals'] })
+    } else if (['REVIEW_MODERATION', 'NEW_REVIEW', 'TEACHER_REPLY'].includes(type)) {
+      qc.invalidateQueries({ queryKey: ['courseReviews'] })
+      qc.invalidateQueries({ queryKey: ['teacherCourseReviews'] })
+      qc.invalidateQueries({ queryKey: ['teacherCourseReviewStats'] })
+    } else if (type && type.startsWith('COURSE_')) {
+      qc.invalidateQueries({ queryKey: ['courses'] })
+      qc.invalidateQueries({ queryKey: ['myCourses'] })
+    }
   })
 
   const markAsRead = useMutation({

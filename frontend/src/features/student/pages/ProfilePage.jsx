@@ -4,6 +4,7 @@ import * as authApi from '@auth/api/auth.js'
 import PageHeader from '@shared/components/ui/PageHeader.jsx'
 import SectionCard from '@shared/components/ui/SectionCard.jsx'
 import EmotionPrivacyModal from '@student/components/EmotionPrivacyModal.jsx'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 import {
   User,
   Shield,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react'
 
 export default function ProfilePage() {
+  const toast = useToast()
   const user = useAuthStore((s) => s.user)
   const isStudent = user?.role === 'STUDENT'
 
@@ -87,7 +89,7 @@ export default function ProfilePage() {
         setSavedSuccess(false)
       }, 4000)
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi khi cập nhật hồ sơ')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi cập nhật hồ sơ')
     } finally {
       setSaving(false)
     }
@@ -151,9 +153,6 @@ export default function ProfilePage() {
               {user?.role === 'STUDENT' ? 'Học viên' : user?.role === 'TEACHER' ? 'Giảng viên' : 'Quản trị viên'}
             </span>
           </div>
-          <p className="text-dim text-xs" style={{ margin: '4px 0 0' }}>
-            Tài khoản: <strong>{user?.username}</strong> {user?.email ? `• ${user.email}` : ''}
-          </p>
         </div>
       </div>
 

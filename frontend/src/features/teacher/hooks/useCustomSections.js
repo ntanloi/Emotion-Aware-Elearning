@@ -10,7 +10,7 @@ export function useCreateCustomSection(courseId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload) => api.createCustomSection(courseId, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }) },
   })
 }
 
@@ -18,7 +18,7 @@ export function useUpdateCustomSection(courseId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }) => api.updateCustomSection(courseId, id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }) },
   })
 }
 
@@ -26,6 +26,6 @@ export function useDeleteCustomSection(courseId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id) => api.deleteCustomSection(courseId, id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: QUERY_KEY(courseId) }) },
   })
 }

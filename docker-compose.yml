@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: elearning_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-123456}
+      MYSQL_DATABASE: ${DB_NAME:-elearning_emotion}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - elearning_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: elearning_languagetool
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      Java_Xms: 512m
+      Java_Xmx: 1g
+    networks:
+      - elearning_net
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: elearning_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - elearning_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: elearning_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+      languagetool:
+        condition: service_started
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-elearning_emotion}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-123456}
+      SERVER_PORT: 8080
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-doi-chuoi-nay-toi-thieu-32-ky-tu-truoc-khi-deploy-that}
+      AI_SERVICE_URL: http://ai-service:8000
+      LANGUAGETOOL_URL: http://languagetool:8010/v2/check
+    networks:
+      - elearning_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: elearning_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - elearning_net
+
+volumes:
+  mysql_data:
+
+networks:
+  elearning_net:
+    driver: bridge

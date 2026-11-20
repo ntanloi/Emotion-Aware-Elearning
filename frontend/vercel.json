@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/drive-proxy/:path*", "destination": "https://drive.usercontent.google.com/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

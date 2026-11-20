@@ -98,7 +98,7 @@ public class RewardSettlementService {
         escrowRepo.save(e);
         notificationService.send(e.getTeacherId(), "Nhận thêm tiền giữ hộ",
                 "Bạn được cộng " + String.format("%,d", amt.longValue()) + " đ do học viên không đạt điều kiện thưởng.",
-                "FINANCE", e.getOrderId(), "/teacher/dashboard");
+                "FINANCE", e.getOrderId(), "/dashboard/teacher?tab=transactions");
         log.info("Released reward escrow #{} of amount {} to teacher {}", e.getId(), amt, e.getTeacherId());
     }
 }

@@ -1,15 +1,14 @@
 -- V30: He thong thanh toan thu ho, giu tien (Escrow), so cai vi giang vien va yeu cau rut tien (Payouts)
 
 -- 1. Bo sung cac cot tai chinh, hoan tien va het han vao bang orders
-ALTER TABLE orders
-    ADD COLUMN paid_amount      DECIMAL(12, 2) NULL AFTER amount,
-    ADD COLUMN payment_method   VARCHAR(30) NOT NULL DEFAULT 'VIETQR' AFTER paid_amount,
-    ADD COLUMN platform_fee     DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER payment_method,
-    ADD COLUMN teacher_amount    DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER platform_fee,
-    ADD COLUMN refunded_at      DATETIME NULL AFTER paid_at,
-    ADD COLUMN refund_reason    VARCHAR(500) NULL AFTER refunded_at,
-    ADD COLUMN refund_ref_code  VARCHAR(100) NULL AFTER refund_reason,
-    ADD COLUMN expired_at       DATETIME NULL AFTER refund_ref_code;
+ALTER TABLE orders ADD COLUMN paid_amount DECIMAL(12, 2) NULL AFTER amount;
+ALTER TABLE orders ADD COLUMN payment_method VARCHAR(30) NOT NULL DEFAULT 'VIETQR' AFTER paid_amount;
+ALTER TABLE orders ADD COLUMN platform_fee DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER payment_method;
+ALTER TABLE orders ADD COLUMN teacher_amount DECIMAL(12, 2) NOT NULL DEFAULT 0.00 AFTER platform_fee;
+ALTER TABLE orders ADD COLUMN refunded_at DATETIME NULL AFTER paid_at;
+ALTER TABLE orders ADD COLUMN refund_reason VARCHAR(500) NULL AFTER refunded_at;
+ALTER TABLE orders ADD COLUMN refund_ref_code VARCHAR(100) NULL AFTER refund_reason;
+ALTER TABLE orders ADD COLUMN expired_at DATETIME NULL AFTER refund_ref_code;
 
 CREATE INDEX idx_orders_expired_at ON orders(expired_at);
 

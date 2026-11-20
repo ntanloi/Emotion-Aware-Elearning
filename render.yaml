@@ -1,0 +1,88 @@
+# Render Blueprint: tao BACKEND (goi free). Dat file nay o GOC repo, cung cap voi backend/, frontend/, ai-service/.
+# Sau khi tao: vao Dashboard dien cac bien "sync: false" (Render se hoi khi Apply Blueprint).
+# ai-service KHONG nam o day: do thuc te no dung ~470-510MB RAM nen khong vua goi free 512MB.
+services:
+  - type: web
+    name: toeic-backend
+    runtime: docker
+    region: singapore        # neu Render bao region khong hop le, doi thanh oregon
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: JAVA_TOOL_OPTIONS
+        value: "-Xms128m -Xmx300m -Xss512k -XX:MaxMetaspaceSize=160m -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
+      - key: TOMCAT_MAX_THREADS
+        value: "30"
+      - key: SERVER_FORWARD_HEADERS_STRATEGY
+        value: framework
+      # --- Database (MySQL ben ngoai: TiDB Cloud / Aiven / Railway) ---
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        value: emotion_elearning
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_PARAMS
+        value: "sslMode=REQUIRED&serverTimezone=UTC&rewriteBatchedStatements=true"
+      - key: DB_POOL_MAX
+        value: "5"
+      - key: DB_POOL_MIN
+        value: "1"
+      # --- Bao mat / lien ket giua cac dich vu ---
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL            # URL Vercel, vd https://toeic-xxx.vercel.app (nhieu URL: cach nhau dau phay)
+        sync: false
+      - key: AI_SERVICE_URL          # URL https cong khai cua ai-service
+        sync: false
+      - key: AI_SERVICE_SECRET
+        sync: false
+      # --- Media / mail / chatbot ---
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: elearning
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: CHAT_LLM_ENABLED
+        value: "true"
+      - key: CHAT_LLM_API_KEY
+        sync: false
+      - key: CHAT_LLM_MODEL
+        sync: false
+      - key: CHAT_LLM_API_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+      # --- Thanh toan SePay ---
+      - key: PAYMENT_BANK_ID
+        value: MB
+      - key: PAYMENT_ACCOUNT_NO
+        sync: false
+      - key: PAYMENT_ACCOUNT_NAME
+        sync: false
+      - key: SEPAY_API_KEY
+        sync: false
+      # --- Tat bot cac tinh nang nang RAM ---
+      - key: LANGUAGETOOL_ENABLED
+        value: "false"
+      - key: MODERATION_LLM_ENABLED
+        value: "false"
+      - key: REWARD_ENABLED
+        value: "false"
+      - key: ALERT_DEMO_SEED_ENABLED
+        value: "false"

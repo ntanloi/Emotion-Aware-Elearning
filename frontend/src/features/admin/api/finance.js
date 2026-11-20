@@ -25,6 +25,11 @@ export const getAdminPayouts = async ({ status, page = 0, size = 15 } = {}) => {
   return data
 }
 
+export const checkPayoutSepay = async (payoutId, { transactionRef } = {}) => {
+  const { data } = await client.get(`/admin/finance/payouts/${payoutId}/check-sepay`, { params: { transactionRef } })
+  return data
+}
+
 export const approvePayout = async (payoutId, { transactionRef, adminNote }) => {
   const { data } = await client.post(`/admin/finance/payouts/${payoutId}/approve`, { transactionRef, adminNote })
   return data

@@ -3,18 +3,21 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck, MessageSquare, Star, Info, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { useNotifications } from '@shared/hooks/useNotifications.js'
 import { parseRejectReason } from '@teacher/utils/rejectReasonParser.js'
+import { useAuthStore } from '@auth/store/authStore.js'
+import { resolveNotificationTarget } from '@shared/utils/notificationNavigation.js'
 
+import { parseVnDate, formatVnDate } from '@shared/utils/dateTime.js'
 function formatTimeAgo(dateStr) {
   if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffSec = Math.floor((now - date) / 1000)
+  const date = parseVnDate(dateStr)
+  if (!date) return ''
+  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000)
 
   if (diffSec < 60) return 'Vừa xong'
   if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`
   if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`
   if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} ngày trước`
-  return date.toLocaleDateString('vi-VN')
+  return formatVnDate(date)
 }
 
 function formatNotificationPreview(n) {
@@ -35,6 +38,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
+  const role = useAuthStore((s) => s.user?.role)
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
 
   // Đóng dropdown khi click bên ngoài
@@ -54,14 +58,10 @@ export default function NotificationBell() {
     }
     setOpen(false)
 
-    // Nếu là thông báo từ chối khóa học, dẫn đến trang danh sách và mở modal chi tiết
-    if (n.type === 'COURSE_REJECTED' && n.targetId) {
-      navigate(`/teacher/courses?rejectCourseId=${n.targetId}`)
-      return
-    }
-
-    if (n.link) {
-      navigate(n.link)
+    // Chỉ navigate tới route hợp lệ theo vai trò (xem notificationNavigation.js)
+    const target = resolveNotificationTarget(n, role)
+    if (target) {
+      navigate(target)
     }
   }
 

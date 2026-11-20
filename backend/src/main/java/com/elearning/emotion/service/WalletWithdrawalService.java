@@ -5,6 +5,7 @@ import com.elearning.emotion.entity.User;
 import com.elearning.emotion.entity.WalletWithdrawal;
 import com.elearning.emotion.repository.UserRepository;
 import com.elearning.emotion.repository.WalletWithdrawalRepository;
+import com.elearning.emotion.service.realtime.RealtimePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class WalletWithdrawalService {
     private final AuditService auditService;
     private final NotificationService notificationService;
     private final UserRepository userRepository;
+    private final RealtimePublisher realtimePublisher;
 
     public record BankInfo(String bankId, String accountNo, String accountName) {}
 
@@ -67,6 +69,11 @@ public class WalletWithdrawalService {
 
         log.info("Student {} submitted withdrawal request #{} for {} VND (cash={}, bonus={})",
                 userId, saved.getId(), amt, split.fromCash(), split.fromBonus());
+        try {
+            // Admin đang mở tab "Rút tiền" tự thấy yêu cầu mới, không cần reload
+            realtimePublisher.publishToRole("ADMIN", "admin-stats",
+                    java.util.Map.of("reason", "WITHDRAWAL_REQUESTED", "withdrawalId", saved.getId()));
+        } catch (Exception ignored) { }
         return saved;
     }
 

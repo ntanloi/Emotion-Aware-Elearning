@@ -1,196 +1,171 @@
 package com.elearning.emotion.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
-import java.net.Socket;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Gửi email OTP qua Brevo HTTP API (cổng 443).
+ * Lý do: Render (gói free) chặn outbound SMTP cổng 25/465/587 nên không thể dùng Gmail SMTP.
+ */
 @Service
 @Slf4j
 public class EmailService {
 
-    @Value("${spring.mail.host:smtp.gmail.com}")
-    private String host;
+    private static final String BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 
-    @Value("${spring.mail.port:587}")
-    private int port;
+    @Value("${brevo.api-key:}")
+    private String brevoApiKey;
 
-    @Value("${spring.mail.username:}")
-    private String username;
-
-    @Value("${spring.mail.password:}")
-    private String password;
+    @Value("${brevo.sender-email:}")
+    private String brevoSenderEmail;
 
     @Value("${spring.mail.sender-name:E-Learning AI}")
     private String senderName;
 
+    @Value("${app.frontend-url:${FRONTEND_URL:https://testdeploy-weld-chi.vercel.app}}")
+    private String frontendUrl;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+
     /**
-     * Kiểm tra xem cấu hình tài khoản gửi mail SMTP đã được thiết lập hay chưa
+     * Lấy URL gốc công khai để chèn asset ảnh/icon vào email (Retina 2x).
      */
-    public boolean isConfigured() {
-        return username != null && !username.isBlank() && password != null && !password.isBlank();
+    public String getBaseUrl() {
+        String url = (frontendUrl != null && !frontendUrl.isBlank()) ? frontendUrl.trim() : "https://testdeploy-weld-chi.vercel.app";
+        while (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+        if (url.contains("localhost") || url.contains("127.0.0.1")) {
+            return "https://testdeploy-weld-chi.vercel.app";
+        }
+        return url;
     }
 
     /**
-     * Gửi email mã OTP xác thực đăng ký tài khoản qua Gmail
+     * 6 ô số hiển thị như thẻ riêng lẻ nhưng nằm trong MỘT khối duy nhất có user-select: all,
+     * nên nhấp/chạm một lần là chọn toàn bộ mã. Các ô là inline-block viết liền nhau (không khoảng trắng,
+     * không dùng td) để khi copy ra đúng chuỗi "123456", không có tab hay dấu cách.
+     */
+    private String buildDigitCells(String otpCode, String colorHex) {
+        if (otpCode == null || otpCode.isBlank()) {
+            return "<td style=\"padding: 10px 20px; font-size: 26px; font-weight: 800; color: " + colorHex + ";\">------</td>";
+        }
+        String clean = otpCode.trim();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<td align=\"center\" style=\"padding: 0; font-size: 0; line-height: 0; cursor: pointer; -webkit-user-select: all; -moz-user-select: all; user-select: all;\">");
+        for (int i = 0; i < clean.length(); i++) {
+            sb.append("<span style=\"display: inline-block; width: 44px; height: 52px; line-height: 52px; margin: 0 4px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; text-align: center; vertical-align: middle; font-size: 26px; font-weight: 800; color: ")
+              .append(colorHex)
+              .append("; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\">")
+              .append(clean.charAt(i))
+              .append("</span>");
+        }
+        sb.append("</td>");
+        return sb.toString();
+    }
+
+    /**
+     * Gợi ý sao chép (icon + chữ). Email không chạy được JavaScript nên không thể ghi clipboard trực tiếp;
+     * người dùng chạm/nhấp vào mã để chọn toàn bộ rồi sao chép, vẫn ở lại trong email.
+     */
+    private String buildCopyHint(String baseUrl, String colorHex) {
+        return "<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" align=\"center\" style=\"margin: 0 auto;\"><tr>"
+                + "<td style=\"padding-right: 6px;\"><img src=\"" + baseUrl + "/images/email/icon-copy.png\" width=\"16\" height=\"16\" alt=\"\" "
+                + "style=\"display: block; border: 0; width: 16px; height: 16px;\" /></td>"
+                + "<td style=\"font-size: 12.5px; font-weight: 600; color: " + colorHex + ";\">Nhấn vào mã để chọn toàn bộ, rồi sao chép</td>"
+                + "</tr></table>";
+    }
+
+    /**
+     * Kiểm tra đã cấu hình Brevo (API key + email người gửi đã xác minh) hay chưa
+     */
+    public boolean isConfigured() {
+        return brevoApiKey != null && !brevoApiKey.isBlank()
+                && brevoSenderEmail != null && !brevoSenderEmail.isBlank();
+    }
+
+    /**
+     * Gửi email mã OTP xác thực đăng ký tài khoản
      */
     public boolean sendRegisterOtpEmail(String toEmail, String fullName, String otpCode) {
         String cleanFullName = (fullName != null && !fullName.isBlank()) ? fullName.trim() : "bạn";
         String htmlContent = buildRegisterOtpHtml(cleanFullName, otpCode);
         String subject = "[E-Learning AI] Mã xác thực OTP đăng ký tài khoản: " + otpCode;
 
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            log.warn("[EmailService] Chưa cấu hình SMTP Gmail (MAIL_USERNAME / MAIL_PASSWORD trong .env). Mã OTP cho '{}': {}", toEmail, otpCode);
+        if (!isConfigured()) {
+            log.warn("[EmailService] Chưa cấu hình BREVO_API_KEY / BREVO_SENDER_EMAIL. Không gửi mail tới '{}'.", toEmail);
             return false;
         }
 
         try {
-            sendSmtpEmail(toEmail.trim(), subject, htmlContent);
-            log.info("[EmailService] Đã gửi mã OTP đăng ký thành công qua Gmail đến: {}", toEmail);
+            sendViaBrevo(toEmail.trim(), subject, htmlContent);
+            log.info("[EmailService] Đã gửi mã OTP đăng ký thành công đến: {}", toEmail);
             return true;
         } catch (Exception e) {
-            log.error("[EmailService] Lỗi gửi email qua Gmail SMTP: {}. Mã OTP cho '{}': {}", e.getMessage(), toEmail, otpCode);
+            log.error("[EmailService] Lỗi gửi email OTP đăng ký qua Brevo tới '{}': {}", toEmail, e.getMessage());
             return false;
         }
     }
 
     /**
-     * Gửi email mã OTP đặt lại mật khẩu qua Gmail
+     * Gửi email mã OTP đặt lại mật khẩu
      */
     public boolean sendResetPasswordOtpEmail(String toEmail, String fullName, String otpCode) {
         String cleanFullName = (fullName != null && !fullName.isBlank()) ? fullName.trim() : "bạn";
         String htmlContent = buildResetPasswordOtpHtml(cleanFullName, otpCode);
         String subject = "[E-Learning AI] Mã xác thực OTP đặt lại mật khẩu: " + otpCode;
 
-        if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            log.warn("[EmailService] Chưa cấu hình SMTP Gmail (MAIL_USERNAME / MAIL_PASSWORD trong .env). Mã OTP đặt lại mật khẩu cho '{}': {}", toEmail, otpCode);
+        if (!isConfigured()) {
+            log.warn("[EmailService] Chưa cấu hình BREVO_API_KEY / BREVO_SENDER_EMAIL. Không gửi mail tới '{}'.", toEmail);
             return false;
         }
 
         try {
-            sendSmtpEmail(toEmail.trim(), subject, htmlContent);
-            log.info("[EmailService] Đã gửi mã OTP đặt lại mật khẩu thành công qua Gmail đến: {}", toEmail);
+            sendViaBrevo(toEmail.trim(), subject, htmlContent);
+            log.info("[EmailService] Đã gửi mã OTP đặt lại mật khẩu thành công đến: {}", toEmail);
             return true;
         } catch (Exception e) {
-            log.error("[EmailService] Lỗi gửi email đặt lại mật khẩu qua Gmail SMTP: {}. Mã OTP cho '{}': {}", e.getMessage(), toEmail, otpCode);
+            log.error("[EmailService] Lỗi gửi email đặt lại mật khẩu qua Brevo tới '{}': {}", toEmail, e.getMessage());
             return false;
         }
     }
 
-    private void sendSmtpEmail(String toEmail, String subject, String htmlBody) throws Exception {
-        int targetPort = (port > 0) ? port : 465;
-        Socket socket;
-        BufferedReader reader;
-        BufferedWriter writer;
+    private void sendViaBrevo(String toEmail, String subject, String htmlBody) throws Exception {
+        Map<String, Object> payload = Map.of(
+                "sender", Map.of("name", senderName, "email", brevoSenderEmail.trim()),
+                "to", List.of(Map.of("email", toEmail)),
+                "subject", subject,
+                "htmlContent", htmlBody
+        );
+        String json = objectMapper.writeValueAsString(payload);
 
-        if (targetPort == 465) {
-            // SMTPS (Implicit SSL) - Cổng mặc định an toàn & ổn định nhất của Gmail
-            SSLSocket sslSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(host, 465);
-            sslSocket.setSoTimeout(10000);
-            socket = sslSocket;
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        HttpRequest request = HttpRequest.newBuilder(URI.create(BREVO_URL))
+                .timeout(Duration.ofSeconds(10))
+                .header("api-key", brevoApiKey.trim())
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                .build();
 
-            expectResponse(reader, "220");
-            sendLine(writer, "EHLO localhost");
-            readUntilEndOfResponse(reader);
-        } else {
-            // STARTTLS (Cổng 587)
-            socket = new Socket(host, targetPort);
-            socket.setSoTimeout(10000);
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-
-            expectResponse(reader, "220");
-            sendLine(writer, "EHLO localhost");
-            readUntilEndOfResponse(reader);
-
-            sendLine(writer, "STARTTLS");
-            expectResponse(reader, "220");
-
-            SSLSocket sslSocket = (SSLSocket) ((SSLSocketFactory) SSLSocketFactory.getDefault())
-                    .createSocket(socket, host, targetPort, true);
-            sslSocket.setSoTimeout(10000);
-            socket = sslSocket;
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
-
-            sendLine(writer, "EHLO localhost");
-            readUntilEndOfResponse(reader);
-        }
-
-        // Xác thực AUTH LOGIN
-        sendLine(writer, "AUTH LOGIN");
-        expectResponse(reader, "334");
-
-        sendLine(writer, Base64.getEncoder().encodeToString(username.trim().getBytes(StandardCharsets.UTF_8)));
-        expectResponse(reader, "334");
-
-        // Mật khẩu ứng dụng (xóa khoảng trắng nếu copy từ Google App Password dạng 4 cụm)
-        String cleanPassword = password.replace(" ", "").trim();
-        sendLine(writer, Base64.getEncoder().encodeToString(cleanPassword.getBytes(StandardCharsets.UTF_8)));
-        expectResponse(reader, "235");
-
-        // Thiết lập người gửi và người nhận
-        sendLine(writer, "MAIL FROM:<" + username.trim() + ">");
-        expectResponse(reader, "250");
-
-        sendLine(writer, "RCPT TO:<" + toEmail.trim() + ">");
-        expectResponse(reader, "250");
-
-        sendLine(writer, "DATA");
-        expectResponse(reader, "354");
-
-        // Header chuẩn MIME UTF-8
-        String encodedSubject = "=?UTF-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes(StandardCharsets.UTF_8)) + "?=";
-        String encodedSender = "=?UTF-8?B?" + Base64.getEncoder().encodeToString(senderName.getBytes(StandardCharsets.UTF_8)) + "?=";
-
-        sendLine(writer, "From: " + encodedSender + " <" + username.trim() + ">");
-        sendLine(writer, "To: <" + toEmail.trim() + ">");
-        sendLine(writer, "Subject: " + encodedSubject);
-        sendLine(writer, "MIME-Version: 1.0");
-        sendLine(writer, "Content-Type: text/html; charset=UTF-8");
-        sendLine(writer, "Content-Transfer-Encoding: base64");
-        sendLine(writer, "");
-
-        // Gửi nội dung HTML mã hóa Base64
-        String base64Content = Base64.getMimeEncoder().encodeToString(htmlBody.getBytes(StandardCharsets.UTF_8));
-        writer.write(base64Content);
-        writer.write("\r\n.\r\n");
-        writer.flush();
-        expectResponse(reader, "250");
-
-        sendLine(writer, "QUIT");
-        try {
-            socket.close();
-        } catch (Exception ignored) {
-        }
-    }
-
-    private void sendLine(BufferedWriter writer, String line) throws IOException {
-        writer.write(line + "\r\n");
-        writer.flush();
-    }
-
-    private void expectResponse(BufferedReader reader, String expectedPrefix) throws IOException {
-        String line = reader.readLine();
-        if (line == null || !line.startsWith(expectedPrefix)) {
-            throw new IOException("SMTP phản hồi không hợp lệ: " + line + " (Kỳ vọng: " + expectedPrefix + ")");
-        }
-    }
-
-    private void readUntilEndOfResponse(BufferedReader reader) throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.length() >= 4 && line.charAt(3) == ' ') {
-                break;
-            }
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 300) {
+            throw new IOException("Brevo trả về HTTP " + response.statusCode() + ": " + response.body());
         }
     }
 
@@ -198,6 +173,9 @@ public class EmailService {
         String safeName = (fullName != null && !fullName.isBlank())
                 ? fullName.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").trim()
                 : "bạn";
+        String cleanOtp = (otpCode != null) ? otpCode.trim() : "";
+        String baseUrl = getBaseUrl();
+        String digitCells = buildDigitCells(cleanOtp, "#1d4ed8");
 
         return """
             <!DOCTYPE html>
@@ -207,66 +185,137 @@ public class EmailService {
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Mã xác thực OTP - E-Learning AI</title>
             </head>
-            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 30px 15px;">
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 36px 16px;">
                 <tr>
                   <td align="center">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <!-- Main Card Container -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03); border: 1px solid #e2e8f0;">
                       
-                      <!-- Header với dải màu Gradient thương hiệu -->
+                      <!-- Top Accent Gradient Bar -->
                       <tr>
-                        <td style="background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); padding: 36px 30px; text-align: center;">
-                          <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 26px;">🎓</span>
-                          </div>
-                          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">E-Learning AI</h1>
-                          <p style="margin: 6px 0 0; color: #e0e7ff; font-size: 13.5px; font-weight: 400;">Hệ Thống Học TOEIC &amp; Nhận Diện Cảm Xúc Thông Minh</p>
-                        </td>
+                        <td height="5" style="background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #0d9488 100%); font-size: 0; line-height: 0;">&nbsp;</td>
                       </tr>
 
-                      <!-- Nội dung chính -->
+                      <!-- Header Section -->
                       <tr>
-                        <td style="padding: 36px 32px 28px;">
-                          <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 19px; font-weight: 600;">Xác thực tài khoản người dùng</h2>
-                          <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; color: #334155;">
-                            Xin chào <strong>{{fullName}}</strong>,
-                          </p>
-                          <p style="margin: 0 0 20px; font-size: 14.5px; line-height: 1.6; color: #334155;">
-                            Cảm ơn bạn đã lựa chọn đăng ký tài khoản tại <strong>E-Learning AI</strong>. Để xác thực địa chỉ email và hoàn tất thủ tục đăng ký, vui lòng sử dụng mã xác thực OTP (One-Time Password) dưới đây:
-                          </p>
-
-                          <!-- Khung hiển thị mã OTP nổi bật -->
-                          <div style="background: #f8fafc; border: 2px dashed #6366f1; border-radius: 12px; padding: 22px 16px; text-align: center; margin: 28px 0 24px;">
-                            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 1px;">Mã xác thực của bạn</div>
-                            <div style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 12px; color: #4338ca; padding-left: 12px;">
-                              {{otpCode}}
-                            </div>
-                          </div>
-
-                          <!-- Lưu ý thời gian & bảo mật -->
-                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
+                        <td style="padding: 36px 36px 20px; text-align: center;">
+                          <!-- Brand Logo Icon (Retina 2x) -->
+                          <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 14px;">
                             <tr>
-                              <td style="font-size: 13px; line-height: 1.6; color: #475569;">
-                                ⏱ <strong>Thời hạn sử dụng:</strong> Mã xác thực có hiệu lực trong vòng <strong>5 phút</strong>.<br>
-                                🔒 <strong>Bảo mật:</strong> Tuyệt đối không chia sẻ mã này cho bất kỳ ai, kể cả nhân viên hệ thống.
+                              <td align="center">
+                                <img src="{{baseUrl}}/images/email/logo-brand.png" width="56" height="56" alt="E-Learning AI" style="display: block; border: 0; width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 10px 18px -4px rgba(37, 99, 235, 0.35);" />
                               </td>
                             </tr>
                           </table>
 
-                          <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #64748b;">
+                          <!-- Brand Name & Tagline -->
+                          <h1 style="margin: 0; color: #0f172a; font-size: 20px; font-weight: 800; letter-spacing: -0.4px;">E-Learning AI</h1>
+                          <p style="margin: 5px 0 0; color: #64748b; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Hệ Thống Học TOEIC &amp; Nhận Diện Cảm Xúc Thông Minh</p>
+
+                          <!-- Subtle Divider -->
+                          <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                            <tr>
+                              <td height="1" style="background-color: #f1f5f9; font-size: 0; line-height: 0;">&nbsp;</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Content Body -->
+                      <tr>
+                        <td style="padding: 10px 36px 36px;">
+                          <!-- Title -->
+                          <h2 style="margin: 0 0 14px; color: #0f172a; font-size: 18px; font-weight: 700;">Xác thực tài khoản người dùng</h2>
+                          
+                          <p style="margin: 0 0 12px; font-size: 14.5px; line-height: 1.6; color: #334155;">
+                            Xin chào <strong>{{fullName}}</strong>,
+                          </p>
+                          
+                          <p style="margin: 0 0 24px; font-size: 14.5px; line-height: 1.6; color: #334155;">
+                            Cảm ơn bạn đã lựa chọn đăng ký tài khoản tại <strong>E-Learning AI</strong>. Để xác thực địa chỉ email và hoàn tất thủ tục đăng ký, vui lòng sử dụng mã xác thực OTP (One-Time Password) dưới đây:
+                          </p>
+
+                          <!-- OTP Verification Box (UX/UI Pro Max 6-Digit Cards) -->
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px 16px; margin: 0 0 24px; text-align: center;">
+                            <tr>
+                              <td align="center">
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 14px;">MÃ XÁC THỰC CỦA BẠN</div>
+                                
+                                <!-- 6 Digit Individual Cells -->
+                                <table border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto 12px;">
+                                  <tr>
+                                    {{digitCells}}
+                                  </tr>
+                                </table>
+
+                                {{copyHint}}
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Professional Information Cards (Replacing raw emojis) -->
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+                            <!-- Row 1: Thời hạn -->
+                            <tr>
+                              <td style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 12px 14px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td width="36" valign="top" style="padding-right: 12px;">
+                                      <img src="{{baseUrl}}/images/email/icon-timer.png" width="30" height="30" alt="Thời hạn" style="display: block; border: 0; width: 30px; height: 30px;" />
+                                    </td>
+                                    <td valign="middle">
+                                      <div style="font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 2px;">
+                                        Thời hạn sử dụng: 5 phút
+                                      </div>
+                                      <div style="font-size: 12px; line-height: 1.45; color: #b45309;">
+                                        Mã xác thực có hiệu lực trong vòng 5 phút. Quá thời gian trên bạn sẽ cần yêu cầu mã mới.
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+
+                            <tr><td height="8" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
+
+                            <!-- Row 2: Bảo mật -->
+                            <tr>
+                              <td style="background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 12px 14px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td width="36" valign="top" style="padding-right: 12px;">
+                                      <img src="{{baseUrl}}/images/email/icon-shield.png" width="30" height="30" alt="Bảo mật" style="display: block; border: 0; width: 30px; height: 30px;" />
+                                    </td>
+                                    <td valign="middle">
+                                      <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 2px;">
+                                        Bảo mật tài khoản tuyệt đối
+                                      </div>
+                                      <div style="font-size: 12px; line-height: 1.45; color: #15803d;">
+                                        Tuyệt đối không chia sẻ mã này cho bất kỳ ai, kể cả nhân viên hệ thống E-Learning AI.
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Footer Notice -->
+                          <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #64748b;">
                             Nếu bạn không thực hiện yêu cầu đăng ký này, vui lòng bỏ qua email hoặc thông báo cho bộ phận hỗ trợ của chúng tôi.
                           </p>
                         </td>
                       </tr>
 
-                      <!-- Footer chân trang -->
+                      <!-- Footer -->
                       <tr>
-                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 32px; text-align: center;">
-                          <p style="margin: 0 0 6px; font-size: 12.5px; color: #64748b;">
-                            Email tự động từ hệ thống <strong>E-Learning AI</strong>.
+                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 22px 36px; text-align: center;">
+                          <p style="margin: 0 0 6px; font-size: 12px; color: #64748b;">
+                            Email được gửi tự động từ hệ thống bảo mật <strong>E-Learning AI</strong>.
                           </p>
-                          <p style="margin: 0; font-size: 11.5px; color: #94a3b8;">
-                            © 2026 E-Learning AI • Nền tảng Học tiếng Anh trực tuyến hỗ trợ AI
+                          <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                            © 2026 E-Learning AI • Nền tảng Học tiếng Anh trực tuyến &amp; Nhận diện cảm xúc AI
                           </p>
                         </td>
                       </tr>
@@ -278,14 +327,20 @@ public class EmailService {
             </body>
             </html>
             """
+                .replace("{{baseUrl}}", baseUrl)
                 .replace("{{fullName}}", safeName)
-                .replace("{{otpCode}}", (otpCode != null) ? otpCode.trim() : "");
+                .replace("{{digitCells}}", digitCells)
+                .replace("{{copyHint}}", buildCopyHint(baseUrl, "#1d4ed8"))
+                .replace("{{otpCode}}", cleanOtp);
     }
 
     private String buildResetPasswordOtpHtml(String fullName, String otpCode) {
         String safeName = (fullName != null && !fullName.isBlank())
                 ? fullName.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").trim()
                 : "bạn";
+        String cleanOtp = (otpCode != null) ? otpCode.trim() : "";
+        String baseUrl = getBaseUrl();
+        String digitCells = buildDigitCells(cleanOtp, "#0284c7");
 
         return """
             <!DOCTYPE html>
@@ -295,66 +350,137 @@ public class EmailService {
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Mã xác thực đặt lại mật khẩu - E-Learning AI</title>
             </head>
-            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 30px 15px;">
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 36px 16px;">
                 <tr>
                   <td align="center">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <!-- Main Card Container -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03); border: 1px solid #e2e8f0;">
                       
-                      <!-- Header với dải màu Gradient bảo mật -->
+                      <!-- Top Accent Gradient Bar (Sky/Indigo) -->
                       <tr>
-                        <td style="background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%); padding: 36px 30px; text-align: center;">
-                          <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 26px;">🔐</span>
-                          </div>
-                          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">E-Learning AI</h1>
-                          <p style="margin: 6px 0 0; color: #e0e7ff; font-size: 13.5px; font-weight: 400;">Yêu Cầu Thiết Lập Lại Mật Khẩu</p>
-                        </td>
+                        <td height="5" style="background: linear-gradient(90deg, #0284c7 0%, #2563eb 50%, #7c3aed 100%); font-size: 0; line-height: 0;">&nbsp;</td>
                       </tr>
 
-                      <!-- Nội dung chính -->
+                      <!-- Header Section -->
                       <tr>
-                        <td style="padding: 36px 32px 28px;">
-                          <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 19px; font-weight: 600;">Khôi phục quyền truy cập</h2>
-                          <p style="margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; color: #334155;">
-                            Xin chào <strong>{{fullName}}</strong>,
-                          </p>
-                          <p style="margin: 0 0 20px; font-size: 14.5px; line-height: 1.6; color: #334155;">
-                            Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản liên kết với địa chỉ email này trên hệ thống <strong>E-Learning AI</strong>. Để tạo mật khẩu mới, bạn vui lòng sử dụng mã xác thực OTP (One-Time Password) dưới đây:
-                          </p>
-
-                          <!-- Khung hiển thị mã OTP nổi bật -->
-                          <div style="background: #f8fafc; border: 2px dashed #0284c7; border-radius: 12px; padding: 22px 16px; text-align: center; margin: 28px 0 24px;">
-                            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 1px;">Mã OTP đặt lại mật khẩu</div>
-                            <div style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 12px; color: #0369a1; padding-left: 12px;">
-                              {{otpCode}}
-                            </div>
-                          </div>
-
-                          <!-- Lưu ý thời gian & bảo mật -->
-                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; border-left: 4px solid #ef4444;">
+                        <td style="padding: 36px 36px 20px; text-align: center;">
+                          <!-- Brand Logo Icon (giống icon trang chủ của web, Retina 3x) -->
+                          <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 14px;">
                             <tr>
-                              <td style="font-size: 13px; line-height: 1.6; color: #475569;">
-                                ⏱ <strong>Thời hạn sử dụng:</strong> Mã xác thực có hiệu lực trong vòng <strong>5 phút</strong>.<br>
-                                🔒 <strong>Bảo mật:</strong> Tuyệt đối không chia sẻ mã này cho bất kỳ ai. Nếu bạn không gửi yêu cầu này, vui lòng bỏ qua email và mật khẩu của bạn vẫn an toàn.
+                              <td align="center">
+                                <img src="{{baseUrl}}/images/email/logo-brand.png" width="56" height="56" alt="E-Learning AI" style="display: block; border: 0; width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 10px 18px -4px rgba(37, 99, 235, 0.35);" />
                               </td>
                             </tr>
                           </table>
 
-                          <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #64748b;">
+                          <!-- Brand Name & Tagline -->
+                          <h1 style="margin: 0; color: #0f172a; font-size: 20px; font-weight: 800; letter-spacing: -0.4px;">E-Learning AI</h1>
+                          <p style="margin: 5px 0 0; color: #64748b; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Yêu Cầu Thiết Lập Lại Mật Khẩu</p>
+
+                          <!-- Subtle Divider -->
+                          <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top: 24px;">
+                            <tr>
+                              <td height="1" style="background-color: #f1f5f9; font-size: 0; line-height: 0;">&nbsp;</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Content Body -->
+                      <tr>
+                        <td style="padding: 10px 36px 36px;">
+                          <!-- Title -->
+                          <h2 style="margin: 0 0 14px; color: #0f172a; font-size: 18px; font-weight: 700;">Khôi phục quyền truy cập</h2>
+                          
+                          <p style="margin: 0 0 12px; font-size: 14.5px; line-height: 1.6; color: #334155;">
+                            Xin chào <strong>{{fullName}}</strong>,
+                          </p>
+                          
+                          <p style="margin: 0 0 24px; font-size: 14.5px; line-height: 1.6; color: #334155;">
+                            Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản liên kết với địa chỉ email này trên hệ thống <strong>E-Learning AI</strong>. Để tạo mật khẩu mới, bạn vui lòng sử dụng mã xác thực OTP (One-Time Password) dưới đây:
+                          </p>
+
+                          <!-- OTP Verification Box (UX/UI Pro Max 6-Digit Cards) -->
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px 16px; margin: 0 0 24px; text-align: center;">
+                            <tr>
+                              <td align="center">
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; margin-bottom: 14px;">MÃ OTP ĐẶT LẠI MẬT KHẨU</div>
+                                
+                                <!-- 6 Digit Individual Cells -->
+                                <table border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto 12px;">
+                                  <tr>
+                                    {{digitCells}}
+                                  </tr>
+                                </table>
+
+                                {{copyHint}}
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Professional Information Cards (Replacing raw emojis) -->
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+                            <!-- Row 1: Thời hạn -->
+                            <tr>
+                              <td style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 12px 14px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td width="36" valign="top" style="padding-right: 12px;">
+                                      <img src="{{baseUrl}}/images/email/icon-timer.png" width="30" height="30" alt="Thời hạn" style="display: block; border: 0; width: 30px; height: 30px;" />
+                                    </td>
+                                    <td valign="middle">
+                                      <div style="font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 2px;">
+                                        Thời hạn sử dụng: 5 phút
+                                      </div>
+                                      <div style="font-size: 12px; line-height: 1.45; color: #b45309;">
+                                        Mã xác thực có hiệu lực trong vòng 5 phút. Quá thời gian trên bạn sẽ cần gửi lại yêu cầu mới.
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+
+                            <tr><td height="8" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
+
+                            <!-- Row 2: Cảnh báo an toàn -->
+                            <tr>
+                              <td style="background-color: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 12px 14px;">
+                                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td width="36" valign="top" style="padding-right: 12px;">
+                                      <img src="{{baseUrl}}/images/email/icon-shield-alert.png" width="30" height="30" alt="Cảnh báo an toàn" style="display: block; border: 0; width: 30px; height: 30px;" />
+                                    </td>
+                                    <td valign="middle">
+                                      <div style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 2px;">
+                                        Cảnh báo an toàn tài khoản
+                                      </div>
+                                      <div style="font-size: 12px; line-height: 1.45; color: #b91c1c;">
+                                        Nếu bạn không gửi yêu cầu này, vui lòng bỏ qua email và mật khẩu hiện tại của bạn vẫn an toàn tuyệt đối.
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Footer Notice -->
+                          <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #64748b;">
                             Nếu bạn nghi ngờ tài khoản bị xâm phạm, vui lòng đổi mật khẩu ngay sau khi đăng nhập hoặc liên hệ đội ngũ quản trị.
                           </p>
                         </td>
                       </tr>
 
-                      <!-- Footer chân trang -->
+                      <!-- Footer -->
                       <tr>
-                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 32px; text-align: center;">
-                          <p style="margin: 0 0 6px; font-size: 12.5px; color: #64748b;">
-                            Email tự động từ hệ thống <strong>E-Learning AI</strong>.
+                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 22px 36px; text-align: center;">
+                          <p style="margin: 0 0 6px; font-size: 12px; color: #64748b;">
+                            Email được gửi tự động từ hệ thống bảo mật <strong>E-Learning AI</strong>.
                           </p>
-                          <p style="margin: 0; font-size: 11.5px; color: #94a3b8;">
-                            © 2026 E-Learning AI • Nền tảng Học tiếng Anh trực tuyến hỗ trợ AI
+                          <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                            © 2026 E-Learning AI • Nền tảng Học tiếng Anh trực tuyến &amp; Nhận diện cảm xúc AI
                           </p>
                         </td>
                       </tr>
@@ -366,7 +492,10 @@ public class EmailService {
             </body>
             </html>
             """
+                .replace("{{baseUrl}}", baseUrl)
                 .replace("{{fullName}}", safeName)
-                .replace("{{otpCode}}", (otpCode != null) ? otpCode.trim() : "");
+                .replace("{{digitCells}}", digitCells)
+                .replace("{{copyHint}}", buildCopyHint(baseUrl, "#0284c7"))
+                .replace("{{otpCode}}", cleanOtp);
     }
 }

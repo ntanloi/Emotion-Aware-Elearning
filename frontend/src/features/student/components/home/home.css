@@ -66,7 +66,7 @@
   pointer-events: none;
 }
 
-/* Slide thuần túy hình ảnh (Banner 1 & Banner 3) */
+/* Slide thuần túy hình ảnh (Banner 1, 2 & 3) */
 .home-banner-slide.slide-image-only {
   padding: 0;
   display: flex;
@@ -89,6 +89,29 @@
 
 .home-banner-slide.slide-image-only:hover .home-banner-pure-img {
   transform: scale(1.012);
+}
+
+/* Biến thể hiển thị đủ ảnh (ảnh 16:9 trong khung banner rộng) */
+.home-banner-slide.slide-image-only.is-contain {
+  position: relative;
+  background: #e8ebfb;
+}
+
+.home-banner-slide.slide-image-only.is-contain .home-banner-blur-bg {
+  position: absolute;
+  inset: -24px;
+  width: calc(100% + 48px);
+  height: calc(100% + 48px);
+  object-fit: cover;
+  filter: blur(28px) saturate(1.1);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.home-banner-slide.slide-image-only.is-contain .home-banner-pure-img {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
 }
 
 /* Slide Content */

@@ -11,11 +11,11 @@
 -- Bằng chứng: card khoá học Study4 hiển thị giá đang bán + giá gốc gạch
 -- ngang + % giảm (VD "1.050.000đ  1.800.000đ  -41%") và có ảnh bìa riêng.
 -- original_price NULL/= price ⇒ không hiển thị giá gạch/badge giảm giá.
-ALTER TABLE courses
-    ADD COLUMN price           DECIMAL(12, 2) NULL AFTER duration_hours,
-    ADD COLUMN original_price  DECIMAL(12, 2) NULL AFTER price,
-    ADD COLUMN cover_media_id  CHAR(36)       NULL AFTER original_price,
-    ADD CONSTRAINT fk_course_cover FOREIGN KEY (cover_media_id) REFERENCES media_assets (id);
+ALTER TABLE courses ADD COLUMN price          DECIMAL(12, 2) NULL AFTER duration_hours;
+ALTER TABLE courses ADD COLUMN original_price DECIMAL(12, 2) NULL AFTER price;
+ALTER TABLE courses ADD COLUMN cover_media_id CHAR(36)       NULL AFTER original_price;
+ALTER TABLE courses ADD CONSTRAINT fk_course_cover
+    FOREIGN KEY (cover_media_id) REFERENCES media_assets (id);
 
 -- ---------- 2. content_item_progress: tick hoàn thành theo TỪNG dạng luyện tập ----------
 -- Bằng chứng: mỗi Bộ từ vựng (1 content_item type=VOCAB_SET) hiển thị NHIỀU
@@ -45,19 +45,16 @@ CREATE TABLE content_item_progress (
 -- Bằng chứng: mỗi từ vựng trong danh sách/flashcard có 2 icon loa riêng để
 -- phát âm giọng Anh-Anh (UK) và Anh-Mỹ (US) — 1 audio_media_id dùng chung
 -- không đủ.
-ALTER TABLE vocab_words
-    ADD COLUMN audio_uk_media_id CHAR(36) NULL AFTER image_media_id,
-    ADD COLUMN audio_us_media_id CHAR(36) NULL AFTER audio_uk_media_id;
+ALTER TABLE vocab_words ADD COLUMN audio_uk_media_id CHAR(36) NULL AFTER image_media_id;
+ALTER TABLE vocab_words ADD COLUMN audio_us_media_id CHAR(36) NULL AFTER audio_uk_media_id;
 
 UPDATE vocab_words SET audio_uk_media_id = audio_media_id WHERE audio_media_id IS NOT NULL;
 
-ALTER TABLE vocab_words
-    ADD CONSTRAINT fk_word_audio_uk FOREIGN KEY (audio_uk_media_id) REFERENCES media_assets (id),
-    ADD CONSTRAINT fk_word_audio_us FOREIGN KEY (audio_us_media_id) REFERENCES media_assets (id);
+ALTER TABLE vocab_words ADD CONSTRAINT fk_word_audio_uk FOREIGN KEY (audio_uk_media_id) REFERENCES media_assets (id);
+ALTER TABLE vocab_words ADD CONSTRAINT fk_word_audio_us FOREIGN KEY (audio_us_media_id) REFERENCES media_assets (id);
 
-ALTER TABLE vocab_words
-    DROP FOREIGN KEY fk_word_audio,
-    DROP COLUMN audio_media_id;
+ALTER TABLE vocab_words DROP FOREIGN KEY fk_word_audio;
+ALTER TABLE vocab_words DROP COLUMN audio_media_id;
 
 -- ---------- 4. content_items: thời gian giới hạn làm bài ----------
 -- Bằng chứng: card đề thi/bài luyện (PRACTICE_TEST, DICTATION_SET) hiển thị

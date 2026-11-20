@@ -31,11 +31,15 @@ import {
 } from '@teacher/hooks/useTeacherReviews.js'
 import ReviewImageLightbox from '@student/components/ReviewImageLightbox.jsx'
 import { useRealtimeEvent } from '@shared/realtime/index.js'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 export default function TeacherCourseReviewsPage() {
   const { courseId } = useParams()
   const { data: course } = useCourse(courseId)
   const qc = useQueryClient()
+  const toast = useToast()
+  const confirm = useConfirm()
 
   // Realtime: giảng viên nhận event khi có đánh giá mới, chỉnh sửa, xóa hoặc thay đổi phản hồi
   const handleReviewRealtime = (payload) => {
@@ -86,16 +90,22 @@ export default function TeacherCourseReviewsPage() {
     try {
       await pinMutation.mutateAsync(reviewId)
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Không thể ghim đánh giá')
+      toast.error(err.response?.data?.message || err.response?.data?.error || err.message || 'Không thể ghim đánh giá')
     }
   }
 
   const handleUnpinReview = async (reviewId) => {
-    if (!window.confirm('Gỡ đánh giá này khỏi trang giới thiệu khóa học?')) return
+    const ok = await confirm({
+      title: 'Bỏ ghim đánh giá',
+      message: 'Gỡ đánh giá này khỏi trang giới thiệu khóa học?',
+      confirmLabel: 'Bỏ ghim',
+      variant: 'warning',
+    })
+    if (!ok) return
     try {
       await unpinMutation.mutateAsync(reviewId)
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Không thể bỏ ghim')
+      toast.error(err.response?.data?.message || err.response?.data?.error || err.message || 'Không thể bỏ ghim')
     }
   }
 
@@ -109,7 +119,7 @@ export default function TeacherCourseReviewsPage() {
     try {
       await reorderMutation.mutateAsync(ids)
     } catch (err) {
-      alert('Không thể cập nhật thứ tự đánh giá ghim')
+      toast.error('Không thể cập nhật thứ tự đánh giá ghim')
     }
   }
 
@@ -130,16 +140,22 @@ export default function TeacherCourseReviewsPage() {
       setEditingReplyId(null)
       setReplyText('')
     } catch (err) {
-      alert(err.response?.data?.error || err.message || 'Không thể lưu phản hồi')
+      toast.error(err.response?.data?.error || err.message || 'Không thể lưu phản hồi')
     }
   }
 
   const handleDeleteReply = async (reviewId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa phản hồi này không?')) return
+    const ok = await confirm({
+      title: 'Xóa phản hồi',
+      message: 'Bạn có chắc chắn muốn xóa phản hồi này không?',
+      confirmLabel: 'Xóa phản hồi',
+      variant: 'danger',
+    })
+    if (!ok) return
     try {
       await deleteReplyMutation.mutateAsync(reviewId)
     } catch (err) {
-      alert(err.response?.data?.error || err.message || 'Không thể xóa phản hồi')
+      toast.error(err.response?.data?.error || err.message || 'Không thể xóa phản hồi')
     }
   }
 
@@ -535,7 +551,7 @@ export default function TeacherCourseReviewsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                       <StarRating value={r.rating} size={13} />
                       <span className="text-dim text-xs">
-                        {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                        {formatVnDate(r.createdAt)}
                       </span>
                     </div>
 
@@ -785,7 +801,7 @@ export default function TeacherCourseReviewsPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                         <StarRating value={r.rating} size={15} />
                         <span className="text-dim text-xs">
-                          {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                          {formatVnDate(r.createdAt)}
                           {r.isEdited && ' • (đã chỉnh sửa)'}
                         </span>
                       </div>
@@ -898,7 +914,7 @@ export default function TeacherCourseReviewsPage() {
                         </strong>
                         {r.teacherRepliedAt && (
                           <span className="text-dim text-xs">
-                            • {new Date(r.teacherRepliedAt).toLocaleDateString('vi-VN')}
+                            • {formatVnDate(r.teacherRepliedAt)}
                           </span>
                         )}
                       </div>

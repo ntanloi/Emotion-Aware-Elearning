@@ -21,6 +21,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 
+import { formatVnDate, vnTime } from '@shared/utils/dateTime.js'
 function CourseAiBadge({ reportJson }) {
   if (!reportJson) {
     return <span style={{ fontSize: 12, color: 'var(--c-muted, #94a3b8)' }}>Chưa kiểm tra</span>
@@ -369,7 +370,7 @@ export default function AdminCourseListPage() {
                 const waitingTime = formatWaitingTime(c.submittedAt)
                 const urgencyClass = getWaitUrgencyClass(c.submittedAt)
                 const isModifiedAfterPublish =
-                  c.contentChangedAt && c.reviewedAt && new Date(c.contentChangedAt) > new Date(c.reviewedAt)
+                  c.contentChangedAt && c.reviewedAt && vnTime(c.contentChangedAt) > vnTime(c.reviewedAt)
 
                 return (
                   <tr
@@ -450,7 +451,7 @@ export default function AdminCourseListPage() {
                         <td data-label="Thời gian chờ" style={{ padding: '12px 14px' }}>
                           <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <div style={{ fontSize: 12, color: 'var(--text-dim, #475569)' }}>
-                              {c.submittedAt ? new Date(c.submittedAt).toLocaleDateString('vi-VN') : '—'}
+                              {c.submittedAt ? formatVnDate(c.submittedAt) : '—'}
                             </div>
                             {waitingTime && (
                               <div className={`urgency-badge ${urgencyClass}`} style={{ marginTop: 4 }}>
@@ -474,7 +475,7 @@ export default function AdminCourseListPage() {
                           </span>
                         </td>
                         <td data-label="Cập nhật" style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
-                          {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('vi-VN') : '—'}
+                          {c.updatedAt ? formatVnDate(c.updatedAt) : '—'}
                         </td>
                       </>
                     )}
@@ -485,7 +486,7 @@ export default function AdminCourseListPage() {
                           <StatusBadge status={isModifiedAfterPublish ? 'MODIFIED' : c.status} />
                         </td>
                         <td data-label="Thời điểm sửa" style={{ padding: '12px 14px', color: 'var(--c-muted, #64748b)' }}>
-                          {c.contentChangedAt ? new Date(c.contentChangedAt).toLocaleDateString('vi-VN') : '—'}
+                          {c.contentChangedAt ? formatVnDate(c.contentChangedAt) : '—'}
                         </td>
                       </>
                     )}

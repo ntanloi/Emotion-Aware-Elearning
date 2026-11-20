@@ -29,6 +29,7 @@ import SelectFromBankModal from '@teacher/components/modals/SelectFromBankModal.
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
 import EmptyState from '@shared/components/ui/EmptyState.jsx'
 import { parseRejectReason } from '@teacher/utils/rejectReasonParser.js'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
 const PART_NAMES = {
   1: 'Part 1: Mô tả hình ảnh (Photographs)',
@@ -43,6 +44,8 @@ const PART_NAMES = {
 export default function TeacherTestBuilderPage() {
   const { id: testId } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
 
   const [builderData, setBuilderData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -76,7 +79,7 @@ export default function TeacherTestBuilderPage() {
       }
     } catch (err) {
       console.error('Lỗi tải dữ liệu soạn đề:', err)
-      alert(err.response?.data?.message || 'Không thể tải dữ liệu đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể tải dữ liệu đề thi')
     } finally {
       setLoading(false)
     }
@@ -90,29 +93,41 @@ export default function TeacherTestBuilderPage() {
   const isEditable = test && (test.status === 'DRAFT' || test.status === 'REJECTED')
 
   const handleDeleteQuestion = async (questionId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi đề thi?')) return
+    const ok = await confirm({
+      title: 'Xóa câu hỏi khỏi đề thi',
+      message: 'Bạn có chắc chắn muốn xóa câu hỏi này khỏi đề thi?',
+      confirmLabel: 'Xóa câu hỏi',
+      variant: 'danger',
+    })
+    if (!ok) return
     try {
       await removeQuestionFromTest(testId, questionId)
       await loadData(activePartNo)
       setNotification('Đã xóa câu hỏi khỏi đề thi')
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa câu hỏi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể xóa câu hỏi')
     }
   }
 
   const handleSubmitForReview = async () => {
     if (totalQuestions === 0) {
-      alert('Đề thi cần có ít nhất 1 câu hỏi để có thể gửi duyệt')
+      toast.warning('Đề thi cần có ít nhất 1 câu hỏi để có thể gửi duyệt')
       return
     }
-    if (!window.confirm('Bạn có chắc muốn gửi đề thi này lên ban quản trị kiểm duyệt?')) return
+    const ok = await confirm({
+      title: 'Gửi duyệt đề thi',
+      message: 'Bạn có chắc muốn gửi đề thi này lên ban quản trị kiểm duyệt?',
+      confirmLabel: 'Gửi duyệt',
+      variant: 'primary',
+    })
+    if (!ok) return
     setActionLoading(true)
     try {
       await submitTestForReview(testId)
       await loadData(activePartNo)
       setNotification('Đã gửi đề thi lên ban quản trị xét duyệt')
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể gửi duyệt đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể gửi duyệt đề thi')
     } finally {
       setActionLoading(false)
     }
@@ -124,7 +139,7 @@ export default function TeacherTestBuilderPage() {
       await toggleTestStatus(testId)
       await loadData(activePartNo)
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể thay đổi trạng thái đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể thay đổi trạng thái đề thi')
     } finally {
       setActionLoading(false)
     }

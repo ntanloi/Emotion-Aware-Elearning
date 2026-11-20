@@ -438,7 +438,7 @@ public class SegmentAlertService {
             String title = "⚠️ Cảnh báo bài giảng: Điểm nghẽn tiếp thu";
             String content = String.format("Bài '%s' có đoạn %s: %d/%d học viên (%.1f%%) %s.",
                     item.getTitle(), timeLabel, affected, total, pct, stateVn);
-            String link = "/teacher/dashboard?tab=emotions&lessonId=" + item.getId() + "&time=" + s;
+            String link = "/dashboard/teacher?tab=emotions&lessonId=" + item.getId() + "&time=" + s;
 
             notificationService.send(
                     teacher.getId(),

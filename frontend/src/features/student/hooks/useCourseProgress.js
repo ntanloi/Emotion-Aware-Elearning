@@ -19,23 +19,23 @@ export function useCourseProgress(courseId) {
   const videoProgressMutation = useMutation({
     mutationFn: ({ itemId, watchedSeconds, durationSeconds }) =>
       progressApi.recordVideoProgress(itemId, { watchedSeconds, durationSeconds }),
-    onSuccess: () => invalidateProgress(),
+    onSuccess: () => { invalidateProgress() },
   })
 
   const vocabCompletedMutation = useMutation({
     mutationFn: (itemId) => progressApi.recordVocabCompleted(itemId),
-    onSuccess: () => invalidateProgress(),
+    onSuccess: () => { invalidateProgress() },
   })
 
   const grammarReadMutation = useMutation({
     mutationFn: (itemId) => progressApi.recordGrammarRead(itemId),
-    onSuccess: () => invalidateProgress(),
+    onSuccess: () => { invalidateProgress() },
   })
 
   const savePartialAnswersMutation = useMutation({
     mutationFn: ({ itemId, attemptId, answers }) =>
       progressApi.savePartialAnswers(itemId, attemptId, answers),
-    onSuccess: () => invalidateProgress(),
+    onSuccess: () => { invalidateProgress() },
   })
 
   const progressData = query.data || null

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import * as financeApi from '@admin/api/finance.js'
 import Modal from '@shared/components/ui/Modal.jsx'
+import { useRealtimeEvent } from '@shared/realtime/index.js'
 import {
   Wallet,
   CheckCircle2,
@@ -16,6 +17,7 @@ import {
   DollarSign
 } from 'lucide-react'
 
+import { formatVnDateTime } from '@shared/utils/dateTime.js'
 export default function AdminStudentWithdrawalsTab({ showToast }) {
   const [status, setStatus] = useState('PENDING')
   const [page, setPage] = useState(0)
@@ -44,6 +46,11 @@ export default function AdminStudentWithdrawalsTab({ showToast }) {
   useEffect(() => {
     fetchWithdrawals()
   }, [fetchWithdrawals])
+
+  // Realtime: học viên vừa gửi yêu cầu rút tiền -> danh sách tự cập nhật
+  useRealtimeEvent('admin-stats', (payload) => {
+    if (payload?.reason === 'WITHDRAWAL_REQUESTED') fetchWithdrawals()
+  })
 
   const handlePay = async (e) => {
     e.preventDefault()
@@ -166,7 +173,7 @@ export default function AdminStudentWithdrawalsTab({ showToast }) {
                 return (
                   <tr key={w.id} style={{ borderBottom: '1px solid var(--border-subtle, #f1f5f9)' }}>
                     <td style={{ padding: '12px 14px', color: 'var(--text-dim)', fontSize: 12 }}>
-                      {new Date(w.createdAt).toLocaleString('vi-VN')}
+                      {formatVnDateTime(w.createdAt)}
                     </td>
                     <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 12 }}>
                       {w.userId}

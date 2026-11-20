@@ -1,15 +1,13 @@
 -- Phase 3: Review moderation, reports and keyword filtering
 
 -- 1. Bổ sung trường ẩn đánh giá trên bảng course_reviews
-ALTER TABLE course_reviews
-    ADD COLUMN hidden_reason VARCHAR(500) NULL,
-    ADD COLUMN hidden_by CHAR(36) NULL,
-    ADD COLUMN hidden_at DATETIME NULL;
+ALTER TABLE course_reviews ADD COLUMN hidden_reason VARCHAR(500) NULL;
+ALTER TABLE course_reviews ADD COLUMN hidden_by CHAR(36) NULL;
+ALTER TABLE course_reviews ADD COLUMN hidden_at DATETIME NULL;
 
 -- 2. Bổ sung trường ẩn riêng ảnh trên bảng review_images
-ALTER TABLE review_images
-    ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN hidden_reason VARCHAR(255) NULL;
+ALTER TABLE review_images ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE review_images ADD COLUMN hidden_reason VARCHAR(255) NULL;
 
 -- 3. Bảng báo cáo đánh giá và ảnh vi phạm (review_reports)
 CREATE TABLE IF NOT EXISTS review_reports (

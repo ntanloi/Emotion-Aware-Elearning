@@ -1,9 +1,8 @@
 -- Phase 2: Teacher reply on course reviews and in-app notifications system
 
 -- 1. Bổ sung trường phản hồi của giảng viên trên bảng course_reviews
-ALTER TABLE course_reviews
-    ADD COLUMN teacher_reply TEXT NULL,
-    ADD COLUMN teacher_replied_at DATETIME NULL;
+ALTER TABLE course_reviews ADD COLUMN teacher_reply TEXT NULL;
+ALTER TABLE course_reviews ADD COLUMN teacher_replied_at DATETIME NULL;
 
 -- 2. Bảng thông báo người dùng (notifications)
 CREATE TABLE IF NOT EXISTS notifications (

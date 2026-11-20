@@ -8,13 +8,14 @@ spring:
         size: 4
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?${DB_PARAMS:useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&rewriteBatchedStatements=true}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
+      # Mac dinh 20/5. Tren may RAM nho (Render free 512MB) dat DB_POOL_MAX=5, DB_POOL_MIN=1
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
       connection-timeout: 20000
 
   jpa:
@@ -28,6 +29,7 @@ spring:
         format_sql: false
         jdbc:
           batch_size: 50
+          time_zone: Asia/Ho_Chi_Minh
         order_inserts: true
         order_updates: true
 
@@ -37,25 +39,13 @@ spring:
     baseline-on-migrate: true
 
   jackson:
+    time-zone: Asia/Ho_Chi_Minh
     serialization:
       fail-on-empty-beans: false
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    # Chi dung lam ten hien thi nguoi gui. Gui mail that qua Brevo HTTP API (xem khoi brevo: ben duoi).
     sender-name: ${MAIL_SENDER_NAME:E-Learning AI}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
 
   # Gioi han upload: video bai giang co the toi 500MB (~1.5 tieng), can nang len dang ke so voi
   # mac dinh (1MB) cua Spring. 550MB de co du dia troi cho video ~500MB + metadata multipart.
@@ -67,13 +57,19 @@ spring:
       file-size-threshold: 10MB
 
 server:
-  port: ${SERVER_PORT:8080}
+  # Render/PaaS cap cong qua bien PORT; chay local van dung SERVER_PORT hoac 8080
+  port: ${PORT:${SERVER_PORT:8080}}
   tomcat:
+    threads:
+      max: ${TOMCAT_MAX_THREADS:200}
     # Mac dinh Tomcat chi "swallow" toi 2MB khi tra loi loi som (vd file vuot han muc) -> voi
     # request 500MB se bi reset connection thay vi client nhan duoc thong bao loi ro rang.
     max-swallow-size: -1
 
 app:
+  auth:
+    # Chi bat true khi chay local de nhan OTP khi gui mail loi. PRODUCTION de false.
+    expose-dev-otp: ${APP_AUTH_EXPOSE_DEV_OTP:false}
   storage:
     # local     : luu vao thu muc uploads/ tren dia server, serve qua /uploads/** (xem WebMvcConfig).
     #             Chi phu hop DEV - mat file khi redeploy/container restart, khong co CDN.
@@ -199,6 +195,7 @@ logging:
     org.springframework.data.web.config.PageModule$PlainPageSerializationWarning: OFF
     org.apache.catalina.connector.CoyoteAdapter: WARN
 
-
-
-
+# Brevo (gui email OTP qua HTTP API, khong dung SMTP vi Render chan cong 25/465/587)
+brevo:
+  api-key: ${BREVO_API_KEY:}
+  sender-email: ${BREVO_SENDER_EMAIL:}

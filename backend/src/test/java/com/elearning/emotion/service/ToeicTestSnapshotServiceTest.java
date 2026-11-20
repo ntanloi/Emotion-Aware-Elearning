@@ -51,6 +51,8 @@ class ToeicTestSnapshotServiceTest {
     private TestAttemptRepository testAttemptRepository;
     @Mock
     private CourseAccessService courseAccessService;
+    @Mock
+    private com.elearning.emotion.service.realtime.RealtimePublisher realtimePublisher;
 
     @InjectMocks
     private ToeicTestSnapshotService toeicTestSnapshotService;

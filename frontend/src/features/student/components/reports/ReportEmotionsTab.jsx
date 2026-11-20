@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import EmptyState from '@shared/components/ui/EmptyState.jsx'
 
+import { vnTime } from '@shared/utils/dateTime.js'
 function formatDuration(totalSeconds) {
   if (!totalSeconds || totalSeconds <= 0) return '0 phút'
   const hours = Math.floor(totalSeconds / 3600)
@@ -69,7 +70,7 @@ export default function ReportEmotionsTab({
 
       const parseTime = (val) => {
         if (!val) return 0
-        const t = new Date(val).getTime()
+        const t = vnTime(val)
         return isNaN(t) ? 0 : t
       }
       const timeDiff = parseTime(b.lastStudiedAt) - parseTime(a.lastStudiedAt)

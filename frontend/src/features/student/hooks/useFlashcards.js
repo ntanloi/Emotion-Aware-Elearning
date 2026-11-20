@@ -7,7 +7,7 @@ export function useFlashcards() {
 
   const reviewMutation = useMutation({
     mutationFn: ({ wordId, knewIt }) => flashcardsApi.reviewFlashcard(wordId, knewIt),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['flashcards', 'mine'] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['flashcards', 'mine'] }) },
   })
 
   return { ...query, review: reviewMutation.mutateAsync, reviewing: reviewMutation.isPending }
