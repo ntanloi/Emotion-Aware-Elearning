@@ -1,4 +1,4 @@
-# Hệ Thống E-Learning Nhận Diện Cảm Xúc & Kiểm Duyệt Khóa Học TOEIC
+# Hệ Thống E-Learning Nhận Diện Cảm Xúc và Kiểm Duyệt Khóa Học TOEIC
 
 Hệ thống E-Learning toàn diện kết hợp:
 1. **Nền tảng học tập & luyện thi TOEIC** (Video bài giảng, luyện tập theo Part 1–7, từ vựng, ngữ pháp, chép chính tả).
