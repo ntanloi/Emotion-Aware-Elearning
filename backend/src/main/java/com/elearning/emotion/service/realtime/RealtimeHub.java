@@ -148,15 +148,21 @@ public class RealtimeHub {
         } else if (event.targetRole() != null) {
             // Gửi cho tất cả client có role khớp (ví dụ ADMIN)
             String expectedRole = event.targetRole().toUpperCase();
+            int delivered = 0;
             for (Set<UserConnection> conns : userConnections.values()) {
                 for (UserConnection conn : conns) {
                     if (conn.role() != null && conn.role().toUpperCase().contains(expectedRole)) {
                         if (!sendToConnection(conn, event, payloadJson)) {
                             deadConnections.add(conn);
+                        } else {
+                            delivered++;
                         }
                     }
                 }
             }
+            // Chẩn đoán: cho biết sự kiện theo role đã tới được bao nhiêu kết nối SSE đang mở
+            log.debug("[RealtimeHub] Sự kiện '{}' (id={}) gửi tới role {}: {} kết nối",
+                    event.type(), event.eventId(), expectedRole, delivered);
         } else {
             // Gửi broadcast toàn hệ thống
             for (Set<UserConnection> conns : userConnections.values()) {

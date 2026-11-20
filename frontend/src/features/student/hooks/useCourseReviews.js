@@ -23,23 +23,42 @@ export function useMyCourseReview(courseId) {
 
 export function useSubmitCourseReview(courseId) {
   const qc = useQueryClient()
+
+  // Làm mới dữ liệu ở nền - KHÔNG return Promise để mutateAsync resolve ngay khi server lưu xong
+  // (modal đóng liền, danh sách tự refetch xong sau đó).
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['courseReviews', courseId] })
     qc.invalidateQueries({ queryKey: ['course', courseId] })
     qc.invalidateQueries({ queryKey: ['courses'] })
   }
 
+  // Cập nhật ngay đánh giá của chính mình trong cache để UI đổi tức thì, không chờ refetch
+  const applyMine = (review) => {
+    qc.setQueryData(['courseReviews', courseId, 'mine'], (old) =>
+      old ? { ...old, review } : old
+    )
+  }
+
   const create = useMutation({
     mutationFn: (payload) => reviewsApi.createCourseReview(courseId, payload),
-    onSuccess: invalidate,
+    onSuccess: (review) => {
+      applyMine(review)
+      invalidate()
+    },
   })
   const update = useMutation({
     mutationFn: (payload) => reviewsApi.updateCourseReview(courseId, payload),
-    onSuccess: invalidate,
+    onSuccess: (review) => {
+      applyMine(review)
+      invalidate()
+    },
   })
   const remove = useMutation({
     mutationFn: () => reviewsApi.deleteCourseReview(courseId),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      applyMine(null)
+      invalidate()
+    },
   })
 
   return { create, update, remove }

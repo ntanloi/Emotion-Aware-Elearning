@@ -1,5 +1,6 @@
 package com.elearning.emotion.dto;
 
+import com.elearning.emotion.entity.PaymentTransaction;
 import com.elearning.emotion.entity.PayoutRequest;
 
 import java.math.BigDecimal;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 public record PayoutRequestDto(
         String id,
         String teacherId,
+        String teacherCode,
         String teacherName,
         String teacherEmail,
         BigDecimal amount,
@@ -19,12 +21,21 @@ public record PayoutRequestDto(
         String transactionRef,
         LocalDateTime processedAt,
         String processedByName,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean sepayMatched,
+        Long sepayTransactionId,
+        String sepayReferenceCode
 ) {
     public static PayoutRequestDto from(PayoutRequest r) {
+        return from(r, null);
+    }
+
+    public static PayoutRequestDto from(PayoutRequest r, PaymentTransaction tx) {
+        String tCode = r.getTeacher() != null ? r.getTeacher().getTeacherCode() : null;
         return new PayoutRequestDto(
                 r.getId(),
                 r.getTeacher() != null ? r.getTeacher().getId() : null,
+                tCode,
                 r.getTeacher() != null ? r.getTeacher().getFullName() : null,
                 r.getTeacher() != null ? r.getTeacher().getEmail() : null,
                 r.getAmount(),
@@ -36,7 +47,10 @@ public record PayoutRequestDto(
                 r.getTransactionRef(),
                 r.getProcessedAt(),
                 r.getProcessedBy() != null ? r.getProcessedBy().getFullName() : null,
-                r.getCreatedAt()
+                r.getCreatedAt(),
+                tx != null,
+                tx != null ? tx.getSepayId() : null,
+                tx != null ? tx.getReferenceCode() : null
         );
     }
 }

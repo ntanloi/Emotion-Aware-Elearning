@@ -15,6 +15,7 @@ import {
   Video,
 } from 'lucide-react'
 
+import { formatVnTime } from '@shared/utils/dateTime.js'
 const formatTime = (seconds) => {
   if (seconds === null || seconds === undefined || isNaN(seconds)) return '00:00'
   const s = Math.max(0, Math.round(seconds))
@@ -164,7 +165,7 @@ export default function LiveClassPanel() {
           {renderStatusBadge()}
           <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>
             {lastUpdatedAt
-              ? `Cập nhật lúc: ${lastUpdatedAt.toLocaleTimeString('vi-VN')}`
+              ? `Cập nhật lúc: ${formatVnTime(lastUpdatedAt)}`
               : 'Đang tải dữ liệu thời gian thực...'}
           </span>
           <span

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { ImageOff, RotateCcw } from 'lucide-react'
-import { resolveMediaUrl } from '@config/media.js'
+import { resolveMediaUrl, stripCloudinaryTransform } from '@config/media.js'
 
 /**
  * QuestionImage — Component hiển thị hình ảnh câu hỏi / đoạn văn với placeholder cố định kích cỡ khi lỗi.
@@ -25,9 +25,12 @@ export default function QuestionImage({
 }) {
   const [status, setStatus] = useState('loading') // 'loading' | 'loaded' | 'error'
   const [retryCount, setRetryCount] = useState(0)
+  const [useOriginal, setUseOriginal] = useState(false)
   const imgRef = useRef(null)
 
-  const resolvedSrc = resolveMediaUrl(src)
+  // Nếu URL đã tối ưu (transformation) bị Cloudinary từ chối, thử lại 1 lần bằng URL gốc trước khi báo lỗi
+  const optimizedSrc = resolveMediaUrl(src)
+  const resolvedSrc = useOriginal ? stripCloudinaryTransform(optimizedSrc) : optimizedSrc
 
   useEffect(() => {
     if (!resolvedSrc) {
@@ -73,7 +76,14 @@ export default function QuestionImage({
           }}
           className={`question-img-element ${status === 'loaded' ? 'visible' : 'hidden'}`}
           onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('error')}
+          onError={() => {
+            if (!useOriginal && stripCloudinaryTransform(resolvedSrc) !== resolvedSrc) {
+              setUseOriginal(true)
+              setStatus('loading')
+              return
+            }
+            setStatus('error')
+          }}
         />
       )}
 

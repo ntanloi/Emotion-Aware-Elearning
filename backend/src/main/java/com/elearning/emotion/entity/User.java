@@ -20,6 +20,10 @@ public class User {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    /** Mã định danh giảng viên duy nhất (VD: GV1001, GV9A8B7C) */
+    @Column(name = "teacher_code", unique = true, length = 20)
+    private String teacherCode;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -80,6 +84,19 @@ public class User {
     void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if ("TEACHER".equalsIgnoreCase(role) && (teacherCode == null || teacherCode.isBlank())) {
+            teacherCode = generateTeacherCode();
+        }
+    }
+
+    public static String generateTeacherCode() {
+        String alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        StringBuilder sb = new StringBuilder("GV");
+        java.security.SecureRandom rnd = new java.security.SecureRandom();
+        for (int i = 0; i < 6; i++) {
+            sb.append(alphabet.charAt(rnd.nextInt(alphabet.length())));
+        }
+        return sb.toString();
     }
 
     @PreUpdate

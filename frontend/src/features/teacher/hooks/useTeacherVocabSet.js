@@ -15,6 +15,6 @@ export function useSetVocabSetWords(contentItemId) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (wordIds) => contentItemsApi.setVocabWords(contentItemId, wordIds),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vocab-set-words', contentItemId] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['vocab-set-words', contentItemId] }) },
   })
 }

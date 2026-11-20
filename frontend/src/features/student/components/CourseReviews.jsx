@@ -9,6 +9,7 @@ import ReviewSummary from './reviews/ReviewSummary.jsx'
 import ReviewList from './reviews/ReviewList.jsx'
 import ReviewForm from './reviews/ReviewForm.jsx'
 import { useRealtimeEvent } from '@shared/realtime/index.js'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 
 /**
  * CourseReviews — Tối ưu hóa UI & Kiến trúc mô-đun (Phase U4):
@@ -18,6 +19,7 @@ import { useRealtimeEvent } from '@shared/realtime/index.js'
  * - Điều kiện tiến độ rút gọn thành 1 dòng tinh gọn.
  */
 export default function CourseReviews({ courseId }) {
+  const toast = useToast()
   const { isAuthenticated } = useAuthStore()
   const qc = useQueryClient()
 
@@ -83,7 +85,7 @@ export default function CourseReviews({ courseId }) {
 
   const handleOpenReport = (review, imageId = null) => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để gửi báo cáo vi phạm.')
+      toast.warning('Vui lòng đăng nhập để gửi báo cáo vi phạm.')
       return
     }
     setReportModal({
@@ -106,10 +108,10 @@ export default function CourseReviews({ courseId }) {
         details: reportModal.details,
         imageId: reportModal.imageId || undefined,
       })
-      alert('Cảm ơn bạn! Báo cáo vi phạm đã được gửi tới Ban quản trị hệ thống.')
+      toast.success('Cảm ơn bạn! Báo cáo vi phạm đã được gửi tới Ban quản trị hệ thống.')
       setReportModal({ open: false, review: null, imageId: null, reason: 'SPAM', details: '', submitting: false })
     } catch (err) {
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi gửi báo cáo')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi gửi báo cáo')
       setReportModal((prev) => ({ ...prev, submitting: false }))
     }
   }

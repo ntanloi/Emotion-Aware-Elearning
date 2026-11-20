@@ -1,22 +1,20 @@
 -- V21: Admin foundation, khoa hoc kiem duyet, danh gia AI va nhat ky danh gia
-ALTER TABLE users
-  ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-  ADD COLUMN status_reason VARCHAR(500) NULL,
-  ADD COLUMN token_version INT NOT NULL DEFAULT 0,
-  ADD COLUMN last_login_at DATETIME NULL,
-  ADD COLUMN deleted_at DATETIME NULL,
-  ADD COLUMN must_change_password BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE users ADD COLUMN status_reason VARCHAR(500) NULL;
+ALTER TABLE users ADD COLUMN token_version INT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN last_login_at DATETIME NULL;
+ALTER TABLE users ADD COLUMN deleted_at DATETIME NULL;
+ALTER TABLE users ADD COLUMN must_change_password BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX idx_users_role_status ON users (role, status);
 
-ALTER TABLE courses
-  ADD COLUMN submitted_at DATETIME NULL,
-  ADD COLUMN reviewed_at DATETIME NULL,
-  ADD COLUMN reviewed_by CHAR(36) NULL,
-  ADD COLUMN reject_reason TEXT NULL,
-  ADD COLUMN content_changed_at DATETIME NULL,
-  ADD COLUMN ai_moderation_report JSON NULL,
-  ADD CONSTRAINT fk_courses_reviewer FOREIGN KEY (reviewed_by) REFERENCES users (id);
+ALTER TABLE courses ADD COLUMN submitted_at DATETIME NULL;
+ALTER TABLE courses ADD COLUMN reviewed_at DATETIME NULL;
+ALTER TABLE courses ADD COLUMN reviewed_by CHAR(36) NULL;
+ALTER TABLE courses ADD COLUMN reject_reason TEXT NULL;
+ALTER TABLE courses ADD COLUMN content_changed_at DATETIME NULL;
+ALTER TABLE courses ADD COLUMN ai_moderation_report JSON NULL;
+ALTER TABLE courses ADD CONSTRAINT fk_courses_reviewer FOREIGN KEY (reviewed_by) REFERENCES users (id);
 
 CREATE INDEX idx_courses_status ON courses (status, submitted_at);
 

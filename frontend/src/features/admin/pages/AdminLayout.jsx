@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { AdminUIProvider } from '@admin/context/AdminUIContext.jsx'
 import { useAdminStats } from '@admin/hooks/useAdminStats.js'
 import './admin-theme.css'
 import {
@@ -40,7 +39,7 @@ export default function AdminLayout() {
   }, [sidebarOpen])
 
   return (
-    <AdminUIProvider>
+    <>
       <div className="admin-layout-wrapper">
         {/* Thanh công cụ mở menu Admin trên Tablet & Mobile */}
         <div className="admin-mobile-topbar">
@@ -199,6 +198,6 @@ export default function AdminLayout() {
           </div>
         </main>
       </div>
-    </AdminUIProvider>
+    </>
   )
 }

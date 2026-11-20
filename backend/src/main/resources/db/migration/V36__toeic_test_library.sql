@@ -63,7 +63,6 @@ CREATE TABLE test_attempts (
     INDEX idx_ta_status (status)
 );
 
-ALTER TABLE attempts
-    ADD COLUMN test_attempt_id CHAR(36) NULL,
-    ADD CONSTRAINT fk_attempts_test_attempt FOREIGN KEY (test_attempt_id) REFERENCES test_attempts (id) ON DELETE SET NULL,
-    ADD INDEX idx_attempts_test_attempt (test_attempt_id);
+ALTER TABLE attempts ADD COLUMN test_attempt_id CHAR(36) NULL;
+ALTER TABLE attempts ADD CONSTRAINT fk_attempts_test_attempt FOREIGN KEY (test_attempt_id) REFERENCES test_attempts (id) ON DELETE SET NULL;
+ALTER TABLE attempts ADD INDEX idx_attempts_test_attempt (test_attempt_id);

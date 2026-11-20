@@ -24,9 +24,9 @@ export function useCreateQuestion(contentItemId) {
     mutationFn: (payload) =>
       questionsApi.createQuestion({ contentItemId, ...payload }),
     onSuccess: () =>
-      qc.invalidateQueries({
+      { qc.invalidateQueries({
         queryKey: ["questions", "teacher-view", contentItemId],
-      }),
+      }) },
   });
 }
 
@@ -35,9 +35,9 @@ export function useUpdateQuestion(contentItemId) {
   return useMutation({
     mutationFn: ({ id, payload }) => questionsApi.updateQuestion(id, payload),
     onSuccess: () =>
-      qc.invalidateQueries({
+      { qc.invalidateQueries({
         queryKey: ["questions", "teacher-view", contentItemId],
-      }),
+      }) },
   });
 }
 
@@ -46,9 +46,9 @@ export function useDeleteQuestion(contentItemId) {
   return useMutation({
     mutationFn: (id) => questionsApi.deleteQuestion(id),
     onSuccess: () =>
-      qc.invalidateQueries({
+      { qc.invalidateQueries({
         queryKey: ["questions", "teacher-view", contentItemId],
-      }),
+      }) },
   });
 }
 
@@ -58,9 +58,9 @@ export function useToggleQuestionStatus(contentItemId) {
     mutationFn: ({ id, status }) =>
       questionsApi.toggleQuestionStatus(id, status),
     onSuccess: () =>
-      qc.invalidateQueries({
+      { qc.invalidateQueries({
         queryKey: ["questions", "teacher-view", contentItemId],
-      }),
+      }) },
   });
 }
 
@@ -70,9 +70,9 @@ export function useBulkUpdateQuestionStatus(contentItemId) {
     mutationFn: (status) =>
       questionsApi.bulkUpdateQuestionStatus(contentItemId, status),
     onSuccess: () =>
-      qc.invalidateQueries({
+      { qc.invalidateQueries({
         queryKey: ["questions", "teacher-view", contentItemId],
-      }),
+      }) },
   });
 }
 

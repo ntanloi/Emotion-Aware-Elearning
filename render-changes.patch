@@ -1,0 +1,48 @@
+--- a/backend/src/main/resources/application.yml
++++ b/backend/src/main/resources/application.yml
+@@ -8,13 +8,14 @@
+         size: 4
+ 
+   datasource:
+-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true
++    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:emotion_elearning}?${DB_PARAMS:useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&rewriteBatchedStatements=true}
+     username: ${DB_USER:root}
+     password: ***
+     driver-class-name: com.mysql.cj.jdbc.Driver
+     hikari:
+-      maximum-pool-size: 20
+-      minimum-idle: 5
++      # Mac dinh 20/5. Tren may RAM nho (Render free 512MB) dat DB_POOL_MAX=5, DB_POOL_MIN=1
++      maximum-pool-size: ${DB_POOL_MAX:20}
++      minimum-idle: ${DB_POOL_MIN:5}
+       connection-timeout: 20000
+ 
+   jpa:
+@@ -67,8 +68,11 @@
+       file-size-threshold: 10MB
+ 
+ server:
+-  port: ${SERVER_PORT:8080}
++  # Render/PaaS cap cong qua bien PORT; chay local van dung SERVER_PORT hoac 8080
++  port: ${PORT:${SERVER_PORT:8080}}
+   tomcat:
++    threads:
++      max: ${TOMCAT_MAX_THREADS:200}
+     # Mac dinh Tomcat chi "swallow" toi 2MB khi tra loi loi som (vd file vuot han muc) -> voi
+     # request 500MB se bi reset connection thay vi client nhan duoc thong bao loi ro rang.
+     max-swallow-size: -1
+--- a/ai-service/Dockerfile
++++ b/ai-service/Dockerfile
+@@ -1,4 +1,5 @@
+ FROM python:3.11-slim
++ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+ WORKDIR /app
+ RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 \
+     && rm -rf /var/lib/apt/lists/*
+@@ -8,4 +9,5 @@
+ COPY app/ /app/app/
+ COPY models/ /app/models/
+ EXPOSE 8000
+-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
++# Dung cong PORT do nen tang cap (Render), mac dinh 8000. CHI 1 worker: trang thai session nam trong RAM.
++CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

@@ -14,6 +14,7 @@ import DecisionPanel from '@admin/components/course-review/DecisionPanel.jsx'
 import { RefreshCw, AlertCircle, Wrench } from 'lucide-react'
 import './AdminReviewWorkspace.css'
 
+import { vnTime } from '@shared/utils/dateTime.js'
 const REJECT_REASONS = [
   { code: 'CONTENT_QUALITY', label: 'Chất lượng nội dung chưa đạt' },
   { code: 'FORMAT_ERROR', label: 'Sai định dạng chuẩn TOEIC' },
@@ -340,7 +341,7 @@ export default function AdminCourseReviewDetailPage() {
   const waitingTime = formatWaitingTime(course.submittedAt)
   const urgencyClass = getWaitUrgencyClass(course.submittedAt)
   const isModifiedAfterPublish =
-    course.contentChangedAt && course.reviewedAt && new Date(course.contentChangedAt) > new Date(course.reviewedAt)
+    course.contentChangedAt && course.reviewedAt && vnTime(course.contentChangedAt) > vnTime(course.reviewedAt)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

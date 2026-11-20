@@ -66,7 +66,8 @@ class Phase4StudentWalletTest {
 
         withdrawalRepo = mock(WalletWithdrawalRepository.class);
         withdrawalService = new WalletWithdrawalService(
-                walletService, withdrawalRepo, walletProperties, auditService, notificationService, userRepo
+                walletService, withdrawalRepo, walletProperties, auditService, notificationService, userRepo,
+                mock(com.elearning.emotion.service.realtime.RealtimePublisher.class)
         );
     }
 

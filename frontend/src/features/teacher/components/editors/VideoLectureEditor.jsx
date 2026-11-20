@@ -4,13 +4,16 @@ import RichTextEditor from '@shared/components/ui/RichTextEditor.jsx'
 import { VIDEO_THEORY_TEMPLATES, findEmptySections } from '@shared/components/ui/editorTemplates.js'
 import { useUpdateContentItem } from '@teacher/hooks/useTeacherContentItems.js'
 import { linkMedia } from '@shared/api/media.js'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 import { UploadCloud, Link as LinkIcon, Film, Check, ExternalLink, AlertCircle, Sparkles, Clock } from 'lucide-react'
 
+import { formatVnTime } from '@shared/utils/dateTime.js'
 /**
  * VideoLectureEditor — hỗ trợ 2 tuỳ chọn: Tải file lên (kéo thả) hoặc Gắn link video (URL).
  * Kèm trình soạn thảo lý thuyết (RichTextEditor) đã tối ưu thanh công cụ & màu sắc.
  */
 export default function VideoLectureEditor({ item }) {
+  const toast = useToast()
   const updateItem = useUpdateContentItem(item.courseId, item.sectionCode)
   const [video, setVideo] = useState(item.videoUrl ? { url: item.videoUrl, fileName: 'Video hiện tại' } : null)
   const [sourceMode, setSourceMode] = useState('UPLOAD') // 'UPLOAD' | 'LINK'
@@ -63,7 +66,7 @@ export default function VideoLectureEditor({ item }) {
       setPreviewSavedSuccess(true)
       setTimeout(() => setPreviewSavedSuccess(false), 3000)
     } catch (err) {
-      alert(err.response?.data?.error || 'Không thể lưu cài đặt học thử')
+      toast.error(err.response?.data?.error || 'Không thể lưu cài đặt học thử')
     } finally {
       setPreviewSaving(false)
     }
@@ -480,7 +483,7 @@ export default function VideoLectureEditor({ item }) {
           {!dirty && savedAt && (
             <span className="text-dim text-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <Check size={14} className="text-good" />
-              <span>Đã lưu lúc {savedAt.toLocaleTimeString('vi-VN')}</span>
+              <span>Đã lưu lúc {formatVnTime(savedAt)}</span>
             </span>
           )}
           {dirty && <span className="text-dim text-sm">Có thay đổi chưa lưu</span>}

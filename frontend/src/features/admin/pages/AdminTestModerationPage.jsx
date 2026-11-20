@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   FileCheck,
   Search,
@@ -16,8 +16,12 @@ import { listAdminTests, approveTest, rejectTest, hideTest, seedSampleTests } fr
 import AdminTestDetailModal from '@admin/components/AdminTestDetailModal.jsx'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
 import EmptyState from '@shared/components/ui/EmptyState.jsx'
+import { useToast, useConfirm } from '@admin/context/AdminUIContext.jsx'
+import { useRealtimeEvent, useRealtimeStatus } from '@shared/realtime/index.js'
 
 export default function AdminTestModerationPage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [tests, setTests] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('PENDING_REVIEW')
@@ -43,26 +47,84 @@ export default function AdminTestModerationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
-  const loadTests = async () => {
-    setLoading(true)
+  // Đếm số lần gọi API để bỏ qua phản hồi cũ về muộn (tránh ghi đè dữ liệu mới hơn)
+  const requestSeqRef = useRef(0)
+  // Luôn trỏ tới bộ lọc hiện tại để handler Realtime không bị dính giá trị cũ
+  const statusFilterRef = useRef(statusFilter)
+  statusFilterRef.current = statusFilter
+
+  /**
+   * @param {{ silent?: boolean }} options silent = true: tải lại ngầm, không hiện skeleton
+   *   (dùng cho Realtime để danh sách không bị nháy khi có đề mới).
+   */
+  const loadTests = async ({ silent = false } = {}) => {
+    const seq = ++requestSeqRef.current
+    if (!silent) setLoading(true)
     try {
+      const currentStatus = statusFilterRef.current
       const params = {
-        status: statusFilter === 'ALL' ? undefined : statusFilter,
+        status: currentStatus === 'ALL' ? undefined : currentStatus,
         size: 50,
       }
       const data = await listAdminTests(params)
+      if (seq !== requestSeqRef.current) return
       setTests(data?.content || data || [])
     } catch (err) {
       console.error('Lỗi tải danh sách đề thi:', err)
     } finally {
-      setLoading(false)
+      if (seq === requestSeqRef.current) setLoading(false)
     }
   }
 
-  const handleApprove = async (test) => {
-    if (!window.confirm(`Bạn có chắc muốn phê duyệt đề thi "${test.title}" để xuất bản lên Thư viện công khai?`)) {
-      return
+  // Realtime: giảng viên gửi duyệt / rút yêu cầu / ẩn-hiện đề, hoặc Admin khác duyệt-từ chối
+  // -> danh sách tự cập nhật, Admin không cần F5 trang.
+  useRealtimeEvent('test-moderation', (data) => {
+    console.debug('[Realtime] test-moderation', data)
+    loadTests({ silent: true })
+  })
+
+  // ----- Lớp dự phòng: không phụ thuộc hoàn toàn vào việc SSE có đưa được sự kiện tới trình duyệt -----
+  const { isLive } = useRealtimeStatus()
+
+  // 1) SSE vừa (kết nối lại) LIVE -> đồng bộ ngay để bù các sự kiện lỡ trong lúc mất kết nối
+  const wasLiveRef = useRef(isLive)
+  useEffect(() => {
+    if (isLive && !wasLiveRef.current) loadTests({ silent: true })
+    wasLiveRef.current = isLive
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLive])
+
+  // 2) Admin quay lại tab / cửa sổ này (vd: vừa xem bên giảng viên gửi duyệt xong) -> tải lại ngay
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') loadTests({ silent: true })
     }
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    window.addEventListener('focus', refreshWhenVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.removeEventListener('focus', refreshWhenVisible)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 3) Polling ngầm dự phòng (chỉ khi tab đang hiển thị): 15s khi mất SSE, 60s khi SSE đang LIVE
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') loadTests({ silent: true })
+    }, isLive ? 60000 : 15000)
+    return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLive])
+
+  const handleApprove = async (test) => {
+    const ok = await confirm({
+      title: 'Phê duyệt đề thi',
+      message: `Bạn có chắc muốn phê duyệt đề thi "${test.title}" để xuất bản lên Thư viện công khai?`,
+      confirmLabel: 'Phê duyệt',
+      variant: 'primary',
+    })
+    if (!ok) return
     setActionLoadingId(test.id)
     setMessage('')
     try {
@@ -71,7 +133,7 @@ export default function AdminTestModerationPage() {
       setMessage(`Đã phê duyệt và xuất bản đề thi "${test.title}" thành công!`)
       setDetailModalOpen(false)
     } catch (err) {
-      alert(err.response?.data?.message || 'Có lỗi khi phê duyệt đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi khi phê duyệt đề thi')
     } finally {
       setActionLoadingId(null)
     }
@@ -108,16 +170,20 @@ export default function AdminTestModerationPage() {
       setReasonModal({ open: false, actionType: null, test: null, reason: '' })
       setDetailModalOpen(false)
     } catch (err) {
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi thực hiện thao tác')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi thực hiện thao tác')
     } finally {
       setActionLoadingId(null)
     }
   }
 
   const handleSeedSamples = async () => {
-    if (!window.confirm('Hệ thống sẽ khởi tạo 5 bộ đề thi mẫu chuẩn ETS TOEIC cho thư viện. Tiếp tục?')) {
-      return
-    }
+    const ok = await confirm({
+      title: 'Khởi tạo đề thi mẫu',
+      message: 'Hệ thống sẽ khởi tạo 5 bộ đề thi mẫu chuẩn ETS TOEIC cho thư viện. Tiếp tục?',
+      confirmLabel: 'Khởi tạo',
+      variant: 'primary',
+    })
+    if (!ok) return
     setSeeding(true)
     setMessage('')
     try {
@@ -125,7 +191,7 @@ export default function AdminTestModerationPage() {
       setMessage('Khởi tạo thành công 5 đề thi mẫu Hệ thống chuẩn ETS TOEIC!')
       loadTests()
     } catch (err) {
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi khởi tạo đề mẫu')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi khởi tạo đề mẫu')
     } finally {
       setSeeding(false)
     }

@@ -6,10 +6,13 @@ import AudioPlayer from '@shared/components/AudioPlayer.jsx'
 import QuestionImage from '@shared/components/QuestionImage.jsx'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
 import '@student/components/tests/tests.css'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 
+import { vnTime } from '@shared/utils/dateTime.js'
 export default function TestRunnerPage() {
   const { attemptId } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [testContent, setTestContent] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -26,6 +29,7 @@ export default function TestRunnerPage() {
   // Đồng hồ đếm ngược server deadline
   const [remainingSeconds, setRemainingSeconds] = useState(null)
   const saveTimeoutRef = useRef(null)
+  const autoSubmittedRef = useRef(false)
 
   useEffect(() => {
     loadContent()
@@ -49,10 +53,21 @@ export default function TestRunnerPage() {
       }
 
       // Khởi tạo đồng hồ
-      if (data.deadlineAt) {
-        const deadline = new Date(data.deadlineAt).getTime()
-        const now = Date.now()
-        const diff = Math.max(0, Math.floor((deadline - now) / 1000))
+      console.info('[TestRunner] timer', {
+        status: data.status,
+        timeLimitSeconds: data.timeLimitSeconds,
+        startedAt: data.startedAt,
+        deadlineAt: data.deadlineAt,
+        remainingSeconds: data.remainingSeconds,
+      })
+      if (typeof data.remainingSeconds === 'number') {
+        // Ưu tiên số giây còn lại do server tính (không phụ thuộc múi giờ của máy học viên)
+        setRemainingSeconds(Math.max(0, Math.floor(data.remainingSeconds)))
+      } else if (data.deadlineAt) {
+        // Dự phòng: deadlineAt là LocalDateTime không kèm múi giờ, server chạy giờ Việt Nam (UTC+7).
+        // parseVnDate coi chuỗi không có offset là giờ Việt Nam nên không phụ thuộc múi giờ máy học viên.
+        const deadline = vnTime(data.deadlineAt)
+        const diff = Number.isNaN(deadline) ? 0 : Math.max(0, Math.floor((deadline - Date.now()) / 1000))
         setRemainingSeconds(diff)
       }
     } catch (err) {
@@ -88,8 +103,10 @@ export default function TestRunnerPage() {
   }, [remainingSeconds])
 
   const handleAutoSubmitOnTimeout = async () => {
-    if (submitting) return
-    alert('Thời gian làm bài đã kết thúc! Hệ thống đang tự động nộp bài của bạn.')
+    // Chặn gọi lặp (interval và effect cùng kích hoạt khi về 0) -> tránh nộp bài và hiện toast 2 lần
+    if (submitting || autoSubmittedRef.current) return
+    autoSubmittedRef.current = true
+    toast.warning('Thời gian làm bài đã kết thúc! Hệ thống đang tự động nộp bài của bạn.', 8000)
     await performSubmit()
   }
 
@@ -122,8 +139,9 @@ export default function TestRunnerPage() {
       navigate(`/tests/attempts/${attemptId}/result`, { replace: true })
     } catch (err) {
       console.error('Lỗi khi nộp bài:', err)
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.')
       setSubmitting(false)
+      autoSubmittedRef.current = false
     }
   }
 

@@ -16,13 +16,14 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 
+import { vnTime } from '@shared/utils/dateTime.js'
 function getLongestWaitText(items, dateField) {
   if (!items || items.length === 0) return 'Hàng đợi trống'
   let oldestTime = Date.now()
   let hasValidDate = false
   for (const item of items) {
     if (item[dateField]) {
-      const t = new Date(item[dateField]).getTime()
+      const t = vnTime(item[dateField])
       if (t < oldestTime) {
         oldestTime = t
         hasValidDate = true
@@ -106,8 +107,8 @@ export default function AdminOverviewPage() {
 
     // Sắp xếp thời gian chờ lâu nhất (timestamp nhỏ nhất) lên trước
     list.sort((a, b) => {
-      const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0
-      const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0
+      const tA = a.timestamp ? vnTime(a.timestamp) : 0
+      const tB = b.timestamp ? vnTime(b.timestamp) : 0
       return tA - tB
     })
 

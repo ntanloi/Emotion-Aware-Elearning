@@ -16,6 +16,7 @@ import {
 import RiskBadge from '@admin/components/ui/RiskBadge.jsx'
 import { RULE_NAMES } from '@teacher/utils/rejectReasonParser.js'
 
+import { formatVnDateTime } from '@shared/utils/dateTime.js'
 // Bổ sung các rule name thường gặp trong moderation
 const EXTENDED_RULE_NAMES = {
   ...RULE_NAMES,
@@ -144,8 +145,8 @@ export default function AiReportPanel({
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1, color: 'var(--c-warning)' }} />
           <div>
             <strong>Đã sửa sau duyệt:</strong> Giảng viên đã cập nhật nội dung vào{' '}
-            {new Date(course.contentChangedAt).toLocaleString('vi-VN')} (sau lần duyệt ngày{' '}
-            {new Date(course.reviewedAt).toLocaleString('vi-VN')}). Hãy kiểm tra kỹ các nội dung mới.
+            {formatVnDateTime(course.contentChangedAt)} (sau lần duyệt ngày{' '}
+            {formatVnDateTime(course.reviewedAt)}). Hãy kiểm tra kỹ các nội dung mới.
           </div>
         </div>
       )}

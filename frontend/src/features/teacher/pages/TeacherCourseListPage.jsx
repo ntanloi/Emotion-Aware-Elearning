@@ -13,6 +13,7 @@ import CourseRejectDetailModal from '@teacher/components/modals/CourseRejectDeta
 import { parseRejectReason } from '@teacher/utils/rejectReasonParser.js'
 import { useAuthStore } from '@auth/store/authStore.js'
 import { useRealtimeEvent } from '@shared/realtime/index.js'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
 const stripHtml = (html) => {
   if (!html) return ''
@@ -32,6 +33,7 @@ const STATUS_BADGE = {
  * Liệt kê khoá học đã tạo + card [+ Tạo khoá học]. Bấm vào 1 khoá học đưa thẳng vào khu vực soạn bài.
  */
 export default function TeacherCourseListPage() {
+  const toast = useToast()
   const user = useAuthStore((s) => s.user)
   const refreshProfile = useAuthStore((s) => s.refreshProfile)
   const { data: courses, isLoading } = useMyCourses()
@@ -79,7 +81,7 @@ export default function TeacherCourseListPage() {
 
   const openCreate = () => {
     if (user?.status === 'PENDING_APPROVAL') {
-      alert('Tài khoản giảng viên của bạn đang chờ quản trị viên phê duyệt. Trong thời gian này bạn chưa thể tạo khóa học.')
+      toast.warning('Tài khoản giảng viên của bạn đang chờ quản trị viên phê duyệt. Trong thời gian này bạn chưa thể tạo khóa học.')
       return
     }
     navigate('/teacher/courses/new')
@@ -363,6 +365,8 @@ export default function TeacherCourseListPage() {
 
 function TeacherCourseCard({ course, onEdit, onOpen, onOpenReadiness, onOpenRejectDetail }) {
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
   const submitCourse = useSubmitCourse()
   const cancelSubmit = useCancelSubmitCourse()
   const hideCourse = useHideCourse()
@@ -370,28 +374,38 @@ function TeacherCourseCard({ course, onEdit, onOpen, onOpenReadiness, onOpenReje
   const badge = STATUS_BADGE[course.status] || STATUS_BADGE.DRAFT
   const busy = submitCourse.isPending || cancelSubmit.isPending || hideCourse.isPending || showCourse.isPending
 
-  const handleAction = (e) => {
+  const handleAction = async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
     if (course.status === 'PUBLISHED') {
-      if (window.confirm('Bạn có chắc muốn ẩn khoá học này khỏi học viên?')) {
-        hideCourse.mutate(course.id)
-      }
+      const ok = await confirm({
+        title: 'Ẩn khoá học',
+        message: 'Bạn có chắc muốn ẩn khoá học này khỏi học viên?',
+        confirmLabel: 'Ẩn khoá học',
+        variant: 'warning',
+      })
+      if (ok) hideCourse.mutate(course.id)
     } else if (course.status === 'HIDDEN') {
       showCourse.mutate(course.id)
     } else if (course.status === 'DRAFT' || course.status === 'REJECTED') {
       if (onOpenReadiness) {
         onOpenReadiness()
       } else {
-        if (window.confirm('Gửi khoá học này tới Quản trị viên để xét duyệt?')) {
+        const ok = await confirm({
+          title: 'Gửi duyệt khoá học',
+          message: 'Gửi khoá học này tới Quản trị viên để xét duyệt?',
+          confirmLabel: 'Gửi duyệt',
+          variant: 'primary',
+        })
+        if (ok) {
           submitCourse.mutate(course.id, {
             onError: (err) => {
               const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Không thể gửi duyệt'
-              alert('Không thể gửi duyệt: ' + msg)
+              toast.error('Không thể gửi duyệt: ' + msg)
             },
             onSuccess: () => {
-              alert('Đã gửi duyệt khóa học thành công!')
+              toast.success('Đã gửi duyệt khóa học thành công!')
             },
           })
         }
@@ -609,17 +623,23 @@ function TeacherCourseCard({ course, onEdit, onOpen, onOpenReadiness, onOpenReje
                   cursor: 'pointer',
                 }}
                 disabled={busy}
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (window.confirm('Bạn có chắc muốn rút lại khoá học này về bản nháp để tiếp tục chỉnh sửa?')) {
+                  const ok = await confirm({
+                    title: 'Rút lại yêu cầu duyệt',
+                    message: 'Bạn có chắc muốn rút lại khoá học này về bản nháp để tiếp tục chỉnh sửa?',
+                    confirmLabel: 'Rút lại',
+                    variant: 'warning',
+                  })
+                  if (ok) {
                     cancelSubmit.mutate(course.id, {
                       onError: (err) => {
                         const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Không thể rút lại yêu cầu duyệt'
-                        alert('Không thể rút lại: ' + msg)
+                        toast.error('Không thể rút lại: ' + msg)
                       },
                       onSuccess: () => {
-                        alert('Đã rút lại yêu cầu duyệt. Khoá học hiện ở trạng thái Bản nháp để bạn chỉnh sửa!')
+                        toast.success('Đã rút lại yêu cầu duyệt. Khoá học hiện ở trạng thái Bản nháp để bạn chỉnh sửa!')
                       },
                     })
                   }

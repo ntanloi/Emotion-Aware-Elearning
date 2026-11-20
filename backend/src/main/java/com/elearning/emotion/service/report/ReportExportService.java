@@ -73,8 +73,8 @@ public class ReportExportService {
         List<ActivityRow> rows = new ArrayList<>();
         for (LearningSession s : sessions) {
             LocalDateTime vnTime = s.getStartTime() != null
-                    ? s.getStartTime().atZone(java.time.ZoneOffset.UTC).withZoneSameInstant(ReportCalculationService.VN_ZONE).toLocalDateTime()
-                    : LocalDateTime.now();
+                    ? s.getStartTime()
+                    : LocalDateTime.now(ReportCalculationService.VN_ZONE);
             long sec = reportCalculationService.getEffectiveStudySeconds(s);
             double minutes = Math.round((sec / 60.0) * 10.0) / 10.0;
             String focusStr = s.getFocusScore() != null ? String.valueOf(s.getFocusScore()) : "";
@@ -84,8 +84,8 @@ public class ReportExportService {
 
         for (Attempt a : attempts) {
             LocalDateTime vnTime = a.getSubmittedAt() != null
-                    ? a.getSubmittedAt().atZone(java.time.ZoneOffset.UTC).withZoneSameInstant(ReportCalculationService.VN_ZONE).toLocalDateTime()
-                    : LocalDateTime.now();
+                    ? a.getSubmittedAt()
+                    : LocalDateTime.now(ReportCalculationService.VN_ZONE);
             double minutes = 0.0;
             if (a.getStartedAt() != null && a.getSubmittedAt() != null) {
                 long durationSec = Math.max(0, java.time.Duration.between(a.getStartedAt(), a.getSubmittedAt()).getSeconds());

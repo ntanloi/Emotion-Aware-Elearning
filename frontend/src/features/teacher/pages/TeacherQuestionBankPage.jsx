@@ -20,6 +20,7 @@ import PassageModal from '@teacher/components/modals/PassageModal.jsx'
 import ImportFromCourseModal from '@teacher/components/modals/ImportFromCourseModal.jsx'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
 import EmptyState from '@shared/components/ui/EmptyState.jsx'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
 const PART_NAMES = {
   1: 'Part 1: Mô tả hình ảnh (Photographs)',
@@ -32,6 +33,8 @@ const PART_NAMES = {
 }
 
 export default function TeacherQuestionBankPage({ embedded = false }) {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [activePartNo, setActivePartNo] = useState(1)
   const [bankData, setBankData] = useState(null)
   const [summary, setSummary] = useState(null)
@@ -70,21 +73,27 @@ export default function TeacherQuestionBankPage({ embedded = false }) {
       setBankData(data)
     } catch (err) {
       console.error('Lỗi tải dữ liệu ngân hàng:', err)
-      alert(err.response?.data?.message || 'Không thể tải ngân hàng câu hỏi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể tải ngân hàng câu hỏi')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (questionId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?')) return
+    const ok = await confirm({
+      title: 'Xóa câu hỏi khỏi ngân hàng',
+      message: 'Bạn có chắc chắn muốn xóa câu hỏi này khỏi ngân hàng câu hỏi?',
+      confirmLabel: 'Xóa câu hỏi',
+      variant: 'danger',
+    })
+    if (!ok) return
     try {
       await deleteBankQuestion(questionId)
       await loadPartData(activePartNo)
       await loadSummary()
       setNotification('Đã xóa câu hỏi khỏi ngân hàng câu hỏi')
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa câu hỏi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể xóa câu hỏi')
     }
   }
 

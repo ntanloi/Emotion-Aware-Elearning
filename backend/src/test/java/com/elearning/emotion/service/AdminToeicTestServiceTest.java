@@ -38,6 +38,8 @@ class AdminToeicTestServiceTest {
     private ToeicTestSnapshotService toeicTestSnapshotService;
     @Mock
     private SystemToeicTestSeederService systemToeicTestSeederService;
+    @Mock
+    private com.elearning.emotion.service.realtime.RealtimePublisher realtimePublisher;
 
     @InjectMocks
     private AdminToeicTestService adminToeicTestService;

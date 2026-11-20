@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { getWallet, getWalletEntries, requestWithdrawal, getWithdrawals } from '@student/api/wallet.js'
 
+import { formatVnDate, formatVnDateTime } from '@shared/utils/dateTime.js'
 const ENTRY_TYPE_LABELS = {
   TOPUP: 'Nạp tiền vào ví',
   PURCHASE: 'Thanh toán khóa học',
@@ -212,7 +213,7 @@ export default function WalletPage() {
                 <Lock size={14} />
                 <span>
                   Đang giữ: <strong>{lockedCash.toLocaleString('vi-VN')} đ</strong>
-                  {wallet?.nextUnlockAt && ` (mở khóa từ ${new Date(wallet.nextUnlockAt).toLocaleDateString('vi-VN')})`}
+                  {wallet?.nextUnlockAt && ` (mở khóa từ ${formatVnDate(wallet.nextUnlockAt)})`}
                 </span>
               </div>
             ) : (
@@ -389,7 +390,7 @@ export default function WalletPage() {
                   return (
                     <tr key={w.id} style={{ borderBottom: '1px solid var(--border, #e2e8f0)' }}>
                       <td style={{ padding: '10px 12px' }}>
-                        {new Date(w.createdAt).toLocaleString('vi-VN')}
+                        {formatVnDateTime(w.createdAt)}
                       </td>
                       <td style={{ padding: '10px 12px', fontWeight: 700 }}>
                         {Number(w.amount).toLocaleString('vi-VN')} đ
@@ -454,7 +455,7 @@ export default function WalletPage() {
                   return (
                     <tr key={entry.id} style={{ borderBottom: '1px solid var(--border, #e2e8f0)' }}>
                       <td style={{ padding: '10px 12px', color: 'var(--text-dim)', fontSize: 12 }}>
-                        {new Date(entry.createdAt).toLocaleString('vi-VN')}
+                        {formatVnDateTime(entry.createdAt)}
                       </td>
                       <td style={{ padding: '10px 12px', fontWeight: 600 }}>
                         {ENTRY_TYPE_LABELS[entry.type] || entry.type}

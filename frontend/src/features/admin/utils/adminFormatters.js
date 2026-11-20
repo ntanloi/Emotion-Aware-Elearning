@@ -1,3 +1,4 @@
+import { vnTime } from '@shared/utils/dateTime.js'
 export const COURSE_STATUS_MAP = {
   PUBLISHED: { label: 'Đang xuất bản', color: 'success', bg: 'var(--success-soft, #dcfce7)', text: '#15803d' },
   PENDING_REVIEW: { label: 'Chờ duyệt', color: 'warning', bg: 'var(--warning-soft, #fef3c7)', text: '#b45309' },
@@ -9,8 +10,8 @@ export const COURSE_STATUS_MAP = {
 
 export function formatWaitingTime(submittedAt) {
   if (!submittedAt) return null
-  const diffMs = Date.now() - new Date(submittedAt).getTime()
-  if (diffMs < 0) return 'Vừa gửi'
+  const diffMs = Date.now() - vnTime(submittedAt)
+  if (isNaN(diffMs) || diffMs < 0) return 'Vừa gửi'
   const mins = Math.floor(diffMs / 60000)
   if (mins < 60) return `Đã chờ ${mins} phút`
   const hours = Math.floor(mins / 60)
@@ -21,7 +22,7 @@ export function formatWaitingTime(submittedAt) {
 
 export function getWaitUrgencyClass(submittedAt) {
   if (!submittedAt) return ''
-  const diffMs = Date.now() - new Date(submittedAt).getTime()
+  const diffMs = Date.now() - vnTime(submittedAt)
   const hours = diffMs / (1000 * 60 * 60)
   if (hours >= 48) return 'urgency-red'
   if (hours >= 24) return 'urgency-yellow'

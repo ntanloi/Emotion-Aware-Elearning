@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import * as walletApi from '@teacher/api/wallet.js'
 import { useAuthStore } from '@auth/store/authStore.js'
+import { useRealtimeEvent } from '@shared/realtime/index.js'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 import {
   Wallet,
   Clock,
@@ -21,6 +23,7 @@ import {
   ChevronDown
 } from 'lucide-react'
 
+import { formatVnDate, formatVnDateTime, vnTime } from '@shared/utils/dateTime.js'
 const fmt = (n) => Number(n || 0).toLocaleString('vi-VN')
 
 const ESCROW_STATUS = {
@@ -55,6 +58,7 @@ function StatCard({ label, value, hint, icon: Icon, color, bg, children }) {
 }
 
 export default function TeacherWalletRevenueView() {
+  const toast = useToast()
   const user = useAuthStore((s) => s.user)
   const [summary, setSummary] = useState(null)
   const [entries, setEntries] = useState([])
@@ -103,9 +107,14 @@ export default function TeacherWalletRevenueView() {
     fetchData()
   }, [fetchData])
 
+  // Realtime: admin duyệt/từ chối rút tiền, tiền về ví... -> tải lại số liệu ngầm (không nháy loading)
+  useRealtimeEvent('notification', (payload) => {
+    if (['WALLET', 'FINANCE', 'TOPUP', 'PAYMENT'].includes(payload?.notification?.type)) fetchData(true)
+  })
+
   const handleOpenPayoutModal = () => {
     if (user?.status === 'PENDING_APPROVAL') {
-      alert('Tài khoản giảng viên của bạn đang chờ phê duyệt, chưa thể gửi yêu cầu rút tiền.')
+      toast.warning('Tài khoản giảng viên của bạn đang chờ phê duyệt, chưa thể gửi yêu cầu rút tiền.')
       return
     }
     setPayoutError(null)
@@ -176,7 +185,7 @@ export default function TeacherWalletRevenueView() {
   const rewardClaimed = Number(summary?.rewardClaimedAmount || 0)
   const holdingCount = Number(summary?.holdingCount || 0)
   const nextDue = summary?.nextHoldingDue
-    ? new Date(summary.nextHoldingDue).toLocaleDateString('vi-VN') : null
+    ? formatVnDate(summary.nextHoldingDue) : null
   const hasBank = !!(summary?.bankAccountNo && summary?.bankId)
   const minPayout = summary?.minPayoutAmount || 50000
   const payoutDisabled = user?.status === 'PENDING_APPROVAL'
@@ -387,11 +396,14 @@ export default function TeacherWalletRevenueView() {
             </div>
           ) : (
             <div className="table-scroll" style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 620 }}>
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1180 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>
                     <th style={{ padding: '12px 16px' }}>Loại giao dịch</th>
-                    <th style={{ padding: '12px 16px' }}>Số tiền</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>Doanh thu (100%)</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>Giữ hộ</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>Nền tảng</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>Thực nhận</th>
                     <th style={{ padding: '12px 16px' }}>Mã đơn / Khóa học</th>
                     <th style={{ padding: '12px 16px' }}>Thời điểm khả dụng</th>
                     <th style={{ padding: '12px 16px' }}>Thời gian ghi nhận</th>
@@ -400,7 +412,8 @@ export default function TeacherWalletRevenueView() {
                 <tbody>
                   {entries.map((entry) => {
                     const isPositive = Number(entry.amount) > 0
-                    const isAvailable = new Date(entry.availableAt) <= new Date()
+                    const isSale = entry.type === 'SALE'
+                    const isAvailable = vnTime(entry.availableAt) <= Date.now()
 
                     return (
                       <tr key={entry.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -418,13 +431,29 @@ export default function TeacherWalletRevenueView() {
                             }}>
                               {isPositive ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
                             </div>
-                            <span style={{ fontWeight: 600, fontSize: 13 }}>
-                              {entry.type === 'SALE' ? 'Bán khóa học (85%)' : (entry.type === 'REWARD_RELEASE' ? 'Nhận tiền giữ hộ' : (entry.type === 'REFUND' ? 'Hoàn tiền học viên' : 'Rút tiền về TK'))}
+                            <span style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap' }}>
+                              {entry.type === 'SALE' ? 'Bán khóa học' : (entry.type === 'REWARD_RELEASE' ? 'Nhận tiền giữ hộ' : (entry.type === 'REFUND' ? 'Hoàn tiền học viên' : 'Rút tiền về TK'))}
                             </span>
                           </div>
                         </td>
 
-                        <td style={{ padding: '12px 16px' }}>
+                        {/* Doanh thu 100% học phí (chỉ có ở dòng bán khóa học) */}
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {isSale ? `${Number(entry.grossAmount || 0).toLocaleString('vi-VN')} đ` : '—'}
+                        </td>
+
+                        {/* Giữ hộ: hiển thị số âm */}
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', color: Number(entry.escrowAmount) > 0 ? '#4f46e5' : 'var(--text-dim)' }}>
+                          {isSale ? (Number(entry.escrowAmount) > 0 ? `-${Number(entry.escrowAmount).toLocaleString('vi-VN')} đ` : '0 đ') : '—'}
+                        </td>
+
+                        {/* Nền tảng hệ thống: hiển thị số âm */}
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', color: Number(entry.platformFeeAmount) > 0 ? '#ef4444' : 'var(--text-dim)' }}>
+                          {isSale ? (Number(entry.platformFeeAmount) > 0 ? `-${Number(entry.platformFeeAmount).toLocaleString('vi-VN')} đ` : '0 đ') : '—'}
+                        </td>
+
+                        {/* Thực nhận (số tiền thực sự vào ví / bị trừ khỏi ví) */}
+                        <td style={{ padding: '12px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <span style={{
                             fontWeight: 700,
                             fontSize: 14,
@@ -453,12 +482,12 @@ export default function TeacherWalletRevenueView() {
                             background: isAvailable ? '#f0fdf4' : '#fffbeb',
                             color: isAvailable ? '#15803d' : '#b45309'
                           }}>
-                            {isAvailable ? 'Đã khả dụng' : `Khả dụng: ${new Date(entry.availableAt).toLocaleDateString('vi-VN')}`}
+                            {isAvailable ? 'Đã khả dụng' : `Khả dụng: ${formatVnDate(entry.availableAt)}`}
                           </span>
                         </td>
 
-                        <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-dim)' }}>
-                          {new Date(entry.createdAt).toLocaleString('vi-VN')}
+                        <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                          {formatVnDateTime(entry.createdAt)}
                         </td>
                       </tr>
                     )
@@ -535,7 +564,7 @@ export default function TeacherWalletRevenueView() {
                       </td>
 
                       <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-dim)' }}>
-                        {new Date(req.createdAt).toLocaleString('vi-VN')}
+                        {formatVnDateTime(req.createdAt)}
                       </td>
                     </tr>
                   ))}
@@ -573,8 +602,8 @@ export default function TeacherWalletRevenueView() {
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: 13 }}>
                         {e.status === 'HOLDING'
-                          ? new Date(e.holdingUntil).toLocaleDateString('vi-VN')
-                          : e.settledAt ? `Đã xử lý ${new Date(e.settledAt).toLocaleDateString('vi-VN')}` : '—'}
+                          ? formatVnDate(e.holdingUntil)
+                          : e.settledAt ? `Đã xử lý ${formatVnDate(e.settledAt)}` : '—'}
                       </td>
                     </tr>
                   )

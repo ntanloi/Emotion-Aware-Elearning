@@ -634,3 +634,27 @@ body {
 
 
 
+
+/* ===== Admin > Tài chính & Thanh toán: thanh tab cuộn ngang được trên máy tính ===== */
+.admin-finance-tab-btn {
+  flex-shrink: 0;
+}
+
+@media (min-width: 769px) {
+  /* Hiện thanh cuộn mảnh (các rule phía trên đang ẩn hoàn toàn nên chuột không kéo được) */
+  .admin-finance-tabs-nav {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  .admin-finance-tabs-nav::-webkit-scrollbar {
+    display: block;
+    height: 8px;
+  }
+  .admin-finance-tabs-nav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+  }
+  .admin-finance-tabs-nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

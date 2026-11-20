@@ -5,6 +5,7 @@ import com.elearning.emotion.dto.QuestionDto;
 import com.elearning.emotion.dto.test.*;
 import com.elearning.emotion.entity.*;
 import com.elearning.emotion.repository.*;
+import com.elearning.emotion.service.realtime.RealtimePublisher;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class AdminToeicTestService {
     private final AuditService auditService;
     private final ToeicTestSnapshotService toeicTestSnapshotService;
     private final SystemToeicTestSeederService systemToeicTestSeederService;
+    private final RealtimePublisher realtimePublisher;
 
     /**
      * Danh sách đề thi cho Admin kiểm duyệt & quản lý
@@ -114,6 +116,7 @@ public class AdminToeicTestService {
         test.setPublishedAt(LocalDateTime.now());
         test.setRejectionReason(null);
         test = toeicTestRepository.save(test);
+        publishTestModeration(test, "APPROVED");
 
         // Ghi Audit Log
         auditService.log(adminUser, "APPROVE_TOEIC_TEST", "TOEIC_TEST", testId,
@@ -151,6 +154,7 @@ public class AdminToeicTestService {
         test.setStatus("REJECTED");
         test.setRejectionReason(safeReason);
         test = toeicTestRepository.save(test);
+        publishTestModeration(test, "REJECTED");
 
         // Ghi Audit Log
         auditService.log(adminUser, "REJECT_TOEIC_TEST", "TOEIC_TEST", testId,
@@ -188,6 +192,7 @@ public class AdminToeicTestService {
         test.setStatus("HIDDEN");
         test.setRejectionReason(safeReason);
         test = toeicTestRepository.save(test);
+        publishTestModeration(test, "HIDDEN");
 
         // Ghi Audit Log
         auditService.log(adminUser, "HIDE_TOEIC_TEST", "TOEIC_TEST", testId,
@@ -227,6 +232,7 @@ public class AdminToeicTestService {
         test.setStatus("PUBLISHED");
         test.setPublishedAt(LocalDateTime.now());
         test = toeicTestRepository.save(test);
+        publishTestModeration(test, "SYSTEM_CREATED");
 
         auditService.log(adminUser, "CREATE_SYSTEM_TOEIC_TEST", "TOEIC_TEST", test.getId(),
                 "{\"title\":\"" + test.getTitle() + "\"}");
@@ -241,9 +247,27 @@ public class AdminToeicTestService {
     @Transactional
     public List<ToeicTestDto> seedSampleSystemTests(String adminId) {
         List<ToeicTest> tests = systemToeicTestSeederService.seedSystemTests(adminId);
+        realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of("action", "SEEDED"));
         return tests.stream().map(t -> {
             List<ToeicTestPart> parts = toeicTestPartRepository.findByTestIdOrderByPartNoAsc(t.getId());
             return ToeicTestDto.from(t, parts);
         }).toList();
+    }
+
+    /**
+     * Đồng bộ Realtime giữa các Admin đang mở trang Kiểm duyệt đề thi
+     * (Admin A duyệt/từ chối -> Admin B thấy ngay, không cần tải lại trang).
+     */
+    private void publishTestModeration(ToeicTest test, String action) {
+        try {
+            realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of(
+                    "testId", test.getId(),
+                    "status", test.getStatus() != null ? test.getStatus() : "",
+                    "action", action));
+            log.info("[Realtime] Đã xếp hàng sự kiện test-moderation (action={}, testId={}, status={}) tới role ADMIN",
+                    action, test.getId(), test.getStatus());
+        } catch (Exception ex) {
+            log.warn("Không thể phát realtime test-moderation cho đề {}: {}", test.getId(), ex.getMessage());
+        }
     }
 }

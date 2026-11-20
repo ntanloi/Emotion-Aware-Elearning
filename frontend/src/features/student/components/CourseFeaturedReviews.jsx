@@ -11,6 +11,7 @@ import {
   Award,
 } from 'lucide-react'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 /**
  * Khối "Học viên nói gì về khóa học" (Phase 4):
  * - Hiển thị các đánh giá xuất sắc nhất do Giảng viên lựa chọn và ghim lên trang giới thiệu.
@@ -193,7 +194,7 @@ export default function CourseFeaturedReviews({ courseId, avgRating = 0, reviewC
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                         <StarRating value={r.rating} size={13} />
                         <span className="text-dim text-xs">
-                          {new Date(r.createdAt).toLocaleDateString('vi-VN')}
+                          {formatVnDate(r.createdAt)}
                         </span>
                       </div>
                     </div>

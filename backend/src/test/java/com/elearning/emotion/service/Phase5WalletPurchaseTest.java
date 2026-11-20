@@ -102,7 +102,8 @@ class Phase5WalletPurchaseTest {
                 rewardProps,
                 walletProps,
                 enrollmentLifecycleService,
-                rewardEscrowService
+                rewardEscrowService,
+                mock(SepayPayoutVerificationService.class)
         );
 
         walletPurchaseService = new WalletPurchaseService(

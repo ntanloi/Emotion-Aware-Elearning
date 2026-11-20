@@ -5,7 +5,7 @@ export function useCreateContentItem(courseId, sectionCode) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload) => itemsApi.createContentItem({ courseId, sectionCode, ...payload }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['content-tree', courseId, sectionCode] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['content-tree', courseId, sectionCode] }) },
   })
 }
 
@@ -24,7 +24,7 @@ export function useDeleteContentItem(courseId, sectionCode) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id) => itemsApi.deleteContentItem(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['content-tree', courseId, sectionCode] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['content-tree', courseId, sectionCode] }) },
   })
 }
 

@@ -23,8 +23,7 @@ CREATE TABLE content_groups (
                                 INDEX idx_group_unit (unit_id)
 );
 
-ALTER TABLE content_items
-    ADD COLUMN group_id CHAR(36) NULL AFTER unit_id,
-    ADD CONSTRAINT fk_item_group FOREIGN KEY (group_id) REFERENCES content_groups(id);
+ALTER TABLE content_items ADD COLUMN group_id CHAR(36) NULL AFTER unit_id;
+ALTER TABLE content_items ADD CONSTRAINT fk_item_group FOREIGN KEY (group_id) REFERENCES content_groups(id);
 
 CREATE INDEX idx_item_group ON content_items (group_id);

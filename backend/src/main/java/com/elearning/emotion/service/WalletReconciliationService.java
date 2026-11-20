@@ -103,7 +103,7 @@ public class WalletReconciliationService {
                         "Phát hiện " + discrepancies.size() + " lỗi lệch sổ cái trong đợt đối soát đêm nay. Vui lòng kiểm tra ngay.",
                         "FINANCE",
                         null,
-                        "/admin/wallet/reconcile"
+                        "/admin/finance?tab=rewards-escrow"
                 );
             }
         } catch (Exception ex) {

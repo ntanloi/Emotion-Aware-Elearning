@@ -223,6 +223,16 @@ public class TestAttemptService {
 
         Map<String, String> draftAnswers = parseDraftAnswers(attempt.getDraftAnswers());
 
+        // Tính thời gian còn lại bằng cùng đồng hồ server đã dùng để tạo deadline,
+        // để client không phải tự so sánh LocalDateTime (không kèm múi giờ) với giờ máy của mình.
+        Long remainingSeconds = attempt.getDeadlineAt() != null
+                ? Math.max(0L, java.time.Duration.between(LocalDateTime.now(), attempt.getDeadlineAt()).getSeconds())
+                : null;
+
+        log.info("[TestTimer] attempt={} status={} limit={}s now={} startedAt={} deadlineAt={} remaining={}s jvmZone={}",
+                attempt.getId(), attempt.getStatus(), attempt.getTimeLimitSeconds(), LocalDateTime.now(),
+                attempt.getStartedAt(), attempt.getDeadlineAt(), remainingSeconds, java.time.ZoneId.systemDefault());
+
         return new TestContentDto(
                 attempt.getId(),
                 attempt.getTest().getId(),
@@ -233,6 +243,7 @@ public class TestAttemptService {
                 attempt.getTimeLimitSeconds(),
                 attempt.getStartedAt(),
                 attempt.getDeadlineAt(),
+                remainingSeconds,
                 attempt.getStatus(),
                 partDtos,
                 draftAnswers

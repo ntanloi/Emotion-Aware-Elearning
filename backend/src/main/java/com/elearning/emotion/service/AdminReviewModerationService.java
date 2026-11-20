@@ -11,6 +11,7 @@ import com.elearning.emotion.repository.CourseReviewRepository;
 import com.elearning.emotion.repository.ReviewImageRepository;
 import com.elearning.emotion.repository.ReviewReportRepository;
 import com.elearning.emotion.repository.UserRepository;
+import com.elearning.emotion.service.realtime.RealtimePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ public class AdminReviewModerationService {
     private final NotificationService notificationService;
     private final AuditService auditService;
     private final CourseFeaturedReviewService featuredReviewService;
+    private final RealtimePublisher realtimePublisher;
 
     /**
      * Danh sách đánh giá dành cho Admin quản lý & kiểm duyệt (Phase 3)
@@ -119,6 +121,28 @@ public class AdminReviewModerationService {
     }
 
     /**
+     * Phát realtime sau khi admin ẩn/khôi phục đánh giá hoặc ảnh: học viên đang xem trang khóa học
+     * ("course-review-public") và giảng viên đang xem trang đánh giá ("course-review") tự làm mới danh sách,
+     * không cần reload. Sự kiện chỉ thực sự được gửi SAU KHI transaction commit.
+     */
+    private void publishReviewChanged(CourseReview review, String action) {
+        try {
+            if (review == null || review.getCourse() == null) return;
+            String courseId = review.getCourse().getId();
+            realtimePublisher.publishToAll("course-review-public",
+                    java.util.Map.of("courseId", courseId, "action", action));
+            if (review.getCourse().getTeacher() != null) {
+                realtimePublisher.publishToUser(review.getCourse().getTeacher().getId(), "course-review",
+                        java.util.Map.of("courseId", courseId, "action", action));
+            }
+            realtimePublisher.publishToRole("ADMIN", "admin-stats",
+                    java.util.Map.of("reason", "REVIEW_MODERATED", "courseId", courseId));
+        } catch (Exception ignored) {
+            // Realtime chỉ là phần bổ trợ, không được làm hỏng nghiệp vụ chính
+        }
+    }
+
+    /**
      * Admin ẩn đánh giá vi phạm (kèm lý do)
      */
     @Transactional
@@ -152,6 +176,7 @@ public class AdminReviewModerationService {
 
         // Ghi Audit Log
         auditService.log(admin, "HIDE_REVIEW", "COURSE_REVIEW", reviewId, "Reason: " + reason);
+        publishReviewChanged(review, "HIDDEN");
 
         // Bắn thông báo cho học viên sở hữu đánh giá
         if (review.getUser() != null) {
@@ -200,6 +225,7 @@ public class AdminReviewModerationService {
 
         // Ghi Audit Log
         auditService.log(admin, "RESTORE_REVIEW", "COURSE_REVIEW", reviewId, "Restored to PUBLISHED");
+        publishReviewChanged(review, "RESTORED");
 
         // Gửi thông báo cho học viên
         if (review.getUser() != null) {
@@ -237,6 +263,7 @@ public class AdminReviewModerationService {
         }
 
         auditService.log(admin, "HIDE_REVIEW_IMAGE", "REVIEW_IMAGE", imageId, "Reason: " + reason);
+        publishReviewChanged(ri.getReview(), "IMAGE_HIDDEN");
 
         CourseReview review = ri.getReview();
         if (review != null && review.getUser() != null) {
@@ -266,6 +293,7 @@ public class AdminReviewModerationService {
         reviewImageRepository.save(ri);
 
         auditService.log(admin, "RESTORE_REVIEW_IMAGE", "REVIEW_IMAGE", imageId, "Restored");
+        publishReviewChanged(ri.getReview(), "IMAGE_RESTORED");
     }
 
     /**

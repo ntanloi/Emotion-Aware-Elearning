@@ -7,6 +7,7 @@ import CustomSectionModal from '@teacher/components/modals/CustomSectionModal.js
 import CourseReadinessModal from '@teacher/components/modals/CourseReadinessModal.jsx'
 import { CheckCircle2, Pencil, Trash2, Plus, ArrowLeft, LayoutDashboard, BookOpen } from 'lucide-react'
 import { SectionIcon } from '@shared/components/ui/AppIcons.jsx'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
 /**
  * TeacherCourseSidebar — hiển thị danh mục nội dung theo định dạng khóa học (profile):
@@ -19,6 +20,8 @@ export default function TeacherCourseSidebar({ activeSection, courseId: courseId
   const { courseId: courseIdFromRoute } = useParams()
   const courseId = courseIdProp || courseIdFromRoute
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
 
   const { data: course } = useCourse(courseId)
   const { data: activeSectionCodes = [] } = useCourseSections(courseId)
@@ -36,10 +39,16 @@ export default function TeacherCourseSidebar({ activeSection, courseId: courseId
     setModal({ open: true, section: sec })
   }
 
-  const handleDeleteCustom = (sec, e) => {
+  const handleDeleteCustom = async (sec, e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (window.confirm(`Xóa mục tùy chỉnh "${sec.title}"?`)) {
+    const ok = await confirm({
+      title: 'Xóa mục tùy chỉnh',
+      message: `Xóa mục tùy chỉnh "${sec.title}"?`,
+      confirmLabel: 'Xóa mục',
+      variant: 'danger',
+    })
+    if (ok) {
       deleteCustomSection.mutate(sec.id)
     }
   }
@@ -53,10 +62,16 @@ export default function TeacherCourseSidebar({ activeSection, courseId: courseId
     ...customSections.map((s) => s.sectionCode),
   ]
 
-  const handleDeleteStandard = (s, e) => {
+  const handleDeleteStandard = async (s, e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (window.confirm(`Xóa mục "${s.label}" khỏi khóa học này? Toàn bộ các nhóm hoạt động và bài học bên trong mục này sẽ bị xóa.`)) {
+    const ok = await confirm({
+      title: 'Xóa mục khỏi khóa học',
+      message: `Xóa mục "${s.label}" khỏi khóa học này? Toàn bộ các nhóm hoạt động và bài học bên trong mục này sẽ bị xóa.`,
+      confirmLabel: 'Xóa mục',
+      variant: 'danger',
+    })
+    if (ok) {
       deleteStandardSection.mutate(s.code, {
         onSuccess: () => {
           if (activeSection === s.code) {
@@ -66,7 +81,7 @@ export default function TeacherCourseSidebar({ activeSection, courseId: courseId
           }
         },
         onError: (err) => {
-          alert(err?.response?.data?.error || err?.message || 'Không thể xóa mục này')
+          toast.error(err?.response?.data?.error || err?.message || 'Không thể xóa mục này')
         },
       })
     }

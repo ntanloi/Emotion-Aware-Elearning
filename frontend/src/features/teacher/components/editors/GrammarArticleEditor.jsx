@@ -4,6 +4,7 @@ import { GRAMMAR_TEMPLATES, findEmptySections } from '@shared/components/ui/edit
 import { useUpdateContentItem } from '@teacher/hooks/useTeacherContentItems.js'
 import { AlertCircle } from 'lucide-react'
 
+import { formatVnTime } from '@shared/utils/dateTime.js'
 /**
  * GrammarArticleEditor — soạn nội dung lý thuyết ngữ pháp bằng RichTextEditor (Tiptap) có sẵn.
  * Lưu thủ công qua nút "Lưu nội dung" (không auto-save mỗi phím gõ để tránh spam request).
@@ -72,7 +73,7 @@ export default function GrammarArticleEditor({ item }) {
       )}
 
       <div className="flex-row mt-16" style={{ justifyContent: 'flex-end', gap: 12 }}>
-        {!dirty && savedAt && <span className="text-dim text-sm">Đã lưu lúc {savedAt.toLocaleTimeString('vi-VN')}</span>}
+        {!dirty && savedAt && <span className="text-dim text-sm">Đã lưu lúc {formatVnTime(savedAt)}</span>}
         {dirty && <span className="text-dim text-sm">Có thay đổi chưa lưu</span>}
         <button type="button" className="btn" onClick={handleSave} disabled={updateItem.isPending || !dirty}>
           {updateItem.isPending ? 'Đang lưu...' : 'Lưu nội dung'}

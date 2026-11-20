@@ -36,12 +36,19 @@ import {
 import Audio from './tiptap-audio-extension.js'
 import { uploadMedia } from '@shared/api/media.js'
 import { createHintExtension } from './editorTemplates.js'
+import { useToast, usePrompt } from '@shared/context/AppUIContext.jsx'
+
+/** Chỉ chấp nhận URL tuyệt đối (http/https), URL giao thức tương đối (//) hoặc đường dẫn gốc (/) */
+const validateMediaUrl = (value) =>
+  /^(https?:)?\/\/\S+$|^\/\S+$/i.test(value)
+    ? null
+    : 'URL không hợp lệ. Vui lòng nhập địa chỉ bắt đầu bằng http://, https:// hoặc /.'
 
 /**
  * Chèn 1 file ảnh/audio (đã kéo-thả hoặc dán) vào editor: upload lên server qua endpoint
  * chung POST /api/media rồi chèn node với URL thật trả về — không nhúng base64 vào nội dung.
  */
-async function insertUploadedFile(view, file, pos, onUploadingChange) {
+async function insertUploadedFile(view, file, pos, onUploadingChange, onError) {
   const isImage = file.type.startsWith('image/')
   const isAudio = file.type.startsWith('audio/')
   if (!isImage && !isAudio) return false
@@ -55,7 +62,7 @@ async function insertUploadedFile(view, file, pos, onUploadingChange) {
     view.dispatch(tr)
     view.focus()
   } catch {
-    window.alert('Tải tệp lên thất bại, vui lòng thử lại.')
+    onError?.('Tải tệp lên thất bại, vui lòng thử lại.')
   } finally {
     onUploadingChange(false)
   }
@@ -99,6 +106,9 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
 
   const hintExt = useMemo(() => createHintExtension(templates, placeholder), [templates, placeholder])
 
+  const toast = useToast()
+  const prompt = usePrompt()
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -119,7 +129,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         if (mediaFiles.length === 0) return false
         event.preventDefault()
         const pos = view.state.selection.to
-        mediaFiles.forEach((file) => insertUploadedFile(view, file, pos, onUploadingChange))
+        mediaFiles.forEach((file) => insertUploadedFile(view, file, pos, onUploadingChange, toast.error))
         return true
       },
       handleDrop(view, event) {
@@ -129,7 +139,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         event.preventDefault()
         const coords = { left: event.clientX, top: event.clientY }
         const dropPos = view.posAtCoords(coords)?.pos ?? view.state.selection.to
-        mediaFiles.forEach((file) => insertUploadedFile(view, file, dropPos, onUploadingChange))
+        mediaFiles.forEach((file) => insertUploadedFile(view, file, dropPos, onUploadingChange, toast.error))
         return true
       },
     },
@@ -411,8 +421,14 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           <button
             type="button"
             title="Chèn ảnh minh họa"
-            onClick={() => {
-              const url = window.prompt('Nhập URL ảnh minh hoạ:')
+            onClick={async () => {
+              const url = await prompt({
+                title: 'Chèn ảnh minh hoạ',
+                message: 'Nhập đường dẫn (URL) của ảnh.',
+                placeholder: 'https://example.com/anh.png',
+                confirmLabel: 'Chèn ảnh',
+                validate: validateMediaUrl,
+              })
               if (url) editor.chain().focus().setImage({ src: url }).run()
             }}
           >
@@ -422,8 +438,14 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           <button
             type="button"
             title="Chèn file âm thanh"
-            onClick={() => {
-              const url = window.prompt('Nhập URL audio (mp3, wav...):')
+            onClick={async () => {
+              const url = await prompt({
+                title: 'Chèn file âm thanh',
+                message: 'Nhập đường dẫn (URL) của file audio (mp3, wav...).',
+                placeholder: 'https://example.com/audio.mp3',
+                confirmLabel: 'Chèn audio',
+                validate: validateMediaUrl,
+              })
               if (url) editor.chain().focus().setAudio({ src: url }).run()
             }}
           >

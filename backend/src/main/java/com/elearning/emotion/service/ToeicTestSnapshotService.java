@@ -6,6 +6,7 @@ import com.elearning.emotion.dto.test.ToeicTestPublishPartRequest;
 import com.elearning.emotion.dto.test.ToeicTestPublishRequest;
 import com.elearning.emotion.entity.*;
 import com.elearning.emotion.repository.*;
+import com.elearning.emotion.service.realtime.RealtimePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ public class ToeicTestSnapshotService {
     private final ToeicTestPartRepository toeicTestPartRepository;
     private final TestAttemptRepository testAttemptRepository;
     private final CourseAccessService courseAccessService;
+    private final RealtimePublisher realtimePublisher;
 
     /**
      * Sao chép (Snapshot) đề thi từ khóa học của GV vào khóa chứa đề ẩn (profile=EXAM)
@@ -259,6 +261,9 @@ public class ToeicTestSnapshotService {
         test.setRejectionReason(null);
         test = toeicTestRepository.save(test);
 
+        // Realtime: báo cho Admin biết có đề thi mới chờ duyệt (không cần F5)
+        publishTestModeration(test, "SUBMITTED");
+
         List<ToeicTestPart> parts = toeicTestPartRepository.findByTestIdOrderByPartNoAsc(test.getId());
         return ToeicTestDto.from(test, parts);
     }
@@ -286,8 +291,29 @@ public class ToeicTestSnapshotService {
         }
 
         test = toeicTestRepository.save(test);
+
+        // Realtime: rút yêu cầu duyệt / ẩn / hiện lại -> Admin tự cập nhật danh sách
+        publishTestModeration(test, "STATUS_CHANGED");
+
         List<ToeicTestPart> parts = toeicTestPartRepository.findByTestIdOrderByPartNoAsc(test.getId());
         return ToeicTestDto.from(test, parts);
+    }
+
+    /**
+     * Phát tín hiệu Realtime tới toàn bộ Admin khi trạng thái đề thi thay đổi.
+     * Sự kiện chỉ được broadcast sau khi transaction commit (xem RealtimeEventListener).
+     */
+    private void publishTestModeration(ToeicTest test, String action) {
+        try {
+            realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of(
+                    "testId", test.getId(),
+                    "status", test.getStatus() != null ? test.getStatus() : "",
+                    "action", action));
+            log.info("[Realtime] Đã xếp hàng sự kiện test-moderation (action={}, testId={}, status={}) tới role ADMIN",
+                    action, test.getId(), test.getStatus());
+        } catch (Exception ex) {
+            log.warn("Không thể phát realtime test-moderation cho đề {}: {}", test.getId(), ex.getMessage());
+        }
     }
 
     /**

@@ -65,20 +65,18 @@ CREATE TABLE wallet_entries (
 );
 
 -- 4. Bo sung cot cho orders
-ALTER TABLE orders
-    ADD COLUMN reward_escrow_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER platform_fee,
-    ADD COLUMN fee_percent DECIMAL(5,2) NULL,
-    ADD COLUMN escrow_percent DECIMAL(5,2) NULL,
-    ADD COLUMN policy_version VARCHAR(20) NULL,
-    ADD COLUMN reward_terms_accepted_at DATETIME NULL,
-    ADD COLUMN access_months INT NULL;
+ALTER TABLE orders ADD COLUMN reward_escrow_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER platform_fee;
+ALTER TABLE orders ADD COLUMN fee_percent DECIMAL(5,2) NULL;
+ALTER TABLE orders ADD COLUMN escrow_percent DECIMAL(5,2) NULL;
+ALTER TABLE orders ADD COLUMN policy_version VARCHAR(20) NULL;
+ALTER TABLE orders ADD COLUMN reward_terms_accepted_at DATETIME NULL;
+ALTER TABLE orders ADD COLUMN access_months INT NULL;
 
 -- 5. Bo sung cot cho payment_transactions
-ALTER TABLE payment_transactions
-    ADD COLUMN kind VARCHAR(10) NOT NULL DEFAULT 'ORDER',  -- ORDER | TOPUP
-    ADD COLUMN topup_user_id CHAR(36) NULL,
-    ADD CONSTRAINT fk_tx_topup_user FOREIGN KEY (topup_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    ADD INDEX idx_tx_topup_user (topup_user_id);
+ALTER TABLE payment_transactions ADD COLUMN kind VARCHAR(10) NOT NULL DEFAULT 'ORDER';
+ALTER TABLE payment_transactions ADD COLUMN topup_user_id CHAR(36) NULL;
+ALTER TABLE payment_transactions ADD CONSTRAINT fk_tx_topup_user FOREIGN KEY (topup_user_id) REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE payment_transactions ADD INDEX idx_tx_topup_user (topup_user_id);
 
 -- 6. Bang quan ly giu tien thuong 10% (reward_escrows)
 CREATE TABLE reward_escrows (
@@ -140,18 +138,16 @@ CREATE TABLE video_view_attempts (
 );
 
 -- 9. Bo sung cot cho learning_sessions
-ALTER TABLE learning_sessions
-    ADD COLUMN attempt_id CHAR(36) NULL,
-    ADD COLUMN face_lost_since DATETIME NULL,
-    ADD COLUMN camera_choice VARCHAR(3) NULL,
-    ADD INDEX idx_ls_attempt_id (attempt_id);
+ALTER TABLE learning_sessions ADD COLUMN attempt_id CHAR(36) NULL;
+ALTER TABLE learning_sessions ADD COLUMN face_lost_since DATETIME NULL;
+ALTER TABLE learning_sessions ADD COLUMN camera_choice VARCHAR(3) NULL;
+ALTER TABLE learning_sessions ADD INDEX idx_ls_attempt_id (attempt_id);
 
 -- 10. Bo sung thoi han khoa hoc cho courses
 ALTER TABLE courses
     ADD COLUMN access_months INT NOT NULL DEFAULT 6;
 
 -- 11. Bo sung thoi han va chu ky hoc cho enrollments
-ALTER TABLE enrollments
-    ADD COLUMN access_months INT NULL,
-    ADD COLUMN started_at DATETIME NULL,
-    ADD COLUMN expires_at DATETIME NULL;
+ALTER TABLE enrollments ADD COLUMN access_months INT NULL;
+ALTER TABLE enrollments ADD COLUMN started_at DATETIME NULL;
+ALTER TABLE enrollments ADD COLUMN expires_at DATETIME NULL;

@@ -28,10 +28,14 @@ import {
 } from '@teacher/api/teacherTests.js'
 import CreateTestModal from '@teacher/components/modals/CreateTestModal.jsx'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
+import { useRealtimeEvent } from '@shared/realtime/index.js'
 import EmptyState from '@shared/components/ui/EmptyState.jsx'
+import { useToast, useConfirm } from '@shared/context/AppUIContext.jsx'
 
 export default function TeacherTestsPage() {
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
   const [tests, setTests] = useState([])
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -42,6 +46,11 @@ export default function TeacherTestsPage() {
   useEffect(() => {
     loadTests()
   }, [])
+
+  // Realtime: admin duyệt / từ chối / ẩn đề thi -> danh sách của giảng viên tự cập nhật
+  useRealtimeEvent('notification', (payload) => {
+    if (payload?.notification?.type === 'TEST_MODERATION') loadTests()
+  })
 
   const loadTests = async () => {
     setLoading(true)
@@ -66,7 +75,7 @@ export default function TeacherTestsPage() {
 
   const handleSubmitReview = async (testId, totalQ) => {
     if (totalQ === 0) {
-      alert('Đề thi chưa có câu hỏi nào. Vui lòng soạn nội dung trước khi gửi duyệt.')
+      toast.warning('Đề thi chưa có câu hỏi nào. Vui lòng soạn nội dung trước khi gửi duyệt.')
       return
     }
     setActionLoadingId(testId)
@@ -76,7 +85,7 @@ export default function TeacherTestsPage() {
       setTests((prev) => prev.map((t) => (t.id === testId ? updated : t)))
       setMessage('Đã gửi đề thi lên ban quản trị xét duyệt!')
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể gửi duyệt đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể gửi duyệt đề thi')
     } finally {
       setActionLoadingId(null)
     }
@@ -89,14 +98,20 @@ export default function TeacherTestsPage() {
       const updated = await toggleTestStatus(testId)
       setTests((prev) => prev.map((t) => (t.id === testId ? updated : t)))
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể thay đổi trạng thái đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể thay đổi trạng thái đề thi')
     } finally {
       setActionLoadingId(null)
     }
   }
 
   const handleDeleteTest = async (testId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác.')) return
+    const ok = await confirm({
+      title: 'Xóa đề thi',
+      message: 'Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác.',
+      confirmLabel: 'Xóa đề thi',
+      variant: 'danger',
+    })
+    if (!ok) return
     setActionLoadingId(testId)
     setMessage('')
     try {
@@ -104,7 +119,7 @@ export default function TeacherTestsPage() {
       setTests((prev) => prev.filter((t) => t.id !== testId))
       setMessage('Đã xóa đề thi thành công')
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa đề thi')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Không thể xóa đề thi')
     } finally {
       setActionLoadingId(null)
     }

@@ -37,7 +37,9 @@ import VideoEmotionTimelineModal from '@teacher/components/VideoEmotionTimelineM
 import TeacherWalletRevenueView from '@teacher/components/TeacherWalletRevenueView.jsx'
 import LiveClassPanel from '@teacher/components/LiveClassPanel.jsx'
 import { useRealtimeEvent } from '@shared/realtime/index.js'
+import { useToast } from '@shared/context/AppUIContext.jsx'
 
+import { formatVnDate } from '@shared/utils/dateTime.js'
 const COURSE_STATUS_CONFIG = {
   PUBLISHED: {
     label: 'Đang mở bán',
@@ -72,6 +74,7 @@ const COURSE_STATUS_CONFIG = {
 }
 
 export default function TeacherDashboardPage() {
+  const toast = useToast()
   const user = useAuthStore((s) => s.user)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -123,7 +126,7 @@ export default function TeacherDashboardPage() {
       setAlerts((prev) => prev.filter((a) => a.id !== alertId))
       loadDashboard()
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái cảnh báo')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi cập nhật trạng thái cảnh báo')
     }
   }
 
@@ -133,7 +136,7 @@ export default function TeacherDashboardPage() {
       setAlerts((prev) => prev.filter((a) => a.id !== alertId))
       loadDashboard()
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi khi bỏ qua cảnh báo')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi bỏ qua cảnh báo')
     }
   }
 
@@ -159,12 +162,12 @@ export default function TeacherDashboardPage() {
     try {
       setSeedingAlerts(true)
       const res = await alertsApi.seedDemoAlerts(null, studentCount)
-      alert(res.message || 'Thao tác thành công!')
+      toast.success(res.message || 'Thao tác thành công!')
       loadAlerts()
       teacherTestsApi.getTeacherTestStats().then(setTestStats).catch(() => {})
       loadDashboard()
     } catch (err) {
-      alert(err.response?.data?.message || 'Lỗi khi tạo dữ liệu demo')
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Lỗi khi tạo dữ liệu demo')
     } finally {
       setSeedingAlerts(false)
     }
@@ -614,7 +617,7 @@ export default function TeacherDashboardPage() {
                           </td>
 
                           <td style={{ padding: '12px 14px', fontSize: 12, whiteSpace: 'nowrap' }} className="text-dim">
-                            {st.enrolledAt ? new Date(st.enrolledAt).toLocaleDateString('vi-VN') : '—'}
+                            {st.enrolledAt ? formatVnDate(st.enrolledAt) : '—'}
                           </td>
 
                           <td style={{ padding: '12px 14px' }}>

@@ -16,6 +16,7 @@ import {
   Hourglass
 } from 'lucide-react'
 
+import { vnTime } from '@shared/utils/dateTime.js'
 export default function PaymentModal({ course, onClose, onSuccess }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -78,8 +79,8 @@ export default function PaymentModal({ course, onClose, onSuccess }) {
 
     const calculateRemaining = () => {
       const expireTime = order.expiredAt
-        ? new Date(order.expiredAt).getTime()
-        : (order.createdAt ? new Date(order.createdAt).getTime() + 24 * 60 * 60 * 1000 : null)
+        ? vnTime(order.expiredAt)
+        : (order.createdAt ? vnTime(order.createdAt) + 24 * 60 * 60 * 1000 : null)
 
       if (!expireTime) return 0
       const diff = Math.max(0, Math.floor((expireTime - Date.now()) / 1000))

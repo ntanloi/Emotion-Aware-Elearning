@@ -46,6 +46,7 @@ public class OrderService {
     private final WalletProperties walletProperties;
     private final EnrollmentLifecycleService enrollmentLifecycleService;
     private final RewardEscrowService rewardEscrowService;
+    private final SepayPayoutVerificationService sepayPayoutVerificationService;
 
     private static final Pattern ORDER_CODE_PATTERN = Pattern.compile("ELN[A-Z0-9]{8}", Pattern.CASE_INSENSITIVE);
     private static final Pattern TOPUP_CODE_PATTERN = Pattern.compile("NAP[A-Z0-9]{8}", Pattern.CASE_INSENSITIVE);
@@ -191,6 +192,11 @@ public class OrderService {
         log.info("Processing SePay webhook: id={}, transferType={}, amount={}, content={}",
                 payload.id(), payload.transferType(), payload.transferAmount(), payload.content());
 
+        // Nếu là giao dịch tiền ra (transferType = out), chuyển sang luồng xử lý tiền chuyển đi của Admin/Hệ thống
+        if (payload.transferType() != null && "out".equalsIgnoreCase(payload.transferType())) {
+            return processOutgoingSepayWebhook(payload, rawPayload);
+        }
+
         // 1. Chỉ nhận tiền vào (transferType = in)
         if (payload.transferType() != null && !"in".equalsIgnoreCase(payload.transferType())) {
             log.info("Ignored non-incoming transferType: {}", payload.transferType());
@@ -284,6 +290,90 @@ public class OrderService {
     }
 
     /**
+     * Xử lý webhook luồng tiền ra (transferType = out) của Admin khi chuyển khoản giải ngân cho giảng viên.
+     */
+    @Transactional
+    public Map<String, Object> processOutgoingSepayWebhook(SepayWebhookPayload payload, String rawPayload) {
+        log.info("Processing outgoing SePay webhook: id={}, amount={}, content={}",
+                payload.id(), payload.transferAmount(), payload.content());
+
+        if (payload.id() != null && paymentTransactionRepository.existsBySepayId(payload.id())) {
+            log.warn("SePay outgoing transaction with sepay_id={} already processed. Skipping duplicate.", payload.id());
+            return Map.of("success", true, "message", "Duplicate outgoing transaction ignored: " + payload.id());
+        }
+
+        LocalDateTime txDate = parseDateTime(payload.transactionDate());
+        BigDecimal transferAmount = payload.transferAmount() != null
+                ? payload.transferAmount().setScale(0, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+        PaymentTransaction tx = PaymentTransaction.builder()
+                .sepayId(payload.id())
+                .gateway(payload.gateway() != null ? payload.gateway() : "SePay")
+                .transactionDate(txDate)
+                .accountNumber(payload.accountNumber())
+                .subAccount(payload.subAccount())
+                .transferType("out")
+                .transferAmount(transferAmount)
+                .accumulated(payload.accumulated())
+                .code(payload.code())
+                .content(payload.content())
+                .referenceCode(payload.referenceCode())
+                .description(payload.description())
+                .kind("PAYOUT")
+                .status("UNMATCHED")
+                .rawPayload(rawPayload)
+                .build();
+
+        if (payload.id() == null) {
+            tx.setAdminNote("Webhook payload tiền ra thiếu mã định danh giao dịch (id) từ SePay");
+            paymentTransactionRepository.save(tx);
+            return Map.of("success", false, "message", "Missing transaction id, recorded as UNMATCHED");
+        }
+
+        // Tự động tìm và khớp với các yêu cầu rút tiền đang chờ (PENDING)
+        List<PayoutRequest> pendingPayouts = payoutRequestRepository.findByStatus("PENDING");
+        PayoutRequest matchedPayout = null;
+
+        for (PayoutRequest p : pendingPayouts) {
+            String checkRef = payload.referenceCode() != null && !payload.referenceCode().isBlank()
+                    ? payload.referenceCode()
+                    : String.valueOf(payload.id());
+            SepayPayoutCheckResult check = sepayPayoutVerificationService.verifyPayoutTransaction(p, checkRef);
+            if (check.matched()) {
+                matchedPayout = p;
+                break;
+            }
+        }
+
+        if (matchedPayout != null) {
+            tx.setStatus("MATCHED");
+            tx.setPayoutRequest(matchedPayout);
+            String teacherName = matchedPayout.getTeacher() != null ? matchedPayout.getTeacher().getFullName() : "N/A";
+            String teacherCode = matchedPayout.getTeacher() != null ? matchedPayout.getTeacher().getTeacherCode() : "N/A";
+            tx.setAdminNote("Tự động nhận diện giao dịch chuyển tiền SePay cho giảng viên: "
+                    + teacherName + " (Mã GV: " + teacherCode + ") - STK: " + matchedPayout.getBankAccountNo());
+            paymentTransactionRepository.save(tx);
+
+            try {
+                realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of(
+                        "reason", "SEPAY_PAYOUT_DETECTED",
+                        "payoutId", matchedPayout.getId(),
+                        "sepayId", tx.getSepayId(),
+                        "amount", tx.getTransferAmount()
+                ));
+            } catch (Exception ignored) {}
+
+            log.info("Successfully matched outgoing SePay transaction {} with payout request {}", tx.getSepayId(), matchedPayout.getId());
+            return Map.of("success", true, "message", "Matched outgoing payout transaction", "payoutId", matchedPayout.getId());
+        } else {
+            tx.setAdminNote("Giao dịch chi tiền SePay chưa khớp với yêu cầu rút tiền nào (chưa đúng số tiền, mã GV hoặc STK)");
+            paymentTransactionRepository.save(tx);
+            log.info("Outgoing SePay transaction {} recorded as UNMATCHED", tx.getSepayId());
+            return Map.of("success", true, "message", "Recorded unmatched outgoing transaction");
+        }
+    }
+
+    /**
      * Hoàn tất đơn hàng PAID: Ghi danh chu kỳ học, tính hoa hồng, tách 5/10/85, tạo escrow và ghi ví giảng viên.
      */
     @Transactional
@@ -306,6 +396,13 @@ public class OrderService {
             if (!videoIds.isEmpty()) {
                 escrowPercent = rewardProperties.getEscrowPercent();
             }
+        }
+
+        // Ghi rõ lý do khi KHÔNG giữ hộ 10% để dễ dò lỗi cấu hình
+        if (escrowPercent.signum() <= 0) {
+            log.info("[Escrow] Order {} KHÔNG tạo giữ hộ: reward.enabled={}, paymentMethod={}, teacher={}, trackableVideos={}",
+                    order.getOrderCode(), rewardProperties.isEnabled(), order.getPaymentMethod(),
+                    teacher != null, videoIds.size());
         }
 
         BigDecimal platformFee = pct(paidAmount, feePercent);
@@ -359,7 +456,7 @@ public class OrderService {
                     teacherNotif,
                     "FINANCE",
                     order.getId(),
-                    "/teacher/dashboard"
+                    "/dashboard/teacher?tab=transactions"
             );
         }
 
@@ -432,13 +529,14 @@ public class OrderService {
 
     /**
      * H1: Admin duyệt chi yêu cầu rút tiền của giảng viên (APPROVED).
+     * BẮT BUỘC: Kiểm tra giao dịch SePay ở luồng tiền chuyển đi của Admin.
+     * Xác thực 3 tiêu chuẩn:
+     * 1. Đúng số tiền
+     * 2. Đúng mã giảng viên
+     * 3. Đúng số tài khoản nhận của giảng viên
      */
     @Transactional
     public PayoutRequestDto approvePayout(String adminId, String payoutId, String transactionRef, String adminNote) {
-        if (transactionRef == null || transactionRef.trim().isBlank()) {
-            throw new IllegalArgumentException("Bắt buộc phải điền mã giao dịch chuyển tiền ngân hàng.");
-        }
-
         User admin = userRepository.findById(adminId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy quản trị viên"));
 
@@ -449,9 +547,33 @@ public class OrderService {
             throw new IllegalArgumentException("Yêu cầu này không ở trạng thái chờ duyệt (PENDING).");
         }
 
+        // BẮT BUỘC: Kiểm tra luồng tiền chuyển đi trên SePay
+        SepayPayoutCheckResult checkResult = sepayPayoutVerificationService.verifyPayoutTransaction(req, transactionRef);
+        if (!checkResult.matched()) {
+            throw new IllegalArgumentException("Không thể duyệt chi! Xác thực SePay thất bại: " + checkResult.message());
+        }
+
+        // Cập nhật trạng thái giao dịch SePay thành MATCHED và liên kết với yêu cầu rút
+        PaymentTransaction tx = null;
+        if (checkResult.transaction() != null && checkResult.transaction().sepayId() != null) {
+            tx = paymentTransactionRepository.findBySepayId(checkResult.transaction().sepayId()).orElse(null);
+            if (tx != null) {
+                tx.setStatus("MATCHED");
+                tx.setPayoutRequest(req);
+                String tCode = req.getTeacher() != null ? req.getTeacher().getTeacherCode() : "";
+                tx.setAdminNote("Đã duyệt chi giải ngân thành công cho giảng viên "
+                        + (req.getTeacher() != null ? req.getTeacher().getFullName() : "")
+                        + " (Mã GV: " + tCode + ") - STK: " + req.getBankAccountNo());
+                paymentTransactionRepository.save(tx);
+            }
+        }
+
         LocalDateTime now = LocalDateTime.now();
         req.setStatus("APPROVED");
-        req.setTransactionRef(transactionRef.trim());
+        String effectiveRef = (tx != null && tx.getReferenceCode() != null && !tx.getReferenceCode().isBlank())
+                ? tx.getReferenceCode()
+                : (transactionRef != null && !transactionRef.trim().isBlank() ? transactionRef.trim() : (tx != null ? String.valueOf(tx.getSepayId()) : "SEPAY"));
+        req.setTransactionRef(effectiveRef);
         req.setAdminNote(adminNote != null ? adminNote.trim() : null);
         req.setProcessedAt(now);
         req.setProcessedBy(admin);
@@ -464,7 +586,7 @@ public class OrderService {
                 .type("PAYOUT")
                 .amount(req.getAmount().negate())
                 .availableAt(now)
-                .description("Rút tiền về STK " + req.getBankAccountNo() + " (" + req.getBankId() + ") - Mã GD: " + transactionRef.trim())
+                .description("Rút tiền về STK " + req.getBankAccountNo() + " (" + req.getBankId() + ") - Mã GD SePay: " + effectiveRef)
                 .build();
         teacherWalletEntryRepository.save(payoutEntry);
 
@@ -472,21 +594,31 @@ public class OrderService {
                 req.getTeacher().getId(),
                 "Yêu cầu rút tiền đã được giải ngân thành công",
                 "Số tiền " + String.format("%,d", req.getAmount().longValue()) + " đ đã được chuyển vào tài khoản "
-                        + req.getBankAccountNo() + " (" + req.getBankId() + "). Mã giao dịch: " + transactionRef.trim(),
+                        + req.getBankAccountNo() + " (" + req.getBankId() + "). Mã giao dịch SePay: " + effectiveRef,
                 "FINANCE",
                 saved.getId(),
-                "/teacher/dashboard"
+                "/dashboard/teacher?tab=transactions"
         );
 
         auditService.log(admin, "PAYOUT_APPROVED", "PAYOUT_REQUEST", payoutId,
                 "Duyệt chi yêu cầu rút " + req.getAmount() + " đ cho giảng viên " + req.getTeacher().getEmail()
-                        + ". Mã GD: " + transactionRef.trim());
+                        + " (Mã GV: " + (req.getTeacher() != null ? req.getTeacher().getTeacherCode() : "") + "). Mã GD SePay: " + effectiveRef);
 
         try {
             realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of("reason", "PAYOUT_APPROVED", "payoutId", payoutId));
         } catch (Exception ignored) {}
 
-        return PayoutRequestDto.from(saved);
+        return PayoutRequestDto.from(saved, tx);
+    }
+
+    /**
+     * Kiểm tra SePay độc lập trước khi duyệt chi (dùng cho modal xem trước của Admin).
+     */
+    @Transactional(readOnly = true)
+    public SepayPayoutCheckResult checkPayoutSepay(String payoutId, String transactionRef) {
+        PayoutRequest req = payoutRequestRepository.findById(payoutId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu rút tiền"));
+        return sepayPayoutVerificationService.verifyPayoutTransaction(req, transactionRef);
     }
 
     /**
@@ -520,7 +652,7 @@ public class OrderService {
                 "Yêu cầu rút " + String.format("%,d", req.getAmount().longValue()) + " đ đã bị từ chối. Lý do: " + reason.trim(),
                 "FINANCE",
                 saved.getId(),
-                "/teacher/dashboard"
+                "/dashboard/teacher?tab=transactions"
         );
 
         auditService.log(admin, "PAYOUT_REJECTED", "PAYOUT_REQUEST", payoutId,
@@ -595,11 +727,16 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Page<PayoutRequestDto> getAdminPayoutRequests(String status, Pageable pageable) {
+        Page<PayoutRequest> page;
         if (status != null && !status.isBlank()) {
-            return payoutRequestRepository.findByStatusOrderByCreatedAtDesc(status.toUpperCase(), pageable)
-                    .map(PayoutRequestDto::from);
+            page = payoutRequestRepository.findByStatusOrderByCreatedAtDesc(status.toUpperCase(), pageable);
+        } else {
+            page = payoutRequestRepository.findAll(pageable);
         }
-        return payoutRequestRepository.findAll(pageable).map(PayoutRequestDto::from);
+        return page.map(req -> {
+            PaymentTransaction tx = paymentTransactionRepository.findByPayoutRequestId(req.getId()).orElse(null);
+            return PayoutRequestDto.from(req, tx);
+        });
     }
 
     @Transactional(readOnly = true)

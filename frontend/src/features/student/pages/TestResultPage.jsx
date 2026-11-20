@@ -6,6 +6,7 @@ import { getAttemptResult } from '@student/api/tests.js'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
 import '@student/components/tests/tests.css'
 
+import { formatVnTime } from '@shared/utils/dateTime.js'
 export default function TestResultPage() {
   const { attemptId } = useParams()
   const navigate = useNavigate()
@@ -182,7 +183,7 @@ export default function TestResultPage() {
               {formatDuration(result.timeSpentSeconds)}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 6 }}>
-              {result.submittedAt ? new Date(result.submittedAt).toLocaleTimeString('vi-VN') : '—'}
+              {result.submittedAt ? formatVnTime(result.submittedAt) : '—'}
             </div>
           </div>
         </div>

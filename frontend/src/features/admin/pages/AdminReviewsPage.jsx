@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { formatVnDateTime } from '@shared/utils/dateTime.js'
 export default function AdminReviewsPage() {
   const toast = useToast()
   const confirm = useConfirm()
@@ -447,7 +448,7 @@ export default function AdminReviewsPage() {
                         <span style={{ fontSize: 13, color: 'var(--c-muted)' }}>
                           Báo cáo bởi: <strong style={{ color: 'var(--text)' }}>{rep.reporterName || 'Người dùng'}</strong>
                           {rep.reporterEmail ? ` (${rep.reporterEmail})` : ''} •{' '}
-                          {rep.createdAt ? new Date(rep.createdAt).toLocaleString('vi-VN') : '—'}
+                          {rep.createdAt ? formatVnDateTime(rep.createdAt) : '—'}
                         </span>
                       </div>
 
@@ -570,7 +571,7 @@ export default function AdminReviewsPage() {
                     {resolvedAdmin && (
                       <div style={{ fontSize: 12, color: 'var(--c-muted)', marginBottom: 14 }}>
                         Xử lý bởi <strong>{resolvedAdmin}</strong> vào{' '}
-                        {rep.resolvedAt ? new Date(rep.resolvedAt).toLocaleString('vi-VN') : '—'}
+                        {rep.resolvedAt ? formatVnDateTime(rep.resolvedAt) : '—'}
                         {rep.resolutionNote && <div>Ghi chú: {rep.resolutionNote}</div>}
                       </div>
                     )}
@@ -734,7 +735,7 @@ export default function AdminReviewsPage() {
                           Khóa học: <strong>{r.courseTitle}</strong>
                         </span>
                         <span style={{ color: 'var(--c-muted)' }}>
-                          • {new Date(r.createdAt).toLocaleString('vi-VN')}
+                          • {formatVnDateTime(r.createdAt)}
                           {r.isEdited && ' (đã sửa)'}
                         </span>
                       </div>
@@ -782,7 +783,7 @@ export default function AdminReviewsPage() {
                       <AlertTriangle size={14} />
                       <span>
                         <strong>{r.status === 'HIDDEN' ? 'Lý do ẩn:' : 'Lý do gắn cờ:'}</strong> {r.hiddenReason}
-                        {r.hiddenByName && ` (bởi ${r.hiddenByName} lúc ${new Date(r.hiddenAt).toLocaleString('vi-VN')})`}
+                        {r.hiddenByName && ` (bởi ${r.hiddenByName} lúc ${formatVnDateTime(r.hiddenAt)})`}
                       </span>
                     </div>
                   )}

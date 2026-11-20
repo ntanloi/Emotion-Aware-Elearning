@@ -7,6 +7,7 @@ import EmptyState from '@shared/components/ui/EmptyState.jsx'
 import anhDeThiImg from '@/assets/banners/anhDeThi.png'
 import '@student/components/tests/tests.css'
 
+import { formatVnDateTime } from '@shared/utils/dateTime.js'
 export default function TestListPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('LIBRARY') // LIBRARY | HISTORY
@@ -261,7 +262,7 @@ export default function TestListPage() {
                     {att.testTitle}
                   </h4>
                   <div style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 4 }}>
-                    Bắt đầu lúc: {att.startedAt ? new Date(att.startedAt).toLocaleString('vi-VN') : '—'}
+                    Bắt đầu lúc: {att.startedAt ? formatVnDateTime(att.startedAt) : '—'}
                   </div>
                 </div>
 

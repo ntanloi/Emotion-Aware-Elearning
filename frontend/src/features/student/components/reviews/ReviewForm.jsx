@@ -3,6 +3,7 @@ import StarRating from '@shared/components/StarRating.jsx'
 import * as reviewsApi from '@student/api/reviews.js'
 import { useSubmitCourseReview } from '@student/hooks/useCourseReviews.js'
 import { X, Camera, ShieldCheck, AlertTriangle, Trash2 } from 'lucide-react'
+import { useConfirm } from '@shared/context/AppUIContext.jsx'
 
 export default function ReviewForm({
   isOpen,
@@ -11,6 +12,7 @@ export default function ReviewForm({
   courseId,
 }) {
   const { create, update, remove } = useSubmitCourseReview(courseId)
+  const confirm = useConfirm()
 
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
@@ -105,7 +107,13 @@ export default function ReviewForm({
   }
 
   const handleDelete = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa đánh giá của mình không?')) return
+    const ok = await confirm({
+      title: 'Xóa đánh giá',
+      message: 'Bạn có chắc chắn muốn xóa đánh giá của mình không?',
+      confirmLabel: 'Xóa đánh giá',
+      variant: 'danger',
+    })
+    if (!ok) return
     try {
       await remove.mutateAsync()
       onClose()
