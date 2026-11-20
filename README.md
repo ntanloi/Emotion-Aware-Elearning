@@ -39,7 +39,7 @@ Hệ thống E-Learning toàn diện kết hợp:
 
 ---
 
-## 2. Hướng Dẫn Khởi Chạy Nhanh
+## 2. Hướng Dẫn Khởi Chạy
 
 ### Cách 1: Khởi chạy toàn bộ hệ thống bằng Docker Compose (Khuyến nghị)
 
