@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { getVideoEmotionTimeline } from '@teacher/api/teacher.js'
+import { useRealtimeEvent } from '@shared/realtime/index.js'
 import {
   Brain,
   AlertCircle,
@@ -86,6 +87,18 @@ export default function VideoEmotionTimelineModal({
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, contentItemId])
+
+  // Realtime: có mẫu cảm xúc mới của chính bài giảng này -> làm mới ngầm biểu đồ ngay (không chờ chu kỳ 10 giây)
+  useRealtimeEvent('emotion-stats', (payload) => {
+    if (!isOpen || !contentItemId) return
+    const ids = payload?.contentItemIds ?? payload?.data?.contentItemIds
+    if (Array.isArray(ids) && !ids.includes(contentItemId)) return
+    getVideoEmotionTimeline(contentItemId)
+      .then((res) => {
+        if (res) setData(res)
+      })
+      .catch(() => {})
+  })
 
   // Tính toán số lượng cho từng bộ lọc
   const statsCounts = useMemo(() => {
