@@ -32,6 +32,14 @@ public interface SessionBucketStatsRepository extends JpaRepository<SessionBucke
         Long getNoFace();
     }
 
+    public interface LessonFocusTotalsProjection {
+        String getContentItemId();
+        Long getTotal();
+        Long getEngaged();
+        Long getInterested();
+        Long getNoFace();
+    }
+
     public interface StudentBucketRow {
         String getUserId();
         Integer getBucketIndex();
@@ -130,6 +138,21 @@ public interface SessionBucketStatsRepository extends JpaRepository<SessionBucke
         WHERE co.teacher_id = :teacherId
         """, nativeQuery = true)
     SessionTotalsProjection getTotalsByTeacherId(@Param("teacherId") String teacherId);
+
+    /** Tổng mẫu cảm xúc theo từng bài giảng video của giảng viên (dùng tính điểm tập trung TB cho bảng Dashboard) */
+    @Query(value = """
+        SELECT s.content_item_id AS contentItemId,
+               COALESCE(SUM(s.n_total), 0) AS total,
+               COALESCE(SUM(s.n_engaged), 0) AS engaged,
+               COALESCE(SUM(s.n_interested), 0) AS interested,
+               COALESCE(SUM(s.n_noface), 0) AS noFace
+        FROM session_bucket_stats s
+        JOIN content_items c ON s.content_item_id = c.id
+        JOIN courses co ON c.course_id = co.id
+        WHERE co.teacher_id = :teacherId
+        GROUP BY s.content_item_id
+        """, nativeQuery = true)
+    List<LessonFocusTotalsProjection> getFocusTotalsByLessonForTeacher(@Param("teacherId") String teacherId);
 
     long countByUserId(String userId);
 

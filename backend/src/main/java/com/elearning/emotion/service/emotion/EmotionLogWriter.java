@@ -50,8 +50,18 @@ public class EmotionLogWriter {
         }
     }
 
+    /**
+     * Xả toàn bộ hàng đợi hiện có xuống DB (dùng khi kết thúc phiên học để điểm tập trung được chốt
+     * sau khi các mẫu cuối đã vào session_bucket_stats). synchronized để chờ lượt flush đang chạy dở.
+     */
+    public synchronized void flushAll() {
+        do {
+            flush();
+        } while (!queue.isEmpty());
+    }
+
     @Scheduled(fixedDelay = 1000)
-    public void flush() {
+    public synchronized void flush() {
         List<EmotionLogRow> batch = new ArrayList<>(500);
         queue.drainTo(batch, 500);
         if (batch.isEmpty()) {

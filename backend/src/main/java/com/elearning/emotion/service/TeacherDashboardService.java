@@ -128,11 +128,29 @@ public class TeacherDashboardService {
                     emptyLessonStats
             );
         } else {
-            double avgFocus = sessions.stream()
-                    .filter(s -> s.getFocusScore() != null)
-                    .mapToDouble(LearningSession::getFocusScore)
-                    .average()
-                    .orElse(0.0);
+            // Điểm tập trung được tính từ session_bucket_stats (cùng nguồn với biểu đồ mốc thời gian),
+            // KHÔNG phụ thuộc focus_score lưu sẵn trong phiên học vì giá trị đó có thể null/0 nếu phiên
+            // chưa kết thúc hoặc bị chốt trước khi hàng đợi ghi log kịp flush.
+            Map<String, SessionBucketStatsRepository.LessonFocusTotalsProjection> focusTotalsByLesson =
+                    sessionBucketStatsRepository.getFocusTotalsByLessonForTeacher(teacherId).stream()
+                            .collect(Collectors.toMap(
+                                    SessionBucketStatsRepository.LessonFocusTotalsProjection::getContentItemId,
+                                    p -> p,
+                                    (a, b) -> a));
+
+            SessionBucketStatsRepository.SessionTotalsProjection teacherTotals =
+                    sessionBucketStatsRepository.getTotalsByTeacherId(teacherId);
+            double pooledOverall = teacherTotals != null
+                    ? pooledFocus(teacherTotals.getTotal(), teacherTotals.getEngaged(),
+                                  teacherTotals.getInterested(), teacherTotals.getNoFace())
+                    : -1.0;
+            double avgFocus = pooledOverall >= 0
+                    ? pooledOverall
+                    : sessions.stream()
+                            .filter(s -> s.getFocusScore() != null)
+                            .mapToDouble(LearningSession::getFocusScore)
+                            .average()
+                            .orElse(0.0);
 
             Map<String, List<LearningSession>> sessionsByLesson = sessions.stream()
                     .filter(s -> s.getContentItem() != null)
@@ -152,11 +170,7 @@ public class TeacherDashboardService {
                     if (item.isVideoLecture()) {
                         processedItemIds.add(item.getId());
                         List<LearningSession> itemSessions = sessionsByLesson.getOrDefault(item.getId(), Collections.emptyList());
-                        double itemAvgFocus = itemSessions.stream()
-                                .filter(s -> s.getFocusScore() != null)
-                                .mapToDouble(LearningSession::getFocusScore)
-                                .average()
-                                .orElse(0.0);
+                        double itemAvgFocus = resolveLessonFocus(focusTotalsByLesson.get(item.getId()), itemSessions);
                         long alertCount = alertCountByLesson.getOrDefault(item.getId(), 0L);
                         String statusLabel;
                         if (alertCount > 0) {
@@ -200,11 +214,7 @@ public class TeacherDashboardService {
                 if (!processedItemIds.contains(entry.getKey())) {
                     List<LearningSession> itemSessions = entry.getValue();
                     ContentItem item = itemSessions.get(0).getContentItem();
-                    double itemAvgFocus = itemSessions.stream()
-                            .filter(s -> s.getFocusScore() != null)
-                            .mapToDouble(LearningSession::getFocusScore)
-                            .average()
-                            .orElse(0.0);
+                    double itemAvgFocus = resolveLessonFocus(focusTotalsByLesson.get(item.getId()), itemSessions);
                     long alertCount = alertCountByLesson.getOrDefault(item.getId(), 0L);
                     String statusLabel;
                     if (alertCount > 0) {
@@ -319,6 +329,15 @@ public class TeacherDashboardService {
                 .average()
                 .orElse(0.0);
         avgFocus = Math.round(avgFocus * 10.0) / 10.0;
+        // Ưu tiên tính từ bucket (cùng nguồn với các mốc bên dưới) để số liệu luôn khớp biểu đồ
+        long aggTotal = bucketAggs.stream().mapToLong(b -> b.getTotalSamples() != null ? b.getTotalSamples() : 0L).sum();
+        long aggEngaged = bucketAggs.stream().mapToLong(b -> b.getEngagedCount() != null ? b.getEngagedCount() : 0L).sum();
+        long aggInterested = bucketAggs.stream().mapToLong(b -> b.getInterestedCount() != null ? b.getInterestedCount() : 0L).sum();
+        long aggNoFace = bucketAggs.stream().mapToLong(b -> b.getNoFaceCount() != null ? b.getNoFaceCount() : 0L).sum();
+        double pooledTimelineFocus = pooledFocus(aggTotal, aggEngaged, aggInterested, aggNoFace);
+        if (pooledTimelineFocus >= 0) {
+            avgFocus = pooledTimelineFocus;
+        }
         int minStudents = alertProperties != null ? alertProperties.getMinStudents() : 5;
 
         if (bucketAggs.isEmpty()) {
@@ -480,6 +499,33 @@ public class TeacherDashboardService {
                 recommendations,
                 minStudents
         );
+    }
+
+    /**
+     * Điểm tập trung gộp = (ENGAGED + INTERESTED) / mẫu hợp lệ (loại NO_FACE) * 100, làm tròn 1 chữ số.
+     * Trả về -1 nếu không có mẫu hợp lệ nào (để caller biết mà dùng giá trị dự phòng).
+     */
+    private static double pooledFocus(Long total, Long engaged, Long interested, Long noFace) {
+        long t = total != null ? total : 0L;
+        long nf = noFace != null ? noFace : 0L;
+        long valid = t - nf;
+        if (valid <= 0) return -1.0;
+        long good = (engaged != null ? engaged : 0L) + (interested != null ? interested : 0L);
+        return Math.round(((double) good / valid) * 1000.0) / 10.0;
+    }
+
+    /** Điểm tập trung TB của 1 bài giảng: ưu tiên số liệu bucket, dự phòng bằng focus_score đã lưu của các phiên. */
+    private static double resolveLessonFocus(
+            SessionBucketStatsRepository.LessonFocusTotalsProjection totals, List<LearningSession> itemSessions) {
+        if (totals != null) {
+            double pooled = pooledFocus(totals.getTotal(), totals.getEngaged(), totals.getInterested(), totals.getNoFace());
+            if (pooled >= 0) return pooled;
+        }
+        return itemSessions.stream()
+                .filter(s -> s.getFocusScore() != null)
+                .mapToDouble(LearningSession::getFocusScore)
+                .average()
+                .orElse(0.0);
     }
 
     /** Thứ tự các mục chuẩn giống sidebar khóa học: Từ vựng → Ngữ pháp → Part 1..7 → Chép chính tả */

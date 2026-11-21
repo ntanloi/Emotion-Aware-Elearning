@@ -38,6 +38,7 @@ public class LearningSessionService {
     private final VideoViewAttemptService attemptService;
     private final com.elearning.emotion.service.emotion.FaceLostTracker faceLostTracker;
     private final VideoViewAttemptRepository attemptRepo;
+    private final com.elearning.emotion.service.emotion.EmotionLogWriter emotionLogWriter;
 
     /**
      * FR-LES-02: bat dau phien hoc khi mo video bai giang.
@@ -133,6 +134,12 @@ public class LearningSessionService {
         LearningSession session = getOrThrow(sessionId, userId);
         session.setStatus(abandoned ? "ABANDONED" : "FINISHED");
         session.setEndTime(LocalDateTime.now());
+        // Xả hàng đợi ghi log để bucket stats đầy đủ trước khi chốt điểm tập trung
+        try {
+            emotionLogWriter.flushAll();
+        } catch (Exception ex) {
+            log.warn("Không flush được hàng đợi log cảm xúc trước khi chốt phiên {}: {}", sessionId, ex.toString());
+        }
         session.setFocusScore(computeFocusScore(sessionId));
         faceLostTracker.clear(sessionId);
 
