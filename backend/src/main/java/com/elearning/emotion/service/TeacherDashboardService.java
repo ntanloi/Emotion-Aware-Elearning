@@ -26,6 +26,7 @@ public class TeacherDashboardService {
     private final LessonAlertRepository lessonAlertRepository;
     private final com.elearning.emotion.config.EmotionAlertProperties alertProperties;
     private final TeacherWalletEntryRepository teacherWalletEntryRepository;
+    private final CourseCustomSectionRepository courseCustomSectionRepository;
 
     @Transactional(readOnly = true)
     public TeacherDashboardDto getTeacherDashboard(String teacherId) {
@@ -99,7 +100,7 @@ public class TeacherDashboardService {
             // Ngay cả khi chưa có session, vẫn lấy danh sách bài giảng video để giáo viên xem
             List<TeacherEmotionLessonDto> emptyLessonStats = new ArrayList<>();
             for (Course c : teacherCourses) {
-                List<ContentItem> courseItems = contentItemRepository.findByCourseId(c.getId());
+                List<ContentItem> courseItems = sortItemsLikeCourse(c.getId(), contentItemRepository.findByCourseId(c.getId()));
                 for (ContentItem item : courseItems) {
                     if (item.isVideoLecture()) {
                         emptyLessonStats.add(new TeacherEmotionLessonDto(
@@ -146,7 +147,7 @@ public class TeacherDashboardService {
             Set<String> processedItemIds = new HashSet<>();
 
             for (Course c : teacherCourses) {
-                List<ContentItem> courseItems = contentItemRepository.findByCourseId(c.getId());
+                List<ContentItem> courseItems = sortItemsLikeCourse(c.getId(), contentItemRepository.findByCourseId(c.getId()));
                 for (ContentItem item : courseItems) {
                     if (item.isVideoLecture()) {
                         processedItemIds.add(item.getId());
@@ -191,7 +192,11 @@ public class TeacherDashboardService {
             }
 
             // Đảm bảo không sót bài giảng nào có session nhưng chưa nằm trong danh sách trên
-            for (Map.Entry<String, List<LearningSession>> entry : sessionsByLesson.entrySet()) {
+            List<Map.Entry<String, List<LearningSession>>> leftoverEntries = new ArrayList<>(sessionsByLesson.entrySet());
+            leftoverEntries.sort(Comparator.comparing(
+                    (Map.Entry<String, List<LearningSession>> e) -> e.getValue().get(0).getContentItem(),
+                    courseOrderComparator(Collections.emptyMap())));
+            for (Map.Entry<String, List<LearningSession>> entry : leftoverEntries) {
                 if (!processedItemIds.contains(entry.getKey())) {
                     List<LearningSession> itemSessions = entry.getValue();
                     ContentItem item = itemSessions.get(0).getContentItem();
@@ -475,6 +480,44 @@ public class TeacherDashboardService {
                 recommendations,
                 minStudents
         );
+    }
+
+    /** Thứ tự các mục chuẩn giống sidebar khóa học: Từ vựng → Ngữ pháp → Part 1..7 → Chép chính tả */
+    private static final List<String> STANDARD_SECTION_ORDER = List.of(
+            "VOCAB", "GRAMMAR", "PART1", "PART2", "PART3", "PART4", "PART5", "PART6", "PART7", "DICTATION");
+
+    /**
+     * Sắp xếp hoạt động của 1 khóa học đúng thứ tự hiển thị trong khóa học:
+     * Mục (chuẩn → tùy chỉnh theo orderIndex) → Nhóm (orderIndex) → Hoạt động (orderIndex).
+     */
+    private List<ContentItem> sortItemsLikeCourse(String courseId, List<ContentItem> items) {
+        Map<String, Integer> customRank = new HashMap<>();
+        for (CourseCustomSection cs : courseCustomSectionRepository.findByCourseIdOrderByOrderIndex(courseId)) {
+            customRank.put(cs.getSectionCode(), cs.getOrderIndex() != null ? cs.getOrderIndex() : 0);
+        }
+        List<ContentItem> sorted = new ArrayList<>(items);
+        sorted.sort(courseOrderComparator(customRank));
+        return sorted;
+    }
+
+    private Comparator<ContentItem> courseOrderComparator(Map<String, Integer> customRank) {
+        return Comparator
+                .comparingInt((ContentItem it) -> sectionRank(it.getSectionCode()))
+                .thenComparingInt(it -> customRank.getOrDefault(it.getSectionCode(), 0))
+                .thenComparing(it -> it.getSectionCode() == null ? "" : it.getSectionCode())
+                // Hoạt động nằm trong Nhóm hiển thị trước, hoạt động lẻ (không có Nhóm) hiển thị sau
+                .thenComparingInt(it -> it.getGroup() == null ? 1 : 0)
+                .thenComparingInt(it -> it.getGroup() != null && it.getGroup().getOrderIndex() != null
+                        ? it.getGroup().getOrderIndex() : 0)
+                .thenComparing(it -> it.getGroup() != null && it.getGroup().getId() != null
+                        ? it.getGroup().getId() : "")
+                .thenComparingInt(it -> it.getOrderIndex() != null ? it.getOrderIndex() : 0);
+    }
+
+    private static int sectionRank(String sectionCode) {
+        int idx = sectionCode == null ? -1 : STANDARD_SECTION_ORDER.indexOf(sectionCode);
+        // Mục tùy chỉnh (CUSTOM_...) và mục lạ xếp sau các mục chuẩn
+        return idx >= 0 ? idx : STANDARD_SECTION_ORDER.size();
     }
 
     private String resolveSectionName(String sectionCode) {
