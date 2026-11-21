@@ -263,6 +263,27 @@
     margin-bottom: 14px;
   }
 
+  /* !important: rule h3 toàn cục trong styles.css nằm NGOÀI @layer nên sẽ đè mọi rule trong layer này */
+  .camera-consent-modal .consent-modal-title {
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    color: #f8fafc !important;
+  }
+
+  .camera-consent-modal .consent-modal-desc {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #cbd5e1;
+  }
+
+  .consent-modal-privacy-note strong {
+    color: #d1fae5;
+    font-weight: 700;
+  }
+
   .consent-modal-icon {
     width: 42px;
     height: 42px;
@@ -973,9 +994,56 @@
       animation: sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-privacy-note {
-      font-size: 12.5px;
+    /* Thanh kéo nhỏ phía trên giúp nhận ra đây là bảng trượt từ đáy */
+    .camera-consent-modal-backdrop.is-mobile-sheet .camera-consent-modal::before {
+      content: "";
+      display: block;
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.25);
+      margin: 0 auto 16px;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-header {
+      gap: 12px;
       margin-bottom: 16px;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-title {
+      font-size: 18px !important;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-desc {
+      font-size: 14.5px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-privacy-note {
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-privacy-note svg {
+      margin-top: 2px;
+    }
+
+    /* Nút phụ: viền sáng trên nền tối thay vì khối trắng chói, để nút chính nổi bật hơn */
+    .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-actions .btn.secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #f1f5f9;
+      box-shadow: none;
     }
 
     .camera-consent-modal-backdrop.is-mobile-sheet .consent-modal-actions {
