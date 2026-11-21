@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import EmotionCameraCapture from '@student/components/EmotionCameraCapture.jsx'
 import AdaptiveSuggestionToast from '@student/components/AdaptiveSuggestionToast.jsx'
@@ -32,6 +33,29 @@ export default function VideoLecturePlayer({ contentItem }) {
   const finishedRef = useRef(false)
   const elapsedSecRef = useRef(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  // Mobile: khung video chỉ cao ~16:9 và có overflow:hidden nên hộp thoại đặt bên trong bị cắt mất nút bấm.
+  // Trên màn hình nhỏ (và khi KHÔNG ở chế độ toàn màn hình) hiển thị hộp thoại qua portal ra <body> dạng bottom sheet.
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 768px)').matches
+      : false
+  )
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mql = window.matchMedia('(max-width: 768px)')
+    const onChange = (e) => setIsMobileViewport(e.matches)
+    setIsMobileViewport(mql.matches)
+    if (mql.addEventListener) mql.addEventListener('change', onChange)
+    else mql.addListener(onChange)
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange)
+      else mql.removeListener(onChange)
+    }
+  }, [])
+  const overlayAsSheet = isMobileViewport && !isFullscreen
+  const renderOverlay = (node) =>
+    overlayAsSheet && typeof document !== 'undefined' ? createPortal(node, document.body) : node
   const [useIframeFallback, setUseIframeFallback] = useState(false)
   const [currentPrediction, setCurrentPrediction] = useState(null)
 
@@ -742,8 +766,8 @@ export default function VideoLecturePlayer({ contentItem }) {
         )}
 
         {/* Hộp thoại hỏi ý kiến bật Camera khi nhấn Play */}
-        {showConsentModal && (
-          <div className="camera-consent-modal-backdrop">
+        {showConsentModal && renderOverlay(
+          <div className={`camera-consent-modal-backdrop${overlayAsSheet ? ' is-mobile-sheet' : ''}`}>
             <div className="camera-consent-modal">
               <div className="consent-modal-header">
                 <div className="consent-modal-icon">
@@ -780,8 +804,8 @@ export default function VideoLecturePlayer({ contentItem }) {
         />
 
         {/* Giai đoạn 8: Hộp thoại nghỉ ngơi thư giãn 2 phút khi học viên bị BORED kéo dài */}
-        {restTimerSeconds != null && (
-          <div className="camera-consent-modal-backdrop" style={{ zIndex: 60 }}>
+        {restTimerSeconds != null && renderOverlay(
+          <div className={`camera-consent-modal-backdrop${overlayAsSheet ? ' is-mobile-sheet' : ''}`} style={{ zIndex: overlayAsSheet ? 2001 : 60 }}>
             <div className="camera-consent-modal" style={{ textAlign: 'center', maxWidth: 360 }}>
               <div
                 style={{
