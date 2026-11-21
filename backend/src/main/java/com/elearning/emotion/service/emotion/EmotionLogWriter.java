@@ -43,6 +43,12 @@ public class EmotionLogWriter {
     private final JdbcTemplate jdbcTemplate;
     private final org.springframework.beans.factory.ObjectProvider<com.elearning.emotion.service.SegmentAlertService> segmentAlertServiceProvider;
     private final BlockingQueue<EmotionLogRow> queue = new LinkedBlockingQueue<>(20_000);
+    private final org.springframework.beans.factory.ObjectProvider<com.elearning.emotion.service.realtime.RealtimePublisher> realtimePublisherProvider;
+
+    /** Các bài giảng có số liệu cảm xúc mới, chờ gộp rồi phát sự kiện realtime cho giảng viên (tránh spam mỗi giây) */
+    private final Set<String> dirtyStatItems = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** Cache contentItemId -> teacherId để không phải truy vấn DB lặp lại */
+    private final Map<String, String> teacherByItem = new java.util.concurrent.ConcurrentHashMap<>();
 
     public void enqueue(EmotionLogRow row) {
         if (!queue.offer(row)) {
@@ -166,6 +172,13 @@ public class EmotionLogWriter {
                     }
                 );
 
+                // Đánh dấu bài giảng có số liệu mới để đẩy realtime lên Dashboard giảng viên
+                for (BucketCounter c : map.values()) {
+                    if (c.contentItemId != null) {
+                        dirtyStatItems.add(c.contentItemId);
+                    }
+                }
+
                 // Giai đoạn 5: Đánh dấu các contentItemId dirty để SegmentAlertService quét lại
                 var alertService = segmentAlertServiceProvider.getIfAvailable();
                 if (alertService != null) {
@@ -180,6 +193,46 @@ public class EmotionLogWriter {
         } catch (Exception ex) {
             log.error("[EmotionLogWriter] Lỗi khi ghi lô vào Database: {}", ex.getMessage(), ex);
         }
+    }
+
+    /** Cho phép service khác (vd: bắt đầu/kết thúc phiên học) báo bài giảng có thay đổi thống kê. */
+    public void markStatsDirty(String contentItemId) {
+        if (contentItemId != null) {
+            dirtyStatItems.add(contentItemId);
+        }
+    }
+
+    /**
+     * Mỗi 3 giây gộp các bài giảng có số liệu mới và phát sự kiện SSE "emotion-stats" tới đúng giảng viên
+     * sở hữu khóa học, để bảng "Hiệu quả Cảm xúc theo từng Bài giảng Video" cập nhật realtime.
+     */
+    @Scheduled(fixedDelay = 3000)
+    public void publishStatsChanged() {
+        if (dirtyStatItems.isEmpty()) return;
+        var publisher = realtimePublisherProvider.getIfAvailable();
+        List<String> ids = new ArrayList<>(dirtyStatItems);
+        dirtyStatItems.removeAll(ids);
+        if (publisher == null) return;
+
+        Map<String, List<String>> itemsByTeacher = new HashMap<>();
+        for (String itemId : ids) {
+            try {
+                String teacherId = teacherByItem.get(itemId);
+                if (teacherId == null) {
+                    List<String> rows = jdbcTemplate.queryForList(
+                            "SELECT co.teacher_id FROM content_items ci JOIN courses co ON ci.course_id = co.id WHERE ci.id = ?",
+                            String.class, itemId);
+                    if (rows.isEmpty()) continue;
+                    teacherId = rows.get(0);
+                    teacherByItem.put(itemId, teacherId);
+                }
+                itemsByTeacher.computeIfAbsent(teacherId, k -> new ArrayList<>()).add(itemId);
+            } catch (Exception ex) {
+                log.warn("[EmotionLogWriter] Không xác định được giảng viên của bài {}: {}", itemId, ex.getMessage());
+            }
+        }
+        itemsByTeacher.forEach((teacherId, items) ->
+                publisher.publishToUser(teacherId, "emotion-stats", Map.of("contentItemIds", items)));
     }
 
     @PreDestroy

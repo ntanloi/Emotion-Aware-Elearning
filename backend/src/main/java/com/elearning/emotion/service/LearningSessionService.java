@@ -76,7 +76,9 @@ public class LearningSessionService {
                 .status("WAITING")
                 .hasCameraPermission(false)
                 .build();
-        return sessionRepository.save(session);
+        LearningSession createdSession = sessionRepository.save(session);
+        emotionLogWriter.markStatsDirty(contentItemId);
+        return createdSession;
     }
 
     /** BR-03: dong y hoac tu choi deu chuyen sang DANG HOC */
@@ -150,6 +152,9 @@ public class LearningSessionService {
         slidingWindowCache.removeSession(sessionId);
 
         LearningSession saved = sessionRepository.save(session);
+        if (saved.getContentItem() != null) {
+            emotionLogWriter.markStatsDirty(saved.getContentItem().getId());
+        }
 
         // Giai đoạn 6: Phát sự kiện để cập nhật tức thì Báo cáo học tập cá nhân
         if (saved.getUser() != null) {

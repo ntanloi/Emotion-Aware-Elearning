@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@auth/store/authStore.js'
 import * as teacherApi from '@teacher/api/teacher.js'
@@ -178,17 +178,27 @@ export default function TeacherDashboardPage() {
     setTimelineModalOpen(true)
   }
 
-  const loadDashboard = async () => {
+  // opts.silent = true: làm mới ngầm (không hiện spinner, không xóa dữ liệu đang xem) - dùng cho realtime
+  const loadDashboard = async (opts) => {
+    const silent = opts?.silent === true
     try {
-      setLoading(true)
-      setError(null)
+      if (!silent) {
+        setLoading(true)
+        setError(null)
+      }
       const res = await teacherApi.getTeacherDashboard()
       setData(res)
       loadAlerts()
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Không thể tải dữ liệu dashboard')
+      if (!silent) {
+        setError(err.response?.data?.message || err.message || 'Không thể tải dữ liệu dashboard')
+      } else {
+        console.warn('Làm mới ngầm dashboard thất bại:', err)
+      }
     } finally {
-      setLoading(false)
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }
 
@@ -206,6 +216,35 @@ export default function TeacherDashboardPage() {
       loadDashboard()
     }
   })
+
+  // Realtime: học viên đang học video -> backend phát 'emotion-stats' -> làm mới ngầm bảng thống kê cảm xúc.
+  // Gộp (debounce) các sự kiện dồn dập để tránh gọi API liên tục.
+  const emotionRefreshTimerRef = useRef(null)
+  useRealtimeEvent('emotion-stats', () => {
+    if (emotionRefreshTimerRef.current) clearTimeout(emotionRefreshTimerRef.current)
+    emotionRefreshTimerRef.current = setTimeout(() => {
+      emotionRefreshTimerRef.current = null
+      loadDashboard({ silent: true })
+    }, 800)
+  })
+
+  useEffect(() => {
+    return () => {
+      if (emotionRefreshTimerRef.current) clearTimeout(emotionRefreshTimerRef.current)
+    }
+  }, [])
+
+  // Dự phòng khi kênh SSE bị ngắt (proxy/mạng): tự làm mới mỗi 15 giây khi đang xem tab Cảm xúc > Bài giảng Video
+  useEffect(() => {
+    if (activeTab !== 'emotions' || emotionSubTab !== 'video') return undefined
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadDashboard({ silent: true })
+      }
+    }, 15000)
+    return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, emotionSubTab])
 
   // Ký tự viết tắt cho avatar
   const getInitials = (name) => {
