@@ -774,15 +774,15 @@ export default function VideoLecturePlayer({ contentItem }) {
                   <Camera size={24} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 16 }}>Bật Camera &amp; AI nhận diện tập trung?</h3>
-                  <p style={{ margin: '4px 0 0', fontSize: 12.5, color: '#94a3b8' }}>
+                  <h3 className="consent-modal-title">Bật Camera &amp; AI nhận diện tập trung?</h3>
+                  <p className="consent-modal-desc">
                     Hệ thống tự động phát hiện khi bạn gặp câu khó, bối rối hoặc mất tập trung để điều chỉnh tốc độ học phù hợp.
                   </p>
                 </div>
               </div>
               <div className="consent-modal-privacy-note">
                 <ShieldCheck size={16} style={{ color: '#10b981', flexShrink: 0 }} />
-                <span>Bảo mật 100%: Hình ảnh chỉ phân tích tạm thời trong RAM, tuyệt đối không lưu video hay ảnh mặt.</span>
+                <span><strong>Bảo mật 100%:</strong> Hình ảnh chỉ phân tích tạm thời trong RAM, tuyệt đối không lưu video hay ảnh mặt.</span>
               </div>
               <div className="consent-modal-actions">
                 <button className="btn primary" onClick={() => handleConfirmConsent(true)}>
@@ -819,8 +819,8 @@ export default function VideoLecturePlayer({ contentItem }) {
               >
                 <Coffee size={32} />
               </div>
-              <h3 style={{ margin: '0 0 6px 0', fontSize: 16 }}>Đang tạm dừng nghỉ ngơi 2 phút</h3>
-              <p style={{ margin: '0 0 16px 0', fontSize: 12.5, color: '#94a3b8' }}>
+              <h3 className="consent-modal-title">Đang tạm dừng nghỉ ngơi 2 phút</h3>
+              <p className="consent-modal-desc" style={{ margin: '6px 0 16px 0' }}>
                 Hãy rời mắt khỏi màn hình, uống một ngụm nước và thư giãn gân cốt nhé!
               </p>
               <div style={{ fontSize: 32, fontWeight: 800, color: '#6366f1', marginBottom: 16 }}>
