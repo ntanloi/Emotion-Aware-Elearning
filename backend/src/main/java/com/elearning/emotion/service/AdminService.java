@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +50,7 @@ public class AdminService {
     private final ModerationAnalysisService moderationAnalysisService;
     private final ModerationRunRepository moderationRunRepository;
     private final ModerationContextBuilder moderationContextBuilder;
+    private final PasswordEncoder passwordEncoder;
 
     private static final Map<String, String> FIXED_SECTION_NAMES = Map.of(
             "VOCAB", "Từ vựng",
@@ -158,6 +160,37 @@ public class AdminService {
         long enrolledCount = "STUDENT".equals(saved.getRole()) ? (long) enrollmentRepository.findByUserId(saved.getId()).size() : 0L;
         long createdCount = "TEACHER".equals(saved.getRole()) ? (long) courseRepository.findByTeacherId(saved.getId()).size() : 0L;
         return AdminUserDto.from(saved, enrolledCount, createdCount);
+    }
+
+    /**
+     * Quản trị viên tạo tài khoản Kiểm duyệt viên (MODERATOR).
+     * Vai trò này không có trong luồng đăng ký công khai nên chỉ ADMIN mới cấp được.
+     */
+    @Transactional
+    public AdminUserDto createModerator(String adminId, CreateModeratorRequest req) {
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy quản trị viên"));
+
+        String cleanEmail = req.email().trim().toLowerCase();
+        if (userRepository.existsByEmail(cleanEmail)) {
+            throw new IllegalArgumentException("Email đã được sử dụng");
+        }
+
+        User moderator = User.builder()
+                .fullName(req.fullName().trim())
+                .email(cleanEmail)
+                .passwordHash(passwordEncoder.encode(req.password()))
+                .role(Role.MODERATOR.name())
+                .status("ACTIVE")
+                .emailVerified(true)
+                .mustChangePassword(true)
+                .build();
+        User saved = userRepository.save(moderator);
+
+        auditService.log(admin, "CREATE_MODERATOR", "USER", saved.getId(),
+                toJson(Map.of("email", saved.getEmail(), "fullName", saved.getFullName())));
+
+        return AdminUserDto.from(saved, 0L, 0L);
     }
 
     /**
@@ -483,6 +516,7 @@ public class AdminService {
         stats.put("totalTeachers", userRepository.countByRole("TEACHER"));
         stats.put("totalCourses", courseRepository.count());
         stats.put("pendingCourses", courseRepository.countByStatus("PENDING_REVIEW"));
+        stats.put("pendingTeachers", userRepository.countByRoleAndStatus("TEACHER", "PENDING_APPROVAL"));
         stats.put("publishedCourses", courseRepository.countByStatus("PUBLISHED"));
         stats.put("rejectedCourses", courseRepository.countByStatus("REJECTED"));
         stats.put("totalEnrollments", enrollmentRepository.count());
@@ -549,9 +583,20 @@ public class AdminService {
     // =========================================================================
 
     public Page<AuditLogDto> getAuditLogs(String action, String targetType, String q, int page, int size) {
+        return getAuditLogs(null, action, targetType, q, page, size);
+    }
+
+    /**
+     * @param actorId nếu khác null: chỉ trả về nhật ký do chính người này thực hiện
+     *                (dùng cho Kiểm duyệt viên chỉ xem được hoạt động của bản thân).
+     */
+    public Page<AuditLogDto> getAuditLogs(String actorId, String action, String targetType, String q, int page, int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 100), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<AuditLog> spec = Specification.where(null);
+        if (actorId != null && !actorId.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("actor").get("id"), actorId));
+        }
         if (action != null && !action.isBlank()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("action"), action.trim().toUpperCase()));
         }

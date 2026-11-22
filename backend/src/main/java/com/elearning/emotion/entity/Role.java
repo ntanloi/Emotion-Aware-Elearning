@@ -3,6 +3,8 @@ package com.elearning.emotion.entity;
 public enum Role {
     STUDENT,
     TEACHER,
+    /** Kiểm duyệt viên: chỉ xử lý nghiệp vụ kiểm duyệt (khóa học, đề thi, đánh giá, từ điển, hồ sơ giảng viên). */
+    MODERATOR,
     ADMIN;
 
     public static boolean isValidRegisterRole(String roleStr) {

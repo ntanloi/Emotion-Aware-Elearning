@@ -183,7 +183,7 @@ public class CourseService {
         // Phát tín hiệu realtime: admin-stats cho Admin và course-status cho Giảng viên
         try {
             if (realtimePublisher != null) {
-                realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of("reason", "COURSE_SUBMITTED", "courseId", saved.getId()));
+                realtimePublisher.publishToModerationStaff("admin-stats", Map.of("reason", "COURSE_SUBMITTED", "courseId", saved.getId()));
                 realtimePublisher.publishToUser(teacherId, "course-status", Map.of("courseId", saved.getId(), "status", "PENDING_REVIEW"));
             }
         } catch (Exception ex) {
@@ -219,7 +219,7 @@ public class CourseService {
 
         try {
             if (realtimePublisher != null) {
-                realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of("reason", "COURSE_CANCELLED", "courseId", saved.getId()));
+                realtimePublisher.publishToModerationStaff("admin-stats", Map.of("reason", "COURSE_CANCELLED", "courseId", saved.getId()));
                 realtimePublisher.publishToUser(teacherId, "course-status", Map.of("courseId", saved.getId(), "status", "DRAFT"));
             }
         } catch (Exception ex) {
@@ -380,7 +380,7 @@ public class CourseService {
 
         try {
             if (realtimePublisher != null) {
-                realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of(
+                realtimePublisher.publishToModerationStaff("admin-stats", Map.of(
                         "reason", "COURSE_APPROVED",
                         "courseId", courseId
                 ));
@@ -492,7 +492,7 @@ public class CourseService {
 
         try {
             if (realtimePublisher != null) {
-                realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of(
+                realtimePublisher.publishToModerationStaff("admin-stats", Map.of(
                         "reason", "COURSE_REJECTED",
                         "courseId", courseId
                 ));

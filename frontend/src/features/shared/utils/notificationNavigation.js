@@ -30,6 +30,7 @@ const KNOWN_ROUTES = [
   '/admin/finance',
   '/admin/audit-logs',
   '/admin/lexicon',
+  '/admin/teachers',
   // Giảng viên
   '/dashboard/teacher',
   '/teacher/courses',
@@ -52,12 +53,13 @@ const LEGACY_REWRITES = [
   [/^\/my-courses(?=[/?#]|$)/, '/courses'],
 ]
 
+const ADMIN_ONLY_PATHS = ['/admin/users', '/admin/finance']
 const isAdminPath = (p) => p === '/admin' || p.startsWith('/admin/')
 const isTeacherPath = (p) => p === '/dashboard/teacher' || p.startsWith('/teacher/')
 
 /** Trang chủ theo vai trò, dùng làm đích dự phòng. */
 export function homeForRole(role) {
-  if (role === 'ADMIN') return '/admin'
+  if (role === 'ADMIN' || role === 'MODERATOR') return '/admin'
   if (role === 'TEACHER') return '/dashboard/teacher'
   return '/courses'
 }
@@ -78,7 +80,11 @@ function isKnownPath(path) {
 }
 
 function allowedForRole(path, role) {
-  if (isAdminPath(path)) return role === 'ADMIN'
+  if (isAdminPath(path)) {
+    if (role === 'ADMIN') return true
+    // Kiểm duyệt viên không được vào trang Người dùng và Tài chính
+    return role === 'MODERATOR' && !ADMIN_ONLY_PATHS.some((p) => path === p || path.startsWith(p + '/'))
+  }
   if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN'
   return true
 }
@@ -88,7 +94,7 @@ function allowedForRole(path, role) {
  * hoặc null nếu thông báo không có đích để mở (chỉ đánh dấu đã đọc).
  *
  * @param {object} n     thông báo { type, referenceId, link, ... }
- * @param {string} role  'STUDENT' | 'TEACHER' | 'ADMIN'
+ * @param {string} role  'STUDENT' | 'TEACHER' | 'MODERATOR' | 'ADMIN'
  */
 export function resolveNotificationTarget(n, role) {
   if (!n) return null

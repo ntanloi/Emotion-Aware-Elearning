@@ -305,7 +305,7 @@ public class ToeicTestSnapshotService {
      */
     private void publishTestModeration(ToeicTest test, String action) {
         try {
-            realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of(
+            realtimePublisher.publishToModerationStaff("test-moderation", Map.of(
                     "testId", test.getId(),
                     "status", test.getStatus() != null ? test.getStatus() : "",
                     "action", action));

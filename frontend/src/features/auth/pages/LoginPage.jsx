@@ -28,7 +28,7 @@ export default function LoginPage() {
 
   // Nếu đã đăng nhập thì chuyển hướng thẳng về dashboard tương ứng với role
   if (user) {
-    if (user.role === 'ADMIN') return <Navigate to="/admin" replace />
+    if (user.role === 'ADMIN' || user.role === 'MODERATOR') return <Navigate to="/admin" replace />
     if (user.role === 'TEACHER') return <Navigate to="/dashboard/teacher" replace />
     return <Navigate to="/courses" replace />
   }
@@ -40,7 +40,7 @@ export default function LoginPage() {
     try {
       await login(email, password)
       const currentUser = useAuthStore.getState().user
-      if (currentUser?.role === 'ADMIN') {
+      if (currentUser?.role === 'ADMIN' || currentUser?.role === 'MODERATOR') {
         navigate('/admin')
       } else if (currentUser?.role === 'TEACHER') {
         navigate('/dashboard/teacher')

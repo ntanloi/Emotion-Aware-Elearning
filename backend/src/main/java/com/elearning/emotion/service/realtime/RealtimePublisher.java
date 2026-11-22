@@ -38,6 +38,16 @@ public class RealtimePublisher {
     }
 
     /**
+     * Gửi sự kiện cho toàn bộ đội ngũ kiểm duyệt (ADMIN + MODERATOR).
+     * Dùng cho các sự kiện thuộc nghiệp vụ kiểm duyệt (khóa học, đề thi, báo cáo đánh giá...).
+     * Sự kiện tài chính vẫn chỉ gửi riêng cho ADMIN qua publishToRole("ADMIN", ...).
+     */
+    public void publishToModerationStaff(String type, Object data) {
+        publishToRole("ADMIN", type, data);
+        publishToRole("MODERATOR", type, data);
+    }
+
+    /**
      * Gửi broadcast toàn hệ thống cho mọi người dùng đang kết nối.
      */
     public void publishToAll(String type, Object data) {

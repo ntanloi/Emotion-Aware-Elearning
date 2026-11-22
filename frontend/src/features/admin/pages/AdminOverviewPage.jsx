@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import { vnTime } from '@shared/utils/dateTime.js'
+import { useAuthStore } from '@auth/store/authStore.js'
 function getLongestWaitText(items, dateField) {
   if (!items || items.length === 0) return 'Hàng đợi trống'
   let oldestTime = Date.now()
@@ -39,6 +40,7 @@ function getLongestWaitText(items, dateField) {
 }
 
 export default function AdminOverviewPage() {
+  const isAdmin = useAuthStore((st) => st.user?.role) === 'ADMIN'
   const navigate = useNavigate()
   const { stats, pendingCourses, pendingReports, modifiedCourses, loading } = useAdminStats(60000)
 
@@ -265,6 +267,9 @@ export default function AdminOverviewPage() {
           <strong style={{ color: '#0f172a' }}>{stats?.publishedCourses || 0} khóa học</strong>
         </div>
 
+        {/* Số liệu người dùng chỉ dành cho ADMIN */}
+        {isAdmin && (
+          <>
         <div className="admin-stat-divider" />
 
         <div className="admin-stat-item">
@@ -284,6 +289,8 @@ export default function AdminOverviewPage() {
           <span style={{ color: 'var(--text-dim, #64748b)' }}>Giảng viên:</span>
           <strong style={{ color: '#0f172a' }}>{stats?.totalTeachers || 0}</strong>
         </div>
+          </>
+        )}
       </div>
 
       {/* 4. Danh sách hợp nhất "Việc cần xử lý" (Tối đa 8 dòng, sắp xếp theo thời gian chờ lâu nhất) */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useAdminStats } from '@admin/hooks/useAdminStats.js'
+import { useAuthStore } from '@auth/store/authStore.js'
 import './admin-theme.css'
 import {
   LayoutDashboard,
@@ -13,12 +14,53 @@ import {
   FileCheck,
   Menu,
   X,
-  ShieldAlert
+  ShieldAlert,
+  UserCheck
 } from 'lucide-react'
+
+/**
+ * Menu điều hướng theo nhóm. Mục `adminOnly` chỉ hiện với ADMIN;
+ * Kiểm duyệt viên (MODERATOR) chỉ thấy nhóm "Kiểm duyệt".
+ */
+const NAV_GROUPS = [
+  {
+    key: 'overview',
+    label: null,
+    items: [{ to: '/admin', end: true, icon: LayoutDashboard, label: 'Tổng quan' }]
+  },
+  {
+    key: 'moderation',
+    label: 'Kiểm duyệt',
+    items: [
+      { to: '/admin/courses', alsoActive: '/admin/moderation', icon: BookOpen, label: 'Khóa học', badge: 'courses', badgeColor: 'var(--c-danger, #ef4444)' },
+      { to: '/admin/tests', icon: FileCheck, label: 'Duyệt đề thi' },
+      { to: '/admin/reviews', icon: MessageSquare, label: 'Đánh giá & báo cáo', badge: 'reports', badgeColor: 'var(--c-warning, #f59e0b)' },
+      { to: '/admin/teachers', icon: UserCheck, label: 'Duyệt giảng viên', badge: 'teachers', badgeColor: 'var(--c-warning, #f59e0b)' },
+      { to: '/admin/lexicon', icon: BookA, label: 'Từ điển kiểm duyệt' }
+    ]
+  },
+  {
+    key: 'system',
+    label: 'Quản trị hệ thống',
+    items: [
+      { to: '/admin/users', icon: Users, label: 'Người dùng', adminOnly: true },
+      { to: '/admin/finance', icon: CreditCard, label: 'Tài chính & Thanh toán', adminOnly: true }
+    ]
+  },
+  {
+    key: 'log',
+    label: null,
+    items: [{ to: '/admin/audit-logs', icon: ClipboardList, label: 'Nhật ký' }]
+  }
+]
 
 export default function AdminLayout() {
   const location = useLocation()
-  const { pendingCourses, pendingReports } = useAdminStats(60000)
+  const { pendingCourses, pendingReports, pendingTeachers } = useAdminStats(60000)
+  const role = useAuthStore((st) => st.user?.role)
+  const isAdmin = role === 'ADMIN'
+  const badges = { courses: pendingCourses, reports: pendingReports, teachers: pendingTeachers }
+  const menuTitle = isAdmin ? 'Menu Quản trị viên' : 'Menu Kiểm duyệt viên'
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Tự động đóng sidebar khi chuyển trang
@@ -50,9 +92,9 @@ export default function AdminLayout() {
             aria-label="Mở menu quản trị"
           >
             <Menu size={18} />
-            <span>Menu Quản trị</span>
+            <span>{isAdmin ? 'Menu Quản trị' : 'Menu Kiểm duyệt'}</span>
           </button>
-          {(pendingCourses > 0 || pendingReports > 0) && (
+          {(pendingCourses > 0 || pendingReports > 0 || pendingTeachers > 0) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span
                 className="badge"
@@ -65,7 +107,7 @@ export default function AdminLayout() {
                   borderRadius: 12
                 }}
               >
-                {pendingCourses + pendingReports} việc cần duyệt
+                {pendingCourses + pendingReports + pendingTeachers} việc cần duyệt
               </span>
             </div>
           )}
@@ -80,7 +122,7 @@ export default function AdminLayout() {
         {/* Cột trái: Sidebar điều hướng Admin chuẩn hóa (hỗ trợ trượt off-canvas trên Mobile) */}
         <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="admin-sidebar-header-mobile">
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Menu Quản trị viên</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{menuTitle}</span>
             <button
               type="button"
               className="admin-sidebar-close-btn"
@@ -92,102 +134,49 @@ export default function AdminLayout() {
           </div>
 
           <nav className="admin-sidebar-nav">
-            <NavLink
-              to="/admin"
-              end
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <LayoutDashboard size={18} />
-              <span>Tổng quan</span>
-            </NavLink>
-
-            <NavLink
-              to="/admin/courses"
-              className={({ isActive }) =>
-                `admin-nav-link ${isActive || location.pathname.startsWith('/admin/moderation') ? 'active' : ''}`
-              }
-            >
-              <BookOpen size={18} />
-              <span>Khóa học</span>
-              {pendingCourses > 0 && (
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '1px 6px',
-                    borderRadius: 10,
-                    background: 'var(--c-danger, #ef4444)',
-                    color: '#ffffff'
-                  }}
-                >
-                  {pendingCourses}
-                </span>
-              )}
-            </NavLink>
-
-            <NavLink
-              to="/admin/tests"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <FileCheck size={18} />
-              <span>Duyệt đề thi</span>
-            </NavLink>
-
-            <NavLink
-              to="/admin/users"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <Users size={18} />
-              <span>Người dùng</span>
-            </NavLink>
-
-            <NavLink
-              to="/admin/reviews"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <MessageSquare size={18} />
-              <span>Đánh giá &amp; báo cáo</span>
-              {pendingReports > 0 && (
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '1px 6px',
-                    borderRadius: 10,
-                    background: 'var(--c-warning, #f59e0b)',
-                    color: '#ffffff'
-                  }}
-                >
-                  {pendingReports}
-                </span>
-              )}
-            </NavLink>
-
-            <NavLink
-              to="/admin/finance"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <CreditCard size={18} />
-              <span>Tài chính &amp; Thanh toán</span>
-            </NavLink>
-
-            <NavLink
-              to="/admin/audit-logs"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <ClipboardList size={18} />
-              <span>Nhật ký</span>
-            </NavLink>
-
-            <NavLink
-              to="/admin/lexicon"
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-            >
-              <BookA size={18} />
-              <span>Từ điển kiểm duyệt</span>
-            </NavLink>
+            {NAV_GROUPS.map((group) => {
+              const items = group.items.filter((it) => !it.adminOnly || isAdmin)
+              if (items.length === 0) return null
+              return (
+                <React.Fragment key={group.key}>
+                  {group.label && (
+                    <div className="admin-nav-group-label">{group.label}</div>
+                  )}
+                  {items.map((it) => {
+                    const Icon = it.icon
+                    const badge = it.badge ? badges[it.badge] : 0
+                    return (
+                      <NavLink
+                        key={it.to}
+                        to={it.to}
+                        end={it.end}
+                        className={({ isActive }) =>
+                          `admin-nav-link ${isActive || (it.alsoActive && location.pathname.startsWith(it.alsoActive)) ? 'active' : ''}`
+                        }
+                      >
+                        <Icon size={18} />
+                        <span>{it.label}</span>
+                        {badge > 0 && (
+                          <span
+                            style={{
+                              marginLeft: 'auto',
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: 10,
+                              background: it.badgeColor,
+                              color: '#ffffff'
+                            }}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    )
+                  })}
+                </React.Fragment>
+              )
+            })}
           </nav>
         </aside>
 

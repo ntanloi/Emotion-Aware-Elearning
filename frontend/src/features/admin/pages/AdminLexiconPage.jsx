@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import { useAuthStore } from '@auth/store/authStore.js'
 import * as adminApi from '@admin/api/admin.js'
 import AdminPageHeader from '@admin/components/ui/AdminPageHeader.jsx'
 import Modal from '@shared/components/ui/Modal.jsx'
@@ -113,6 +114,7 @@ function getScopeLabel(scope) {
 }
 
 export default function AdminLexiconPage() {
+  const isAdmin = useAuthStore((st) => st.user?.role) === 'ADMIN'
   const toast = useToast()
   const confirm = useConfirm()
 
@@ -1089,6 +1091,8 @@ export default function AdminLexiconPage() {
                           <Edit2 size={13} />
                           <span>Sửa</span>
                         </button>
+                        {/* Chỉ ADMIN được xóa hẳn; kiểm duyệt viên chỉ tắt từ khóa */}
+                        {isAdmin && (
                         <button
                           type="button"
                           className="admin-action-btn-danger"
@@ -1098,6 +1102,7 @@ export default function AdminLexiconPage() {
                         >
                           <Trash2 size={13} />
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>

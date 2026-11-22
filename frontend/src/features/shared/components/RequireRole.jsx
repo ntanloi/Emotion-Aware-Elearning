@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '@auth/store/authStore.js'
 
 /**
- * RequireRole — Route guard bảo vệ các đường dẫn theo quyền hạn người dùng (STUDENT | TEACHER | ADMIN)
+ * RequireRole — Route guard bảo vệ các đường dẫn theo quyền hạn người dùng (STUDENT | TEACHER | MODERATOR | ADMIN)
  */
 export default function RequireRole({ allowedRoles = [], children }) {
   const user = useAuthStore((s) => s.user)
@@ -17,8 +17,8 @@ export default function RequireRole({ allowedRoles = [], children }) {
     if (user.role === 'TEACHER') {
       return <Navigate to="/teacher/courses" replace />
     }
-    if (user.role === 'ADMIN') {
-      return <Navigate to="/dashboard/admin" replace />
+    if (user.role === 'ADMIN' || user.role === 'MODERATOR') {
+      return <Navigate to="/admin" replace />
     }
     return <Navigate to="/courses" replace />
   }

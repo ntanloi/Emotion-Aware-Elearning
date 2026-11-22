@@ -18,8 +18,10 @@ import {
   X,
 } from 'lucide-react'
 
+import { useAuthStore } from '@auth/store/authStore.js'
 import { formatVnDate, formatVnDateTime, formatVnTime } from '@shared/utils/dateTime.js'
 const ACTION_MAP = {
+  CREATE_MODERATOR: { label: 'Tạo kiểm duyệt viên', bg: 'rgba(126, 34, 206, 0.12)', text: '#7e22ce', icon: Shield },
   APPROVE_COURSE: { label: 'Phê duyệt khóa học', bg: 'rgba(16, 185, 129, 0.12)', text: '#059669', icon: CheckCircle2 },
   REJECT_COURSE: { label: 'Từ chối khóa học', bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626', icon: XCircle },
   SUSPEND_COURSE: { label: 'Tạm gỡ khóa học', bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626', icon: AlertTriangle },
@@ -148,6 +150,7 @@ function formatAuditSentence(log, detailObj) {
 }
 
 export default function AdminAuditLogPage() {
+  const isAdmin = useAuthStore((st) => st.user?.role) === 'ADMIN'
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -202,7 +205,7 @@ export default function AdminAuditLogPage() {
     <div className="admin-audit-log-page" style={{ paddingBottom: 40 }}>
       {/* 1. Header chuẩn hóa */}
       <AdminPageHeader
-        title="Nhật ký"
+        title={isAdmin ? 'Nhật ký' : 'Nhật ký hoạt động của tôi'}
         badge={
           totalElements > 0 ? (
             <span

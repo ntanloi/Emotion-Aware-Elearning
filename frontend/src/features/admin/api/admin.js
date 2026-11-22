@@ -152,6 +152,12 @@ export const reloadLexiconCache = async () => {
   return data
 }
 
+// 9. Tạo tài khoản Kiểm duyệt viên (chỉ ADMIN)
+export const createModerator = async (payload) => {
+  const { data } = await client.post('/admin/moderators', payload)
+  return data
+}
+
 // 8. Xét duyệt hồ sơ giảng viên (Teacher Approval Workflow)
 export const getPendingTeachers = async () => {
   const { data } = await client.get('/admin/teachers/pending')
