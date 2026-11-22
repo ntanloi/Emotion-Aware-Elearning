@@ -72,11 +72,13 @@ public class AdminController {
     }
 
     @GetMapping("/teachers/pending")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<List<AdminUserDto>> getPendingTeachers() {
         return ResponseEntity.ok(adminService.getPendingTeachers());
     }
 
     @PostMapping("/teachers/{id}/approve")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminUserDto> approveTeacher(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id) {
@@ -84,6 +86,7 @@ public class AdminController {
     }
 
     @PostMapping("/teachers/{id}/reject")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminUserDto> rejectTeacher(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id,
@@ -94,6 +97,7 @@ public class AdminController {
 
     // 2. Quản lý & duyệt khóa học
     @GetMapping("/courses")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Page<AdminCourseDto>> getCourses(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String teacherId,
@@ -105,23 +109,27 @@ public class AdminController {
     }
 
     @GetMapping("/courses/{id}/review")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Map<String, Object>> getCourseReviewDetails(@PathVariable String id) {
         return ResponseEntity.ok(adminService.getCourseReviewDetails(id));
     }
 
     // P1-1: Xem toàn bộ cây mục lục nội dung khóa học
     @GetMapping("/courses/{id}/preview")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminCoursePreviewDto> getCoursePreview(@PathVariable String id) {
         return ResponseEntity.ok(adminService.getCoursePreview(id));
     }
 
     // P1-1: Xem chi tiết nội dung bài học thật kèm đáp án đúng
     @GetMapping("/content-items/{id}/preview")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminContentItemPreviewDto> getContentItemPreview(@PathVariable String id) {
         return ResponseEntity.ok(adminService.getContentItemPreview(id));
     }
 
     @PostMapping("/courses/{id}/re-audit")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Map<String, String>> reAuditWithAi(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id) {
@@ -130,6 +138,7 @@ public class AdminController {
     }
 
     @PostMapping("/courses/{id}/approve")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminCourseDto> approveCourse(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id,
@@ -140,6 +149,7 @@ public class AdminController {
     }
 
     @PostMapping("/courses/{id}/reject")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminCourseDto> rejectCourse(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id,
@@ -150,6 +160,7 @@ public class AdminController {
     }
 
     @PostMapping("/courses/{id}/suspend")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminCourseDto> suspendCourse(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id,
@@ -159,6 +170,7 @@ public class AdminController {
     }
 
     @PostMapping("/courses/{id}/restore")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<AdminCourseDto> restoreCourse(
             @AuthenticationPrincipal String adminId,
             @PathVariable String id) {

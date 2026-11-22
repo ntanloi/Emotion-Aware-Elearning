@@ -32,6 +32,7 @@ import AdminLayout from "@admin/pages/AdminLayout.jsx";
 import AdminOverviewPage from "@admin/pages/AdminOverviewPage.jsx";
 import AdminModerationQueuePage from "@admin/pages/AdminModerationQueuePage.jsx";
 import AdminCourseReviewDetailPage from "@admin/pages/AdminCourseReviewDetailPage.jsx";
+import AdminDashboardPage from "@admin/pages/AdminDashboardPage.jsx";
 import AdminTeacherApprovalPage from "@admin/pages/AdminTeacherApprovalPage.jsx";
 import AdminUserListPage from "@admin/pages/AdminUserListPage.jsx";
 import AdminCourseListPage from "@admin/pages/AdminCourseListPage.jsx";
@@ -53,6 +54,12 @@ function RootRedirect() {
 /**
  * Cấu trúc trang (routing) — Có bảo vệ phân quyền theo Role.
  */
+/** Trang chủ khu vực quản trị: ADMIN xem tổng quan hệ thống, MODERATOR xem hàng đợi kiểm duyệt. */
+function AdminHome() {
+  const role = useAuthStore((st) => st.user?.role);
+  return role === "ADMIN" ? <AdminDashboardPage /> : <AdminOverviewPage />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -80,16 +87,19 @@ export default function App() {
         {/* Khu vực quản trị: ADMIN + Kiểm duyệt viên (MODERATOR) dùng chung layout */}
         <Route element={<RequireRole allowedRoles={["ADMIN", "MODERATOR"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
-            {/* Nhóm kiểm duyệt: cả ADMIN và MODERATOR */}
-            <Route index element={<AdminOverviewPage />} />
-            <Route path="moderation" element={<AdminModerationQueuePage />} />
-            <Route path="moderation/:courseId" element={<AdminCourseReviewDetailPage />} />
-            <Route path="courses" element={<AdminCourseListPage />} />
-            <Route path="tests" element={<AdminTestModerationPage />} />
-            <Route path="reviews" element={<AdminReviewsPage />} />
-            <Route path="teachers" element={<AdminTeacherApprovalPage />} />
-            <Route path="lexicon" element={<AdminLexiconPage />} />
+            {/* Dùng chung: Tổng quan (nội dung khác nhau theo role) và Nhật ký */}
+            <Route index element={<AdminHome />} />
             <Route path="audit-logs" element={<AdminAuditLogPage />} />
+            {/* Nhóm kiểm duyệt: chỉ MODERATOR */}
+            <Route element={<RequireRole allowedRoles={["MODERATOR"]} />}>
+              <Route path="moderation" element={<AdminModerationQueuePage />} />
+              <Route path="moderation/:courseId" element={<AdminCourseReviewDetailPage />} />
+              <Route path="courses" element={<AdminCourseListPage />} />
+              <Route path="tests" element={<AdminTestModerationPage />} />
+              <Route path="reviews" element={<AdminReviewsPage />} />
+              <Route path="teachers" element={<AdminTeacherApprovalPage />} />
+              <Route path="lexicon" element={<AdminLexiconPage />} />
+            </Route>
             {/* Nhóm quản trị hệ thống: chỉ ADMIN */}
             <Route element={<RequireRole allowedRoles={["ADMIN"]} />}>
               <Route path="users" element={<AdminUserListPage />} />

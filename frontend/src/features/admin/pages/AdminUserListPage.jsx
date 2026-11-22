@@ -14,8 +14,6 @@ import {
   GraduationCap,
   ShieldCheck,
   UserCheck,
-  CheckCircle2,
-  XCircle,
   Plus,
   ShieldAlert,
 } from 'lucide-react'
@@ -41,11 +39,6 @@ export default function AdminUserListPage() {
     open: false,
     user: null,
     isLocking: true,
-  })
-  // Modal từ chối duyệt giảng viên
-  const [rejectModalState, setRejectModalState] = useState({
-    open: false,
-    user: null,
   })
   const [actionProcessing, setActionProcessing] = useState(false)
 
@@ -111,36 +104,6 @@ export default function AdminUserListPage() {
       await loadUsers()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái tài khoản')
-    } finally {
-      setActionProcessing(false)
-    }
-  }
-
-  const handleApproveTeacher = async (user) => {
-    try {
-      setActionProcessing(true)
-      await adminApi.approveTeacher(user.id)
-      toast.success(`Đã phê duyệt tài khoản giảng viên cho "${user.fullName}" thành ACTIVE.`)
-      await loadUsers()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Lỗi khi phê duyệt tài khoản giảng viên')
-    } finally {
-      setActionProcessing(false)
-    }
-  }
-
-  const handleConfirmRejectTeacher = async (inputValue) => {
-    const user = rejectModalState.user
-    if (!user) return
-    try {
-      setActionProcessing(true)
-      const reason = inputValue?.trim() || 'Hồ sơ chưa đáp ứng tiêu chí giảng viên'
-      await adminApi.rejectTeacher(user.id, reason)
-      toast.success(`Đã từ chối giảng viên "${user.fullName}". Tài khoản đã chuyển về vai trò Học viên.`)
-      setRejectModalState({ open: false, user: null })
-      await loadUsers()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Lỗi khi từ chối hồ sơ giảng viên')
     } finally {
       setActionProcessing(false)
     }
@@ -334,45 +297,7 @@ export default function AdminUserListPage() {
                   </td>
                   <td data-label="Hành động" style={{ padding: '14px 18px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {u.role === 'TEACHER' && u.status === 'PENDING_APPROVAL' ? (
-                      <div style={{ display: 'inline-flex', gap: 6 }}>
-                        <button
-                          type="button"
-                          className="btn primary sm"
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: 12,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            backgroundColor: 'var(--c-success, #16a34a)',
-                            borderColor: 'var(--c-success, #16a34a)',
-                            color: '#fff',
-                          }}
-                          onClick={() => handleApproveTeacher(u)}
-                          disabled={actionProcessing}
-                          title="Phê duyệt quyền giảng viên"
-                        >
-                          <CheckCircle2 size={13} /> Duyệt
-                        </button>
-                        <button
-                          type="button"
-                          className="btn secondary sm"
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: 12,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            color: 'var(--c-danger, #dc2626)',
-                            borderColor: 'rgba(220, 38, 38, 0.3)',
-                          }}
-                          onClick={() => setRejectModalState({ open: true, user: u })}
-                          disabled={actionProcessing}
-                          title="Từ chối phê duyệt (hạ về học viên)"
-                        >
-                          <XCircle size={13} /> Từ chối
-                        </button>
-                      </div>
+                      <span style={{ fontSize: 12, color: 'var(--c-muted, #64748b)' }}>Chờ kiểm duyệt viên duyệt</span>
                     ) : u.role !== 'ADMIN' && (
                       <button
                         type="button"
@@ -454,22 +379,6 @@ export default function AdminUserListPage() {
           toast.success(`Đã tạo kiểm duyệt viên "${created?.email || ''}"`)
           loadUsers()
         }}
-      />
-
-      {/* Modal từ chối phê duyệt giảng viên */}
-      <AdminActionModal
-        open={rejectModalState.open}
-        type="prompt"
-        title="Từ chối phê duyệt giảng viên"
-        message={`Từ chối phê duyệt quyền giảng viên cho "${rejectModalState.user?.fullName}" (${rejectModalState.user?.email})? Tài khoản sẽ được chuyển về vai trò Học viên (STUDENT) ở trạng thái hoạt động.`}
-        confirmText="Xác nhận từ chối"
-        confirmVariant="danger"
-        inputLabel="Lý do từ chối"
-        inputPlaceholder="Nhập lý do từ chối hồ sơ giảng viên..."
-        defaultValue="Hồ sơ giảng viên chưa đáp ứng đủ tiêu chuẩn chuyên môn"
-        loading={actionProcessing}
-        onClose={() => setRejectModalState({ open: false, user: null })}
-        onConfirm={handleConfirmRejectTeacher}
       />
     </div>
   )

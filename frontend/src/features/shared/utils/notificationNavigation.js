@@ -54,6 +54,8 @@ const LEGACY_REWRITES = [
 ]
 
 const ADMIN_ONLY_PATHS = ['/admin/users', '/admin/finance']
+const SHARED_STAFF_PATHS = ['/admin', '/admin/audit-logs']
+const matchesPath = (list, path) => list.some((p) => path === p || (p !== '/admin' && path.startsWith(p + '/')))
 const isAdminPath = (p) => p === '/admin' || p.startsWith('/admin/')
 const isTeacherPath = (p) => p === '/dashboard/teacher' || p.startsWith('/teacher/')
 
@@ -81,9 +83,10 @@ function isKnownPath(path) {
 
 function allowedForRole(path, role) {
   if (isAdminPath(path)) {
-    if (role === 'ADMIN') return true
-    // Kiểm duyệt viên không được vào trang Người dùng và Tài chính
-    return role === 'MODERATOR' && !ADMIN_ONLY_PATHS.some((p) => path === p || path.startsWith(p + '/'))
+    // Tổng quan và Nhật ký dùng chung; Người dùng/Tài chính chỉ ADMIN; các trang kiểm duyệt chỉ MODERATOR
+    if (matchesPath(SHARED_STAFF_PATHS, path)) return role === 'ADMIN' || role === 'MODERATOR'
+    if (matchesPath(ADMIN_ONLY_PATHS, path)) return role === 'ADMIN'
+    return role === 'MODERATOR'
   }
   if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN'
   return true
