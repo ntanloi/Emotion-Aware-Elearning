@@ -302,7 +302,7 @@ export default function AdminDashboardPage() {
                 color: 'var(--text-main, #0f172a)',
               }}
             >
-              Xin chào{fullName ? `, ${fullName}` : ''} 👋
+              Tổng quan
             </h1>
           </div>
           <div
@@ -419,17 +419,17 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* 3. Hero Financial Card - Modern Dark Slate Executive Card (KHÔNG DÙNG GRADIENT AI CHÓI GẮT) */}
+      {/* 3. Hero Financial Card - Modern Royal Blue Executive Card (Màu xanh thanh lịch, không dùng màu đen) */}
       {finance && (
         <div
           style={{
             borderRadius: 16,
-            background: '#0f172a',
-            border: '1px solid #1e293b',
+            background: 'linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
             padding: '24px 28px',
             marginBottom: 16,
             color: '#ffffff',
-            boxShadow: '0 8px 24px -6px rgba(15, 23, 42, 0.25)',
+            boxShadow: '0 8px 24px -4px rgba(37, 99, 235, 0.35)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -444,12 +444,12 @@ export default function AdminDashboardPage() {
                 width: 48,
                 height: 48,
                 borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#38bdf8',
+                color: '#ffffff',
                 flexShrink: 0,
                 marginTop: 2,
               }}
@@ -464,7 +464,7 @@ export default function AdminDashboardPage() {
                   fontWeight: 600,
                   letterSpacing: '0.04em',
                   textTransform: 'uppercase',
-                  color: '#94a3b8',
+                  color: 'rgba(255, 255, 255, 0.88)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
@@ -477,8 +477,9 @@ export default function AdminDashboardPage() {
                     fontWeight: 700,
                     padding: '2px 8px',
                     borderRadius: 999,
-                    background: 'rgba(56, 189, 248, 0.15)',
-                    color: '#38bdf8',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
                   Đối soát tự động
@@ -502,12 +503,12 @@ export default function AdminDashboardPage() {
               <div
                 style={{
                   fontSize: 12.5,
-                  color: '#64748b',
+                  color: 'rgba(255, 255, 255, 0.85)',
                   marginTop: 4,
                   fontWeight: 500,
                 }}
               >
-                Ước đạt <strong style={{ color: '#cbd5e1' }}>≈ {moneyShort(f.totalRevenue)}</strong> · Tích hợp cổng thanh toán trực tuyến
+                Ước đạt <strong style={{ color: '#ffffff' }}>≈ {moneyShort(f.totalRevenue)}</strong> · Tích hợp cổng thanh toán trực tuyến
               </div>
             </div>
           </div>
@@ -519,8 +520,8 @@ export default function AdminDashboardPage() {
               style={{
                 padding: '10px 18px',
                 borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                background: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
                 minWidth: 150,
               }}
             >
@@ -528,20 +529,20 @@ export default function AdminDashboardPage() {
                 style={{
                   fontSize: 11.5,
                   fontWeight: 600,
-                  color: '#94a3b8',
+                  color: 'rgba(255, 255, 255, 0.9)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                 }}
               >
-                <Clock size={13} color="#f59e0b" />
+                <Clock size={13} color="#fef08a" />
                 <span>Chờ chi trả</span>
               </div>
               <div
                 style={{
                   fontSize: 19,
                   fontWeight: 700,
-                  color: '#fbbf24',
+                  color: '#fef08a',
                   marginTop: 4,
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -555,8 +556,8 @@ export default function AdminDashboardPage() {
               style={{
                 padding: '10px 18px',
                 borderRadius: 12,
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                background: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
                 minWidth: 150,
               }}
             >
@@ -564,20 +565,20 @@ export default function AdminDashboardPage() {
                 style={{
                   fontSize: 11.5,
                   fontWeight: 600,
-                  color: '#94a3b8',
+                  color: 'rgba(255, 255, 255, 0.9)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                 }}
               >
-                <CheckCircle2 size={13} color="#10b981" />
+                <CheckCircle2 size={13} color="#86efac" />
                 <span>Đã chi trả</span>
               </div>
               <div
                 style={{
                   fontSize: 19,
                   fontWeight: 700,
-                  color: '#34d399',
+                  color: '#a7f3d0',
                   marginTop: 4,
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -595,8 +596,8 @@ export default function AdminDashboardPage() {
                 gap: 6,
                 padding: '11px 18px',
                 borderRadius: 10,
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(255, 255, 255, 0.18)',
+                border: '1px solid rgba(255, 255, 255, 0.28)',
                 color: '#ffffff',
                 textDecoration: 'none',
                 fontSize: 13,
@@ -604,12 +605,12 @@ export default function AdminDashboardPage() {
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)'
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.28)'
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)'
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.28)'
               }}
             >
               <span>Đối soát chi tiết</span>
