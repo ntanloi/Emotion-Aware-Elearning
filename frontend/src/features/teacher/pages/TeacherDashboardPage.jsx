@@ -297,101 +297,96 @@ export default function TeacherDashboardPage() {
     lessonStats: []
   }
 
-  // Cấu hình 4 Tab Thống kê nguyên khối với màu sắc sống động & trực quan
+  // Cấu hình 4 Tab Thống kê nguyên khối chuẩn SaaS Pro Max (Clean, Elegant, No AI Gradients)
   const metricTabs = [
     {
       id: 'transactions',
       label: 'Doanh thu thực nhận',
       value: `${Number(data?.netRevenue || 0).toLocaleString('vi-VN')} đ`,
       subtext: `Doanh số ${Number(data?.totalRevenue || 0).toLocaleString('vi-VN')} đ · ${data?.paidOrdersCount ?? 0} đơn`,
-      icon: <DollarSign size={24} />,
-      theme: {
-        primary: 'var(--good)',
-        secondary: 'var(--good)',
-        light: 'rgba(16, 185, 129, 0.15)',
-        lightBorder: 'rgba(16, 185, 129, 0.3)',
-        activeBg: 'var(--surface)',
-        activeShadow: '0 8px 24px -4px rgba(16, 185, 129, 0.25)',
-        iconActiveBg: 'var(--good)',
-        iconInactiveBg: 'rgba(16, 185, 129, 0.12)',
-        labelColor: 'var(--good)',
-        valueColor: 'var(--good)',
-      }
+      icon: <DollarSign size={20} strokeWidth={2.2} />,
+      accent: '#059669',
+      iconBg: 'rgba(16, 185, 129, 0.08)',
+      iconBorder: 'rgba(16, 185, 129, 0.2)',
     },
     {
       id: 'students',
       label: 'Học viên',
       value: `${data?.totalStudents || 0}`,
       subtext: 'Học viên đang theo học',
-      icon: <Users size={24} />,
-      theme: {
-        primary: 'var(--accent)',
-        secondary: 'var(--accent-hover)',
-        light: 'rgba(37, 99, 235, 0.15)',
-        lightBorder: 'rgba(37, 99, 235, 0.3)',
-        activeBg: 'var(--surface)',
-        activeShadow: '0 8px 24px -4px rgba(37, 99, 235, 0.25)',
-        iconActiveBg: 'var(--accent)',
-        iconInactiveBg: 'rgba(37, 99, 235, 0.12)',
-        labelColor: 'var(--accent-hover)',
-        valueColor: 'var(--accent-hover)',
-      }
+      icon: <Users size={20} strokeWidth={2.2} />,
+      accent: '#2563eb',
+      iconBg: 'rgba(37, 99, 235, 0.08)',
+      iconBorder: 'rgba(37, 99, 235, 0.2)',
     },
     {
       id: 'courses',
       label: 'Khóa học của tôi',
       value: `${data?.totalCourses || 0}`,
       subtext: `${data?.publishedCourses || 0} khóa đang mở bán`,
-      icon: <BookOpen size={24} />,
-      theme: {
-        primary: 'var(--warn)',
-        secondary: 'var(--warn)',
-        light: 'rgba(245, 158, 11, 0.15)',
-        lightBorder: 'rgba(245, 158, 11, 0.3)',
-        activeBg: 'var(--surface)',
-        activeShadow: '0 8px 24px -4px rgba(245, 158, 11, 0.25)',
-        iconActiveBg: 'var(--warn)',
-        iconInactiveBg: 'rgba(245, 158, 11, 0.12)',
-        labelColor: 'var(--warn)',
-        valueColor: 'var(--warn)',
-      }
+      icon: <BookOpen size={20} strokeWidth={2.2} />,
+      accent: '#d97706',
+      iconBg: 'rgba(245, 158, 11, 0.08)',
+      iconBorder: 'rgba(245, 158, 11, 0.2)',
     },
     {
       id: 'emotions',
-      label: 'Cảm xúc',
-      value: emotionStats.avgFocusScore > 0 ? `${emotionStats.avgFocusScore}%` : 'AI',
-      subtext: alerts.length > 0 ? (alerts.length + ' đoạn cần xem lại') : 'Video & Lớp học Live',
-      icon: <Brain size={24} />,
-      theme: {
-        primary: 'var(--info)',
-        secondary: 'var(--info)',
-        light: 'rgba(2, 132, 199, 0.12)',
-        lightBorder: 'rgba(2, 132, 199, 0.25)',
-        activeBg: 'var(--surface)',
-        activeShadow: '0 4px 12px -2px rgba(2, 132, 199, 0.2)',
-        iconActiveBg: 'var(--info)',
-        iconInactiveBg: 'rgba(2, 132, 199, 0.12)',
-        labelColor: 'var(--info)',
-        valueColor: 'var(--info)',
-      }
+      label: 'Cảm xúc & Tập trung',
+      value: emotionStats.avgFocusScore > 0 ? `${emotionStats.avgFocusScore}%` : 'AI Phân tích',
+      subtext: alerts.length > 0 ? `${alerts.length} đoạn cần xem lại` : 'Video & Lớp học Live',
+      icon: <Brain size={20} strokeWidth={2.2} />,
+      accent: '#0284c7',
+      iconBg: 'rgba(2, 132, 199, 0.08)',
+      iconBorder: 'rgba(2, 132, 199, 0.2)',
     }
   ]
 
   return (
-    <div className="teacher-dashboard-container" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
+    <div className="teacher-dashboard-container" style={{ maxWidth: 1240, margin: '0 auto', padding: '24px 16px', paddingBottom: 48 }}>
       {/* 1. Header tinh gọn */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>Dashboard Giảng viên</h1>
-        <p className="text-dim text-sm" style={{ margin: '4px 0 0 0' }}>
-          Tổng quan doanh thu, học viên và phân tích mức độ tập trung học tập.
-        </p>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--text-main, #0f172a)' }}>
+            Dashboard Giảng viên
+          </h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, color: 'var(--text-muted, #64748b)' }}>
+            Theo dõi doanh thu thực nhận, học viên tham gia và phân tích biểu cảm tập trung học tập.
+          </p>
+        </div>
+
+        {/* Nút hành động nhanh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => loadDashboard()}
+            className="btn secondary sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, fontSize: 12.5 }}
+            title="Làm mới số liệu"
+          >
+            <RefreshCw size={13} className={loading ? 'spin' : ''} />
+            <span>Làm mới</span>
+          </button>
+          <Link
+            to="/teacher/courses/new"
+            className="btn primary sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8, fontSize: 12.5, fontWeight: 600 }}
+          >
+            <span>+ Tạo khóa học mới</span>
+          </Link>
+        </div>
       </div>
 
-      {/* 2. BỘ 4 THẺ CHỈ SỐ GỌN GÀNG, SỐNG ĐỘNG (SaaS Card Layout) */}
-      <div className="teacher-stats-kpi-grid">
+      {/* 2. BỘ 4 THẺ CHỈ SỐ GỌN GÀNG, SANG TRỌNG (SaaS Pro Max Layout) */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 14,
+          marginBottom: 20,
+        }}
+      >
         {metricTabs.map((tab) => {
           const isActive = activeTab === tab.id
-          const t = tab.theme
           return (
             <div
               key={tab.id}
@@ -407,38 +402,38 @@ export default function TeacherDashboardPage() {
                 cursor: 'pointer',
                 borderRadius: 14,
                 padding: '16px 18px',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                background: isActive ? t.activeBg : 'var(--surface)',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                background: 'var(--surface, #ffffff)',
                 border: isActive
-                  ? `2px solid ${t.primary}`
-                  : `1.5px solid ${t.lightBorder}`,
+                  ? `2px solid var(--accent, #2563eb)`
+                  : '1px solid var(--border, #e2e8f0)',
                 boxShadow: isActive
-                  ? t.activeShadow
-                  : '0 2px 6px rgba(0, 0, 0, 0.03)',
+                  ? '0 6px 18px -4px rgba(37, 99, 235, 0.15)'
+                  : '0 1px 3px rgba(15, 23, 42, 0.04)',
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 14,
                 userSelect: 'none',
                 overflow: 'hidden',
-                transform: isActive ? 'translateY(-2px)' : 'none'
+                transform: isActive ? 'translateY(-2px)' : 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                  e.currentTarget.style.borderColor = t.primary
-                  e.currentTarget.style.boxShadow = `0 6px 18px -2px ${t.light}`
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.borderColor = '#cbd5e1'
+                  e.currentTarget.style.boxShadow = '0 6px 16px -4px rgba(15, 23, 42, 0.06)'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
                   e.currentTarget.style.transform = 'none'
-                  e.currentTarget.style.borderColor = t.lightBorder
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.03)'
+                  e.currentTarget.style.borderColor = 'var(--border, #e2e8f0)'
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(15, 23, 42, 0.04)'
                 }
               }}
             >
-              {/* Vạch màu chỉ báo Active trên đỉnh */}
+              {/* Dải chỉ báo active trên đỉnh */}
               {isActive && (
                 <div
                   style={{
@@ -447,25 +442,25 @@ export default function TeacherDashboardPage() {
                     left: 0,
                     right: 0,
                     height: 3,
-                    background: t.primary
+                    background: 'var(--accent, #2563eb)',
                   }}
                 />
               )}
 
-              {/* Icon khối bo góc có màu sắc nổi bật */}
+              {/* Icon khối bo góc thanh nhã */}
               <div
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
+                  width: 42,
+                  height: 42,
+                  borderRadius: 11,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  background: isActive ? t.iconActiveBg : t.iconInactiveBg,
-                  color: isActive ? 'var(--surface)' : t.primary,
-                  boxShadow: isActive ? `0 4px 12px ${t.light}` : 'none',
-                  transition: 'all 0.2s ease'
+                  background: isActive ? 'var(--accent, #2563eb)' : tab.iconBg,
+                  color: isActive ? '#ffffff' : tab.accent,
+                  border: isActive ? 'none' : `1px solid ${tab.iconBorder}`,
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {tab.icon}
@@ -473,32 +468,41 @@ export default function TeacherDashboardPage() {
 
               {/* Chi tiết chỉ số */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: isActive ? t.labelColor : 'var(--text-dim)',
-                  marginBottom: 3,
-                  transition: 'color 0.2s ease'
-                }}>
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.03em',
+                    color: isActive ? 'var(--accent, #2563eb)' : 'var(--text-muted, #64748b)',
+                    marginBottom: 2,
+                    transition: 'color 0.2s ease',
+                  }}
+                >
                   {tab.label}
                 </div>
-                <div style={{
-                  fontSize: 21,
-                  fontWeight: 800,
-                  color: t.valueColor,
-                  lineHeight: 1.2,
-                  letterSpacing: '-0.02em'
-                }}>
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: 'var(--text-main, #0f172a)',
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.025em',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
                   {tab.value}
                 </div>
-                <div style={{
-                  fontSize: 12,
-                  color: 'var(--text-dim)',
-                  marginTop: 3,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text-muted, #64748b)',
+                    marginTop: 3,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
                   {tab.subtext}
                 </div>
               </div>
@@ -1237,93 +1241,149 @@ export default function TeacherDashboardPage() {
                   </p>
                 </div>
 
-                {/* 4 Thống kê cảm xúc tổng quan của giáo viên */}
+                {/* 4 Thống kê cảm xúc tổng quan của giáo viên - Chuẩn SaaS Pro Max */}
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                   gap: 16,
                   marginBottom: 28
                 }}>
-                  {/* Happy / Hứng thú (Đồng bộ với bên học viên: Xanh dương / Cyan #06b6d4) */}
+                  {/* Happy / Hứng thú */}
                   <div style={{
-                    background: 'var(--surface-2)',
-                    borderRadius: 12,
-                    padding: '16px 20px',
-                    border: '1px solid var(--border-subtle)',
-                    borderLeft: '4px solid #06b6d4',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+                    background: 'var(--surface, #ffffff)',
+                    borderRadius: 14,
+                    padding: '18px 20px',
+                    border: '1px solid var(--border, #e2e8f0)',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.2s ease',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#0891b2', marginBottom: 6 }}>
-                      <Smile size={18} />
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>Hứng thú</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#0891b2' }}>
+                        Hứng thú
+                      </span>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        color: '#0891b2',
+                        border: '1px solid rgba(6, 182, 212, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Smile size={17} />
+                      </div>
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800 }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-main, #0f172a)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>
                       {emotionStats.totalSessions > 0 ? `${emotionStats.happyPercent}%` : 'Chờ dữ liệu'}
                     </div>
-                    <div className="text-dim text-xs" style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted, #64748b)', marginTop: 4 }}>
                       Học viên tiếp thu tốt, thoải mái
                     </div>
                   </div>
 
-                  {/* Neutral / Tập trung cao (Đồng bộ với bên học viên: Xanh lá cây var(--good) #10b981) */}
+                  {/* Neutral / Tập trung cao */}
                   <div style={{
-                    background: 'var(--surface-2)',
-                    borderRadius: 12,
-                    padding: '16px 20px',
-                    border: '1px solid var(--border-subtle)',
-                    borderLeft: '4px solid var(--good)',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+                    background: 'var(--surface, #ffffff)',
+                    borderRadius: 14,
+                    padding: '18px 20px',
+                    border: '1px solid var(--border, #e2e8f0)',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.2s ease',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--good)', marginBottom: 6 }}>
-                      <Meh size={18} />
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>Tập trung</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#059669' }}>
+                        Tập trung
+                      </span>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        color: '#059669',
+                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Meh size={17} />
+                      </div>
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800 }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-main, #0f172a)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>
                       {emotionStats.totalSessions > 0 ? `${emotionStats.neutralPercent}%` : 'Chờ dữ liệu'}
                     </div>
-                    <div className="text-dim text-xs" style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted, #64748b)', marginTop: 4 }}>
                       Chú ý lắng nghe bài giảng
                     </div>
                   </div>
 
-                  {/* Confused / Bối rối (Đồng bộ với bên học viên: Vàng hổ phách var(--warn) #f59e0b) */}
+                  {/* Confused / Bối rối */}
                   <div style={{
-                    background: 'var(--surface-2)',
-                    borderRadius: 12,
-                    padding: '16px 20px',
-                    border: '1px solid var(--border-subtle)',
-                    borderLeft: '4px solid var(--warn)',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+                    background: 'var(--surface, #ffffff)',
+                    borderRadius: 14,
+                    padding: '18px 20px',
+                    border: '1px solid var(--border, #e2e8f0)',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.2s ease',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--warn)', marginBottom: 6 }}>
-                      <AlertCircle size={18} />
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>Bối rối / Khó hiểu</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#d97706' }}>
+                        Bối rối / Khó hiểu
+                      </span>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        color: '#d97706',
+                        border: '1px solid rgba(245, 158, 11, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <AlertCircle size={17} />
+                      </div>
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800 }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-main, #0f172a)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>
                       {emotionStats.totalSessions > 0 ? `${emotionStats.confusedPercent}%` : '0%'}
                     </div>
-                    <div className="text-dim text-xs" style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted, #64748b)', marginTop: 4 }}>
                       Cần bổ sung giải thích bài học
                     </div>
                   </div>
 
-                  {/* Bored / Mất tập trung (Đồng bộ với bên học viên: Đỏ var(--bad) #ef4444) */}
+                  {/* Bored / Mất tập trung */}
                   <div style={{
-                    background: 'var(--surface-2)',
-                    borderRadius: 12,
-                    padding: '16px 20px',
-                    border: '1px solid var(--border-subtle)',
-                    borderLeft: '4px solid var(--bad)',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+                    background: 'var(--surface, #ffffff)',
+                    borderRadius: 14,
+                    padding: '18px 20px',
+                    border: '1px solid var(--border, #e2e8f0)',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.2s ease',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--bad)', marginBottom: 6 }}>
-                      <Frown size={18} />
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>Mất tập trung</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#dc2626' }}>
+                        Mất tập trung
+                      </span>
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: '#dc2626',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Frown size={17} />
+                      </div>
                     </div>
-                    <div style={{ fontSize: 24, fontWeight: 800 }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-main, #0f172a)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.025em' }}>
                       {emotionStats.totalSessions > 0 ? `${emotionStats.boredPercent}%` : '0%'}
                     </div>
-                    <div className="text-dim text-xs" style={{ marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted, #64748b)', marginTop: 4 }}>
                       Nên chia nhỏ thời lượng video
                     </div>
                   </div>
