@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin/reviews")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+@PreAuthorize("hasRole('MODERATOR')")
 public class AdminReviewController {
 
     private final AdminReviewModerationService adminReviewModerationService;

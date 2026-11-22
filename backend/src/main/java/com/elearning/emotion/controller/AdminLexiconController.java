@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/lexicon")
-@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+@PreAuthorize("hasRole('MODERATOR')")
 @RequiredArgsConstructor
 @Slf4j
 public class AdminLexiconController {
@@ -191,7 +191,6 @@ public class AdminLexiconController {
      * Xóa một mục từ điển
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Kiểm duyệt viên chỉ được tắt (active=false) chứ không xóa hẳn
     public ResponseEntity<Void> deleteLexicon(@PathVariable String id) {
         if (!lexiconRepository.existsById(id)) {
             throw new IllegalArgumentException("Không tìm thấy mục từ điển với ID: " + id);

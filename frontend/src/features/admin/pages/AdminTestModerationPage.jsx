@@ -12,7 +12,6 @@ import {
   User,
   Sparkles,
 } from 'lucide-react'
-import { useAuthStore } from '@auth/store/authStore.js'
 import { listAdminTests, approveTest, rejectTest, hideTest, seedSampleTests } from '@admin/api/adminTests.js'
 import AdminTestDetailModal from '@admin/components/AdminTestDetailModal.jsx'
 import Skeleton from '@shared/components/ui/Skeleton.jsx'
@@ -21,7 +20,6 @@ import { useToast, useConfirm } from '@admin/context/AdminUIContext.jsx'
 import { useRealtimeEvent, useRealtimeStatus } from '@shared/realtime/index.js'
 
 export default function AdminTestModerationPage() {
-  const isAdmin = useAuthStore((st) => st.user?.role) === 'ADMIN'
   const toast = useToast()
   const confirm = useConfirm()
   const [tests, setTests] = useState([])
@@ -233,8 +231,7 @@ export default function AdminTestModerationPage() {
             Xét duyệt các đề thi do giáo viên đóng góp, kiểm tra tính chuẩn xác của câu hỏi và xuất bản lên Thư viện đề thi TOEIC.
           </p>
         </div>
-        {/* Khởi tạo đề mẫu hệ thống: chỉ ADMIN */}
-        {isAdmin && (
+        {(
         <button
           type="button"
           disabled={seeding}

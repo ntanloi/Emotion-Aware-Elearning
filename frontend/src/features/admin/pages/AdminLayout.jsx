@@ -19,8 +19,8 @@ import {
 } from 'lucide-react'
 
 /**
- * Menu điều hướng theo nhóm. Mục `adminOnly` chỉ hiện với ADMIN;
- * Kiểm duyệt viên (MODERATOR) chỉ thấy nhóm "Kiểm duyệt".
+ * Menu điều hướng theo nhóm. Mỗi mục có `roles`: ADMIN chỉ thấy nhóm quản trị hệ thống,
+ * MODERATOR chỉ thấy nhóm kiểm duyệt; Tổng quan và Nhật ký dùng chung.
  */
 const NAV_GROUPS = [
   {
@@ -31,6 +31,7 @@ const NAV_GROUPS = [
   {
     key: 'moderation',
     label: 'Kiểm duyệt',
+    roles: ['MODERATOR'],
     items: [
       { to: '/admin/courses', alsoActive: '/admin/moderation', icon: BookOpen, label: 'Khóa học', badge: 'courses', badgeColor: 'var(--c-danger, #ef4444)' },
       { to: '/admin/tests', icon: FileCheck, label: 'Duyệt đề thi' },
@@ -42,9 +43,10 @@ const NAV_GROUPS = [
   {
     key: 'system',
     label: 'Quản trị hệ thống',
+    roles: ['ADMIN'],
     items: [
-      { to: '/admin/users', icon: Users, label: 'Người dùng', adminOnly: true },
-      { to: '/admin/finance', icon: CreditCard, label: 'Tài chính & Thanh toán', adminOnly: true }
+      { to: '/admin/users', icon: Users, label: 'Người dùng' },
+      { to: '/admin/finance', icon: CreditCard, label: 'Tài chính & Thanh toán' }
     ]
   },
   {
@@ -59,7 +61,10 @@ export default function AdminLayout() {
   const { pendingCourses, pendingReports, pendingTeachers } = useAdminStats(60000)
   const role = useAuthStore((st) => st.user?.role)
   const isAdmin = role === 'ADMIN'
-  const badges = { courses: pendingCourses, reports: pendingReports, teachers: pendingTeachers }
+  const badges = isAdmin
+    ? {}
+    : { courses: pendingCourses, reports: pendingReports, teachers: pendingTeachers }
+  const pendingTotal = isAdmin ? 0 : pendingCourses + pendingReports + pendingTeachers
   const menuTitle = isAdmin ? 'Menu Quản trị viên' : 'Menu Kiểm duyệt viên'
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -94,7 +99,7 @@ export default function AdminLayout() {
             <Menu size={18} />
             <span>{isAdmin ? 'Menu Quản trị' : 'Menu Kiểm duyệt'}</span>
           </button>
-          {(pendingCourses > 0 || pendingReports > 0 || pendingTeachers > 0) && (
+          {pendingTotal > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span
                 className="badge"
@@ -107,7 +112,7 @@ export default function AdminLayout() {
                   borderRadius: 12
                 }}
               >
-                {pendingCourses + pendingReports + pendingTeachers} việc cần duyệt
+                {pendingTotal} việc cần duyệt
               </span>
             </div>
           )}
@@ -135,8 +140,8 @@ export default function AdminLayout() {
 
           <nav className="admin-sidebar-nav">
             {NAV_GROUPS.map((group) => {
-              const items = group.items.filter((it) => !it.adminOnly || isAdmin)
-              if (items.length === 0) return null
+              if (group.roles && !group.roles.includes(role)) return null
+              const items = group.items
               return (
                 <React.Fragment key={group.key}>
                   {group.label && (

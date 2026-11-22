@@ -25,8 +25,9 @@ import static org.mockito.Mockito.*;
 
 /**
  * Ma trận phân quyền ADMIN / MODERATOR (Kiểm duyệt viên):
- * - Nghiệp vụ kiểm duyệt: cả ADMIN và MODERATOR.
- * - Tài chính, ví, chính sách, quản lý người dùng, tạo tài khoản kiểm duyệt viên: chỉ ADMIN.
+ * - Nghiệp vụ kiểm duyệt (khóa học, đề thi, đánh giá, từ điển, hồ sơ giảng viên): chỉ MODERATOR.
+ * - Tài chính, ví, chính sách, quản lý người dùng, tạo kiểm duyệt viên: chỉ ADMIN.
+ * - Tổng quan thống kê và nhật ký: dùng chung (dữ liệu được lọc theo role).
  */
 @ExtendWith(MockitoExtension.class)
 class ModeratorRoleAuthorizationTest {
@@ -55,25 +56,24 @@ class ModeratorRoleAuthorizationTest {
     }
 
     @Test
-    @DisplayName("Controller kiểm duyệt cho phép cả ADMIN và MODERATOR")
-    void moderationControllersAllowAdminAndModerator() {
-        List<Class<?>> shared = List.of(
-                AdminController.class,
+    @DisplayName("Controller kiểm duyệt CHỈ dành cho MODERATOR")
+    void moderationControllersAreModeratorOnly() {
+        List<Class<?>> moderation = List.of(
                 AdminModerationController.class,
                 AdminLexiconController.class,
                 AdminReportController.class,
                 AdminReviewController.class,
                 AdminToeicTestController.class
         );
-        for (Class<?> c : shared) {
+        for (Class<?> c : moderation) {
             String rule = classRule(c);
-            assertTrue(rule.contains("ADMIN") && rule.contains("MODERATOR"),
-                    c.getSimpleName() + " phải cho phép ADMIN và MODERATOR, tìm thấy: " + rule);
+            assertTrue(rule.contains("MODERATOR"), c.getSimpleName() + " phải yêu cầu MODERATOR: " + rule);
+            assertFalse(rule.contains("ADMIN"), c.getSimpleName() + " không được mở cho ADMIN: " + rule);
         }
     }
 
     @Test
-    @DisplayName("Tài chính, ví và chính sách kiểm duyệt CHỈ dành cho ADMIN")
+    @DisplayName("Tài chính, ví và chính sách CHỈ dành cho ADMIN")
     void financeWalletPolicyAreAdminOnly() {
         List<Class<?>> adminOnly = List.of(
                 AdminFinanceController.class,
@@ -88,26 +88,19 @@ class ModeratorRoleAuthorizationTest {
     }
 
     @Test
-    @DisplayName("Quản lý người dùng, tạo kiểm duyệt viên, xóa từ điển, đề thi hệ thống CHỈ dành cho ADMIN")
-    void sensitiveMethodsAreAdminOnly() {
-        String[][] cases = {
-                {"AdminController", "getUsers"},
-                {"AdminController", "updateUserStatus"},
-                {"AdminController", "createModerator"},
-                {"AdminLexiconController", "deleteLexicon"},
-                {"AdminToeicTestController", "createSystemTest"},
-                {"AdminToeicTestController", "seedSampleTests"},
-        };
-        for (String[] c : cases) {
-            Class<?> clazz;
-            try {
-                clazz = Class.forName("com.elearning.emotion.controller." + c[0]);
-            } catch (ClassNotFoundException e) {
-                throw new AssertionError(e);
-            }
-            String rule = methodRule(clazz, c[1]);
-            assertTrue(rule.contains("ADMIN"), c[0] + "." + c[1] + " phải yêu cầu ADMIN");
-            assertFalse(rule.contains("MODERATOR"), c[0] + "." + c[1] + " không được mở cho MODERATOR: " + rule);
+    @DisplayName("AdminController: người dùng/tạo kiểm duyệt viên chỉ ADMIN; khóa học/giảng viên chỉ MODERATOR")
+    void adminControllerMethodsAreSplitByRole() {
+        String[] adminOnly = {"getUsers", "updateUserStatus", "createModerator"};
+        String[] moderatorOnly = {"getPendingTeachers", "approveTeacher", "rejectTeacher", "getCourses",
+                "getCourseReviewDetails", "getCoursePreview", "getContentItemPreview", "reAuditWithAi",
+                "approveCourse", "rejectCourse", "suspendCourse", "restoreCourse"};
+        for (String m : adminOnly) {
+            String rule = methodRule(AdminController.class, m);
+            assertTrue(rule.contains("ADMIN") && !rule.contains("MODERATOR"), m + " chỉ ADMIN: " + rule);
+        }
+        for (String m : moderatorOnly) {
+            String rule = methodRule(AdminController.class, m);
+            assertTrue(rule.contains("MODERATOR") && !rule.contains("ADMIN"), m + " chỉ MODERATOR: " + rule);
         }
     }
 

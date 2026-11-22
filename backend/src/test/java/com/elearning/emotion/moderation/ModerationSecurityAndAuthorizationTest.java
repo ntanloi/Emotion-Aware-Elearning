@@ -256,8 +256,8 @@ class ModerationSecurityAndAuthorizationTest {
         for (Class<?> clazz : adminControllers) {
             PreAuthorize classAnnotation = clazz.getAnnotation(PreAuthorize.class);
             assertNotNull(classAnnotation, "Controller " + clazz.getSimpleName() + " phải có @PreAuthorize ở class level");
-            assertTrue(classAnnotation.value().contains("ADMIN"),
-                    "Controller " + clazz.getSimpleName() + " phải yêu cầu role ADMIN, tìm thấy: " + classAnnotation.value());
+            assertTrue(classAnnotation.value().contains("ADMIN") || classAnnotation.value().contains("MODERATOR"),
+                    "Controller " + clazz.getSimpleName() + " phải yêu cầu role ADMIN hoặc MODERATOR, tìm thấy: " + classAnnotation.value());
         }
     }
 

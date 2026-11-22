@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 
 import { vnTime } from '@shared/utils/dateTime.js'
-import { useAuthStore } from '@auth/store/authStore.js'
 function getLongestWaitText(items, dateField) {
   if (!items || items.length === 0) return 'Hàng đợi trống'
   let oldestTime = Date.now()
@@ -40,7 +39,6 @@ function getLongestWaitText(items, dateField) {
 }
 
 export default function AdminOverviewPage() {
-  const isAdmin = useAuthStore((st) => st.user?.role) === 'ADMIN'
   const navigate = useNavigate()
   const { stats, pendingCourses, pendingReports, modifiedCourses, loading } = useAdminStats(60000)
 
@@ -257,7 +255,7 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* 3. Dải thông tin quy mô hệ thống (3 chỉ số phụ thu gọn) */}
+      {/* 3. Dải thông tin quy mô hệ thống (chỉ số phụ thu gọn) */}
       <div className="admin-stat-strip">
         <div className="admin-stat-item">
           <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(16, 185, 129, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -267,30 +265,6 @@ export default function AdminOverviewPage() {
           <strong style={{ color: '#0f172a' }}>{stats?.publishedCourses || 0} khóa học</strong>
         </div>
 
-        {/* Số liệu người dùng chỉ dành cho ADMIN */}
-        {isAdmin && (
-          <>
-        <div className="admin-stat-divider" />
-
-        <div className="admin-stat-item">
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37, 99, 235, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Users size={16} color="#2563eb" />
-          </div>
-          <span style={{ color: 'var(--text-dim, #64748b)' }}>Tổng học viên:</span>
-          <strong style={{ color: '#0f172a' }}>{stats?.totalStudents || 0}</strong>
-        </div>
-
-        <div className="admin-stat-divider" />
-
-        <div className="admin-stat-item">
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(13, 148, 136, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <GraduationCap size={16} color="#0d9488" />
-          </div>
-          <span style={{ color: 'var(--text-dim, #64748b)' }}>Giảng viên:</span>
-          <strong style={{ color: '#0f172a' }}>{stats?.totalTeachers || 0}</strong>
-        </div>
-          </>
-        )}
       </div>
 
       {/* 4. Danh sách hợp nhất "Việc cần xử lý" (Tối đa 8 dòng, sắp xếp theo thời gian chờ lâu nhất) */}
