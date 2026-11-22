@@ -247,7 +247,7 @@ public class AdminToeicTestService {
     @Transactional
     public List<ToeicTestDto> seedSampleSystemTests(String adminId) {
         List<ToeicTest> tests = systemToeicTestSeederService.seedSystemTests(adminId);
-        realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of("action", "SEEDED"));
+        realtimePublisher.publishToModerationStaff("test-moderation", Map.of("action", "SEEDED"));
         return tests.stream().map(t -> {
             List<ToeicTestPart> parts = toeicTestPartRepository.findByTestIdOrderByPartNoAsc(t.getId());
             return ToeicTestDto.from(t, parts);
@@ -260,7 +260,7 @@ public class AdminToeicTestService {
      */
     private void publishTestModeration(ToeicTest test, String action) {
         try {
-            realtimePublisher.publishToRole("ADMIN", "test-moderation", Map.of(
+            realtimePublisher.publishToModerationStaff("test-moderation", Map.of(
                     "testId", test.getId(),
                     "status", test.getStatus() != null ? test.getStatus() : "",
                     "action", action));

@@ -54,6 +54,7 @@ export function useAdminStats(autoPollIntervalMs = 60000) {
     stats,
     pendingCourses: stats?.pendingCourses || 0,
     pendingReports: unresolvedReportsCount || stats?.pendingReviewReports || 0,
+    pendingTeachers: stats?.pendingTeachers || 0,
     modifiedCourses: stats?.modifiedCourses || 0,
     loading,
     error,

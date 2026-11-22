@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import * as adminApi from '@admin/api/admin.js'
 import AdminActionModal from '@admin/components/AdminActionModal.jsx'
+import CreateModeratorModal from '@admin/components/CreateModeratorModal.jsx'
 import AdminPageHeader from '@admin/components/ui/AdminPageHeader.jsx'
 import StatusBadge from '@admin/components/ui/StatusBadge.jsx'
 import { useToast } from '@admin/context/AdminUIContext.jsx'
@@ -15,6 +16,8 @@ import {
   UserCheck,
   CheckCircle2,
   XCircle,
+  Plus,
+  ShieldAlert,
 } from 'lucide-react'
 
 import { formatVnDate } from '@shared/utils/dateTime.js'
@@ -22,6 +25,7 @@ export default function AdminUserListPage() {
   const toast = useToast()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [createOpen, setCreateOpen] = useState(false)
   const [roleFilter, setRoleFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -146,6 +150,11 @@ export default function AdminUserListPage() {
     <div className="admin-user-list-page">
       <AdminPageHeader
         title="Người dùng"
+        actions={
+          <button type="button" className="btn sm" onClick={() => setCreateOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Plus size={15} /> Tạo kiểm duyệt viên
+          </button>
+        }
         badge={
           totalElements > 0 ? (
             <span
@@ -188,6 +197,7 @@ export default function AdminUserListPage() {
             <option value="">Tất cả vai trò</option>
             <option value="STUDENT">Học viên</option>
             <option value="TEACHER">Giảng viên</option>
+            <option value="MODERATOR">Kiểm duyệt viên</option>
             <option value="ADMIN">Quản trị viên</option>
           </select>
 
@@ -276,12 +286,16 @@ export default function AdminUserListPage() {
                         backgroundColor:
                           u.role === 'ADMIN'
                             ? 'rgba(126, 34, 206, 0.1)'
+                            : u.role === 'MODERATOR'
+                            ? 'rgba(217, 119, 6, 0.12)'
                             : u.role === 'TEACHER'
                             ? 'rgba(3, 105, 161, 0.1)'
                             : 'rgba(16, 185, 129, 0.1)',
                         color:
                           u.role === 'ADMIN'
                             ? '#7e22ce'
+                            : u.role === 'MODERATOR'
+                            ? '#b45309'
                             : u.role === 'TEACHER'
                             ? '#0369a1'
                             : 'var(--c-success, #15803d)',
@@ -291,8 +305,8 @@ export default function AdminUserListPage() {
                         gap: 5,
                       }}
                     >
-                      {u.role === 'TEACHER' ? <GraduationCap size={13} /> : u.role === 'ADMIN' ? <ShieldCheck size={13} /> : <UserCheck size={13} />}
-                      <span>{u.role === 'TEACHER' ? 'Giảng viên' : u.role === 'STUDENT' ? 'Học viên' : 'Quản trị viên'}</span>
+                      {u.role === 'TEACHER' ? <GraduationCap size={13} /> : u.role === 'ADMIN' ? <ShieldCheck size={13} /> : u.role === 'MODERATOR' ? <ShieldAlert size={13} /> : <UserCheck size={13} />}
+                      <span>{u.role === 'TEACHER' ? 'Giảng viên' : u.role === 'STUDENT' ? 'Học viên' : u.role === 'MODERATOR' ? 'Kiểm duyệt viên' : 'Quản trị viên'}</span>
                     </span>
                   </td>
                   <td data-label="Trạng thái" style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
@@ -430,6 +444,16 @@ export default function AdminUserListPage() {
         loading={actionProcessing}
         onClose={() => setModalState({ open: false, user: null, isLocking: true })}
         onConfirm={handleConfirmLockAction}
+      />
+
+      <CreateModeratorModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(created) => {
+          setCreateOpen(false)
+          toast.success(`Đã tạo kiểm duyệt viên "${created?.email || ''}"`)
+          loadUsers()
+        }}
       />
 
       {/* Modal từ chối phê duyệt giảng viên */}

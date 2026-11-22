@@ -393,7 +393,7 @@ public class CourseReviewService {
         ReviewReport savedReport = reviewReportRepository.save(report);
 
         try {
-            realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of(
+            realtimePublisher.publishToModerationStaff("admin-stats", Map.of(
                     "reason", "NEW_REVIEW_REPORT",
                     "reportId", savedReport.getId()
             ));

@@ -205,13 +205,13 @@ public class ModerationAnalysisService {
                 courseId, result.getRiskLevel(), result.getErrorCount(), result.getWarningCount());
 
         try {
-            realtimePublisher.publishToRole("ADMIN", "moderation-run", Map.of(
+            realtimePublisher.publishToModerationStaff("moderation-run", Map.of(
                     "courseId", courseId,
                     "runId", runId,
                     "status", "READY_FOR_REVIEW",
                     "riskLevel", result.getRiskLevel() != null ? result.getRiskLevel() : "LOW"
             ));
-            realtimePublisher.publishToRole("ADMIN", "admin-stats", Map.of("reason", "MODERATION_READY", "courseId", courseId));
+            realtimePublisher.publishToModerationStaff("admin-stats", Map.of("reason", "MODERATION_READY", "courseId", courseId));
         } catch (Exception ex) {
             log.warn("[ModerationAnalysisService] Không thể phát sự kiện moderation-run READY: {}", ex.getMessage());
         }
@@ -227,7 +227,7 @@ public class ModerationAnalysisService {
 
                 try {
                     String cId = run.getCourse() != null ? run.getCourse().getId() : "";
-                    realtimePublisher.publishToRole("ADMIN", "moderation-run", Map.of(
+                    realtimePublisher.publishToModerationStaff("moderation-run", Map.of(
                             "courseId", cId,
                             "runId", runId,
                             "status", "FAILED"
@@ -262,7 +262,7 @@ public class ModerationAnalysisService {
 
             try {
                 String cId = run.getCourse() != null ? run.getCourse().getId() : "";
-                realtimePublisher.publishToRole("ADMIN", "moderation-run", Map.of(
+                realtimePublisher.publishToModerationStaff("moderation-run", Map.of(
                         "courseId", cId,
                         "runId", run.getId(),
                         "status", "FAILED"

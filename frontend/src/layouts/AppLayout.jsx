@@ -67,9 +67,10 @@ export default function Layout() {
     (location.pathname.startsWith('/dashboard/teacher') ||
       location.pathname.startsWith('/teacher') ||
       (location.pathname === '/profile' && location.search.includes('view=teacher')))
-  const brandLink = user.role === 'ADMIN' ? '/admin' : user.role === 'TEACHER' && isTeacherWorkspace ? '/dashboard/teacher' : '/'
+  const isStaff = user.role === 'ADMIN' || user.role === 'MODERATOR'
+  const brandLink = isStaff ? '/admin' : user.role === 'TEACHER' && isTeacherWorkspace ? '/dashboard/teacher' : '/'
 
-  const roleLabel = user.role === 'ADMIN' ? 'Quản trị viên' : user.role === 'TEACHER' ? 'Giảng viên' : 'Học viên'
+  const roleLabel = user.role === 'ADMIN' ? 'Quản trị viên' : user.role === 'MODERATOR' ? 'Kiểm duyệt viên' : user.role === 'TEACHER' ? 'Giảng viên' : 'Học viên'
 
   return (
     <RealtimeProvider>
@@ -396,10 +397,10 @@ export default function Layout() {
               </>
             )}
 
-            {user.role === 'ADMIN' && (
+            {isStaff && (
               <Link to="/admin" className={`mobile-nav-item ${isActive('/admin') ? 'active' : ''}`}>
                 <Shield size={18} />
-                <span>Trang quản trị</span>
+                <span>{user.role === 'ADMIN' ? 'Trang quản trị' : 'Trang kiểm duyệt'}</span>
               </Link>
             )}
           </div>

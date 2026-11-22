@@ -32,6 +32,7 @@ import AdminLayout from "@admin/pages/AdminLayout.jsx";
 import AdminOverviewPage from "@admin/pages/AdminOverviewPage.jsx";
 import AdminModerationQueuePage from "@admin/pages/AdminModerationQueuePage.jsx";
 import AdminCourseReviewDetailPage from "@admin/pages/AdminCourseReviewDetailPage.jsx";
+import AdminTeacherApprovalPage from "@admin/pages/AdminTeacherApprovalPage.jsx";
 import AdminUserListPage from "@admin/pages/AdminUserListPage.jsx";
 import AdminCourseListPage from "@admin/pages/AdminCourseListPage.jsx";
 import AdminAuditLogPage from "@admin/pages/AdminAuditLogPage.jsx";
@@ -44,7 +45,7 @@ import { useAuthStore } from "@auth/store/authStore.js";
 
 function RootRedirect() {
   const user = useAuthStore((s) => s.user);
-  if (user?.role === "ADMIN") return <Navigate to="/admin" replace />;
+  if (user?.role === "ADMIN" || user?.role === "MODERATOR") return <Navigate to="/admin" replace />;
   if (user?.role === "TEACHER") return <Navigate to="/dashboard/teacher" replace />;
   return <CourseListPage />;
 }
@@ -76,19 +77,24 @@ export default function App() {
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/dashboard/student" element={<Navigate to="/courses" replace />} />
 
-        {/* Khu vực dành riêng cho Quản trị viên (ADMIN) */}
-        <Route element={<RequireRole allowedRoles={["ADMIN"]} />}>
+        {/* Khu vực quản trị: ADMIN + Kiểm duyệt viên (MODERATOR) dùng chung layout */}
+        <Route element={<RequireRole allowedRoles={["ADMIN", "MODERATOR"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
+            {/* Nhóm kiểm duyệt: cả ADMIN và MODERATOR */}
             <Route index element={<AdminOverviewPage />} />
             <Route path="moderation" element={<AdminModerationQueuePage />} />
             <Route path="moderation/:courseId" element={<AdminCourseReviewDetailPage />} />
-            <Route path="users" element={<AdminUserListPage />} />
             <Route path="courses" element={<AdminCourseListPage />} />
             <Route path="tests" element={<AdminTestModerationPage />} />
             <Route path="reviews" element={<AdminReviewsPage />} />
-            <Route path="finance" element={<AdminFinancePage />} />
-            <Route path="audit-logs" element={<AdminAuditLogPage />} />
+            <Route path="teachers" element={<AdminTeacherApprovalPage />} />
             <Route path="lexicon" element={<AdminLexiconPage />} />
+            <Route path="audit-logs" element={<AdminAuditLogPage />} />
+            {/* Nhóm quản trị hệ thống: chỉ ADMIN */}
+            <Route element={<RequireRole allowedRoles={["ADMIN"]} />}>
+              <Route path="users" element={<AdminUserListPage />} />
+              <Route path="finance" element={<AdminFinancePage />} />
+            </Route>
           </Route>
           <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />
         </Route>

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/tests")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
 @RequiredArgsConstructor
 public class AdminToeicTestController {
 
@@ -64,6 +64,7 @@ public class AdminToeicTestController {
     }
 
     @PostMapping("/system")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ToeicTestDto> createSystemTest(
             @AuthenticationPrincipal String adminId,
             @Valid @RequestBody ToeicTestPublishRequest req
@@ -72,6 +73,7 @@ public class AdminToeicTestController {
     }
 
     @PostMapping("/seed-samples")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<java.util.List<ToeicTestDto>> seedSampleTests(
             @AuthenticationPrincipal String adminId
     ) {

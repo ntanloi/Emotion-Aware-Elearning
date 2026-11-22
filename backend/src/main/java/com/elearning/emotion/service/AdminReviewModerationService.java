@@ -135,7 +135,7 @@ public class AdminReviewModerationService {
                 realtimePublisher.publishToUser(review.getCourse().getTeacher().getId(), "course-review",
                         java.util.Map.of("courseId", courseId, "action", action));
             }
-            realtimePublisher.publishToRole("ADMIN", "admin-stats",
+            realtimePublisher.publishToModerationStaff("admin-stats",
                     java.util.Map.of("reason", "REVIEW_MODERATED", "courseId", courseId));
         } catch (Exception ignored) {
             // Realtime chỉ là phần bổ trợ, không được làm hỏng nghiệp vụ chính
